@@ -1,0 +1,49 @@
+#!/usr/bin/env php
+<?php
+
+use Composer\Autoload\ClassLoader;
+use Doctrine\Common\Annotations\AnnotationRegistry;
+use Symfony\Component\Console\Input\ArgvInput;
+use Symfony\Component\Console\Input\InputDefinition;
+use Symfony\Component\Console\Input\InputOption;
+
+foreach ([
+    __DIR__ . '/../autoload.php',
+    __DIR__ . '/../../autoload.php',
+    __DIR__ . '/vendor/autoload.php',
+] as $file) {
+    if (file_exists($file)) {
+        /**
+         * @var ClassLoader $loader
+         */
+        $loader = require $file;
+
+        break;
+    }
+}
+
+// Needed so annotation classes are loaded, but will be removed in doctrine/annotations 2.0,
+// so we might need to change this to make it work for that version when it is released
+AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
+
+// Define the necessary command line options and defaults
+$inputDefinition = new InputDefinition();
+$inputDefinition->addOption(new InputOption(
+    'source-dir',
+    null,
+    InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
+    'Source directories (relative to current directory) where entities will be searched recursively'
+));
+
+$input = new ArgvInput(null, $inputDefinition);
+$srcDirectories = $input->getOption('source-dir');
+
+// Execute command to generate repositories
+$cmd = new \Squirrel\Entities\Generate\RepositoriesGenerateCommand($srcDirectories);
+$log = $cmd();
+
+// Add summary of processed entities
+$log[] = "\n" . count($log) . ' entities found for which repositories were generated.' . "\n";
+
+// Show log
+echo implode("\n", $log);

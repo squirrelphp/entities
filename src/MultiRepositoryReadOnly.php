@@ -1,0 +1,1079 @@
+<?php
+
+namespace Squirrel\Entities;
+
+use Squirrel\Entities\Action\ActionInterface;
+use Squirrel\Queries\DBDebug;
+use Squirrel\Queries\DBInterface;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
+
+/**
+ * QueryHandler functionality: If more than one table needs to be selected or updated
+ * at once QueryHandler combines the knowledge of multiple Repository classes to create
+ * a query which is simple and secure
+ */
+class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
+{
+    /**
+     * @var DBInterface
+     */
+    protected $db;
+
+    /**
+     * @inheritdoc
+     */
+    public function select(array $query): array
+    {
+        // Freeform query was detected
+        if (isset($query['query']) || isset($query['parameters'])) {
+            return $this->selectQueryFreeform($query);
+        }
+
+        // Regular structured query
+        return $this->selectQuery($query);
+    }
+
+    private function selectQueryFreeform(array $options, bool $flattenFields = false): array
+    {
+        // Process options and make sure all values are valid
+        [
+            $sanitizedOptions,
+            $tableName,
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+        ] = $this->processOptions([
+            'repositories' => [],
+            'fields' => [],
+            'query' => '',
+            'parameters' => [],
+        ], $options);
+
+        // Process the query
+        $sqlQuery = $this->buildFreeform($sanitizedOptions['query'], $tableName, $objectToTableFields);
+
+        // Build select part of the query
+        [$selectProcessed, $selectTypes, $selectTypesNullable] = $this->buildFieldSelection(
+            $sanitizedOptions['fields'],
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+            true
+        );
+
+        // Get all the data from the database
+        try {
+            $tableObjects = $this->db->fetchAll(
+                'SELECT ' . \implode(',', $selectProcessed) . ' FROM ' . $sqlQuery,
+                $sanitizedOptions['parameters']
+            );
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+
+        // Process the select results
+        return $this->processSelectResults($tableObjects, $selectTypes, $selectTypesNullable, $flattenFields);
+    }
+
+    /**
+     * Process options and make sure all values are valid
+     *
+     * @param array $validOptions List of valid options and default values for them
+     * @param array $options List of provided options which need to be processed
+     * @param bool $writing Whether this is a writing operation or not
+     * @return array
+     */
+    protected function processOptions(array $validOptions, array $options, bool $writing = false)
+    {
+        // Reset DB class - needs to be set by the current options
+        $dbInstance = null;
+
+        // Copy over the default valid options as a starting point for our options
+        $sanitizedOptions = $validOptions;
+
+        // Go through the defined options
+        foreach ($options as $optKey => $optVal) {
+            // Defined option is not in the list of valid options
+            if (!isset($validOptions[$optKey])) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Unknown option key ' . DBDebug::sanitizeData($optKey)
+                );
+            }
+
+            // Make sure the variable type for the defined option is valid
+            switch ($optKey) {
+                // These are checked & converted by SQL component
+                case 'limit':
+                case 'offset':
+                case 'lock':
+                    break;
+                // Handled in a special way by this class
+                case 'flattenFields':
+                    // Conversion of value does not match the original value, so we have a very wrong type
+                    if (!\is_bool($optVal) && \intval(\boolval($optVal)) !== \intval($optVal)) {
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Option key ' . DBDebug::sanitizeData($optKey) .
+                            ' had an invalid value which cannot be converted correctly'
+                        );
+                    }
+
+                    $options[$optKey] = \boolval($optVal);
+                    break;
+                // Already type hinted "query" as string
+                case 'query':
+                    break;
+                default:
+                    if (!\is_array($optVal)) {
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Option key ' . DBDebug::sanitizeData($optKey) .
+                            ' had a non-array value: ' . DBDebug::sanitizeData($optVal)
+                        );
+                    }
+                    break;
+            }
+
+            $sanitizedOptions[$optKey] = $optVal;
+        }
+
+        // Make sure tables array was defined
+        if (!isset($sanitizedOptions['repositories']) || \count($sanitizedOptions['repositories']) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'No repositories specified'
+            );
+        }
+
+        // No table joins defined - just join them by "default" via repositories definition
+        if (isset($validOptions['tables']) && \count($sanitizedOptions['tables']) === 0) {
+            $sanitizedOptions['tables'] = \array_keys($sanitizedOptions['repositories']);
+        }
+
+        // WHERE needs some restrictions to glue the tables together
+        if (isset($validOptions['where']) && \count($sanitizedOptions['where']) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'No "where" definitions'
+            );
+        }
+
+        // SELECT fields need to be defined
+        if (isset($validOptions['fields']) && \count($sanitizedOptions['fields']) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'No "fields" definition'
+            );
+        }
+
+        // SET changes in update query need to be defined
+        if (isset($validOptions['changes']) && \count($sanitizedOptions['changes']) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'No "changes" / SET definition'
+            );
+        }
+
+        // Query in freeform selects and updates needs to not be empty
+        if (isset($validOptions['query']) && \strlen($sanitizedOptions['query']) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'No "query" definition'
+            );
+        }
+
+        // Make sure parameters for a freestyle query are valid
+        if (isset($validOptions['parameters']) && \count($sanitizedOptions['parameters']) > 0) {
+            // Remove keys from parameters - they are not needed
+            $sanitizedOptions['parameters'] = \array_values($sanitizedOptions['parameters']);
+
+            // Check all provided parameters
+            foreach ($sanitizedOptions['parameters'] as $key => $value) {
+                // Only scalar values are allowed
+                if (!\is_scalar($value)) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Non-scalar "parameters" definition'
+                    );
+                }
+
+                // Convert bool to int
+                if (\is_bool($value)) {
+                    $value = \intval($value);
+                }
+
+                $sanitizedOptions['parameters'][$key] = $value;
+            }
+        }
+
+        /**
+         * Name of the tables for this query
+         *
+         * @var string
+         */
+        $tableName = [];
+
+        /**
+         * Conversion from object to table fields
+         *
+         * @var array
+         */
+        $objectToTableFields = [];
+
+        /**
+         * Types of the variables in the object for type casting
+         *
+         * @var array
+         */
+        $objectTypes = [];
+
+        /**
+         * Whether variables can be NULL or not
+         *
+         * @var array
+         */
+        $objectTypesNullable = [];
+
+        // Go through tables to prepare the repositories
+        foreach ($sanitizedOptions['repositories'] as $name => $class) {
+            // Make sure every entry in the tables array is valid
+            if (!\is_string($name) || \strpos($name, '.') !== false) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "repositories" key definition: ' . DBDebug::sanitizeData($name)
+                );
+            } elseif ($class instanceof RepositoryBuilderReadOnlyInterface) {
+                // Make sure the repository is writeable if we are doing a writing query
+                if ($writing === true && !($class instanceof RepositoryBuilderWriteableInterface)) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Non-writeable "repositories" object definition for writing operation'
+                    );
+                }
+
+                try {
+                    // Dive into the repository builder class and get the raw repository behind it
+                    $builderRepositoryReflection = new \ReflectionClass($class);
+                    $builderRepositoryPropertyReflection = $builderRepositoryReflection->getProperty('repository');
+                    $builderRepositoryPropertyReflection->setAccessible(true);
+                    $baseRepository = $builderRepositoryPropertyReflection->getValue($class);
+
+                    // Get configuration from within the base repository
+                    $baseRepositoryReflection = new \ReflectionClass($baseRepository);
+                    $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('config');
+                    $baseRepositoryPropertyReflection->setAccessible(true);
+                    $class = $baseRepositoryPropertyReflection->getValue($baseRepository);
+
+                    // Get DBInterface from base repository
+                    $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('db');
+                    $baseRepositoryPropertyReflection->setAccessible(true);
+                    $dbClass = $baseRepositoryPropertyReflection->getValue($baseRepository);
+
+                    // Make sure all DBInterface instances are the same = the same connection is used
+                    if (isset($dbInstance) && $dbClass !== $dbInstance) {
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Repositories have different database connections, combined query is not possible'
+                        );
+                    }
+
+                    $dbInstance = $dbClass;
+                } catch (\ReflectionException $e) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Repository configuration could not be retrieved through reflection, ' .
+                        'repository class not as expected: ' . $e->getMessage()
+                    );
+                }
+            } elseif ($class instanceof RepositoryReadOnlyInterface) {
+                // Make sure the repository is writeable if we are doing a writing query
+                if ($writing === true && !($class instanceof RepositoryWriteableInterface)) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Non-writeable "repositories" object definition for writing operation'
+                    );
+                }
+
+                try {
+                    $baseRepositoryReflection = new \ReflectionClass($class);
+
+                    // Get DBInterface from base repository
+                    $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('db');
+                    $baseRepositoryPropertyReflection->setAccessible(true);
+                    $dbClass = $baseRepositoryPropertyReflection->getValue($class);
+
+                    // Get configuration from within the base repository
+                    $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('config');
+                    $baseRepositoryPropertyReflection->setAccessible(true);
+                    $class = $baseRepositoryPropertyReflection->getValue($class);
+
+                    // Make sure all DBInterface instances are the same = the same connection is used
+                    if (isset($dbInstance) && $dbClass !== $dbInstance) {
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Repositories have different database connections, combined query is not possible'
+                        );
+                    }
+
+                    $dbInstance = $dbClass;
+                } catch (\ReflectionException $e) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Repository configuration could not be retrieved through reflection, ' .
+                        'repository class not as expected: ' . $e->getMessage()
+                    );
+                }
+            } else {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid repository specified, does not implement ' .
+                    'RepositoryReadOnlyInterface or RepositoryBuilderReadOnlyInterface: ' .
+                    DBDebug::sanitizeData($sanitizedOptions['repositories'])
+                );
+            }
+
+            // Name of the table
+            $tableName[$name] = $class->getTableName();
+
+            // Conversion from object to table fields
+            $objectToTableFields[$name] = $class->getObjectToTableFields();
+
+            // Types of the variables in the object for type casting
+            $objectTypes[$name] = $class->getObjectTypes();
+
+            // If a variable can be NULL or not
+            $objectTypesNullable[$name] = $class->getObjectTypesNullable();
+        }
+
+        if ($dbInstance instanceof DBInterface) {
+            $this->db = $dbInstance;
+        } else {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Repositories did not contain a valid database connection' .
+                DBDebug::sanitizeData($sanitizedOptions['repositories'])
+            );
+        }
+
+        // Remove repositories data - not needed for query to DBInterface
+        unset($sanitizedOptions['repositories']);
+
+        // Return all processed options and object-to-table information
+        return [$sanitizedOptions, $tableName, $objectToTableFields, $objectTypes, $objectTypesNullable];
+    }
+
+    /**
+     * Build freeform query by replacing object names and object field names with the
+     * actual table names and table field names
+     *
+     * @param string $query
+     * @param array $tableName
+     * @param array $objectToTableFields
+     * @return string
+     */
+    protected function buildFreeform(string $query, array $tableName, array $objectToTableFields)
+    {
+        // Replace all expressions of all involved repositories
+        foreach ($objectToTableFields as $table => $tableFields) {
+            // Replace table name placeholders
+            $query = \str_replace(
+                ':' . $table . ':',
+                $this->db->quoteIdentifier($tableName[$table]) . ' ' . $this->db->quoteIdentifier($table),
+                $query,
+                $count
+            );
+
+            // Replace all table fields with correct values
+            foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                $query = \str_replace(
+                    ':' . $table . '.' . $objFieldName . ':',
+                    $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
+                    $query,
+                    $count
+                );
+            }
+        }
+
+        // If we still have unresolved expressions, something went wrong
+        if (\strpos($query, ':') !== false) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Invalid "query" definition, unresolved colons remain'
+            );
+        }
+
+        // Return processed SQL query
+        return $query;
+    }
+
+    /**
+     * Build SELECT part of the query
+     *
+     * @param array $selectOptions
+     * @param array $objectToTableFields
+     * @param array $objectTypes
+     * @param array $objectTypesNullable
+     * @param bool $generateSql
+     * @return array
+     */
+    private function buildFieldSelection(
+        array $selectOptions,
+        array $objectToTableFields,
+        array $objectTypes,
+        array $objectTypesNullable,
+        bool $generateSql = false
+    ) {
+        // Calculated select fields
+        $selectProcessed = [];
+        $selectTypes = [];
+        $selectTypesNullable = [];
+
+        // Go through all the select fields
+        foreach ($selectOptions as $name => $field) {
+            // No custom name for the field
+            if (\is_int($name)) {
+                $name = $field;
+            }
+
+            // Name always has to be a string
+            if (!\is_string($name)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "fields" definition, key is not a string: ' . DBDebug::sanitizeData($name)
+                );
+            }
+
+            // Field always has to be a string
+            if (!\is_string($field)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "fields" definition, value for ' .
+                    DBDebug::sanitizeData($name) . ' is not a string: ' . DBDebug::sanitizeData($field)
+                );
+            }
+
+            // No expressions allowed in name part!
+            if (\strpos($name, ':') !== false) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "fields" definition, name ' .
+                    DBDebug::sanitizeData($name) . ' contains a colon'
+                );
+            }
+
+            // Special case of COUNT(*) - unlike any other SQL expression, and it should work
+            if (\strtoupper($field) === 'COUNT(*)') {
+                $selectProcessed[] = $field . ' AS ' . '"' . $name . '"';
+                $selectTypes[$name] = 'int';
+            } elseif (\strpos($field, ':') === false) { // No expression in field part
+                // Get separated table and field parts
+                $fieldParts = \explode('.', $field);
+
+                // Field does not exist in this way
+                if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "fields" definition, unknown field name: ' .
+                        DBDebug::sanitizeData($field)
+                    );
+                }
+
+                // We map the SQL field to the full object field (table.field)
+                if ($generateSql === true) {
+                    $selectProcessed[] = $this->db->quoteIdentifier(
+                        $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]]
+                    ) . ' AS "' . $name . '"';
+                } else {
+                    $selectProcessed[$name] = $fieldParts[0] . '.' .
+                        $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+                }
+                $selectTypes[$name] = $objectTypes[$fieldParts[0]][$fieldParts[1]];
+                $selectTypesNullable[$name] = $objectTypesNullable[$fieldParts[0]][$fieldParts[1]];
+            } else { // Expressions in field part
+                // The type guessed by the used table fields
+                $type = '';
+                $nullable = false;
+
+                // Replace all expressions of all involved repositories
+                foreach ($objectToTableFields as $table => $tableFields) {
+                    foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                        $field = \str_replace(
+                            ':' . $table . '.' . $objFieldName . ':',
+                            $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
+                            $field,
+                            $count
+                        );
+
+                        // Replacement occured, so this field name is used
+                        if ($count > 0) {
+                            // We narrow the type to bool if only bool values are used
+                            if ($objectTypes[$table][$objFieldName] === 'bool' && $type === '') {
+                                $type = 'bool';
+                            } elseif ($objectTypes[$table][$objFieldName] === 'int' &&
+                                ($type === '' || $type === 'bool')
+                            ) { // We narrow the type to int if only int and bool values are used
+                                $type = 'int';
+                            } elseif ($objectTypes[$table][$objFieldName] === 'float' && $type !== 'string') {
+                                // If any float values are used, we use float type if there are no strings
+                                $type = 'float';
+                            } elseif ($objectTypes[$table][$objFieldName] === 'string') {
+                                // As soon as a string type is used we always use string type
+                                $type = 'string';
+                            }
+
+                            // NULL is a possible value for this field
+                            if ($objectTypesNullable[$table][$objFieldName] === true) {
+                                $nullable = true;
+                            }
+                        }
+                    }
+                }
+
+                // If we still have unresolved expressions, something went wrong
+                if (\strpos($field, ':') !== false) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "fields" definition, unresolved colons: ' .
+                        DBDebug::sanitizeData($field)
+                    );
+                }
+
+                // We guess the type is string if we have a CONCAT or REPLACE in the string
+                if (\strpos($field, 'CONCAT') !== false || \strpos($field, 'REPLACE') !== false) {
+                    $type = 'string';
+                }
+
+                // Assign the select expression
+                $selectProcessed[] = '(' . $field . ')' . ' AS ' . '"' . $name . '"';
+                $selectTypes[$name] = $type;
+                $selectTypesNullable[$name] = $nullable;
+            }
+        }
+
+        return [$selectProcessed, $selectTypes, $selectTypesNullable];
+    }
+
+    /**
+     * Process the results retrieved from a SELECT query
+     *
+     * @param array $tableObjects
+     * @param array $selectTypes
+     * @param array $selectTypesNullable
+     * @param bool $flattenFields
+     * @return array
+     */
+    private function processSelectResults(
+        array $tableObjects,
+        array $selectTypes,
+        array $selectTypesNullable,
+        bool $flattenFields = false
+    ) {
+        // Go through result set
+        foreach ($tableObjects as $entryCount => $entry) {
+            foreach ($entry as $key => $value) {
+                // Special case of nullable types
+                if (\is_null($value) && $selectTypesNullable[$key] === true) {
+                    $tableObjects[$entryCount][$key] = null;
+                    continue;
+                }
+
+                switch ($selectTypes[$key]) {
+                    case 'int':
+                        $tableObjects[$entryCount][$key] = \intval($value);
+                        break;
+                    case 'bool':
+                        $tableObjects[$entryCount][$key] = \boolval($value);
+                        break;
+                    case 'float':
+                        $tableObjects[$entryCount][$key] = \floatval($value);
+                        break;
+                    case 'string':
+                        $tableObjects[$entryCount][$key] = \strval($value);
+                        break;
+                    default:
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Unknown casting for object variable ' . DBDebug::sanitizeData($key)
+                        );
+                }
+            }
+        }
+
+        // Flatten all values into a one-dimensional array
+        if ($flattenFields === true) {
+            $list = [];
+
+            // Go through table results
+            foreach ($tableObjects as $objIndex => $tableObject) {
+                // Go through all table fields
+                foreach ($tableObject as $fieldName => $fieldValue) {
+                    $list[] = $fieldValue;
+                }
+            }
+
+            return $list;
+        }
+
+        return $tableObjects;
+    }
+
+    private function selectQuery(array $query, bool $flattenFields = false): array
+    {
+        // Process options and make sure all values are valid
+        [
+            $sanitizedOptions,
+            $tableName,
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+        ] = $this->processOptions([
+            'repositories' => [],
+            'fields' => [],
+            'tables' => [],
+            'where' => [],
+            'group' => [],
+            'order' => [],
+            'limit' => 0,
+            'offset' => 0,
+            'flattenFields' => false,
+            'lock' => false,
+        ], $query);
+
+        // Only handle flattening in this class, do not pass it along
+        $flattenFields = ($sanitizedOptions['flattenFields'] || $flattenFields === true);
+        unset($sanitizedOptions['flattenFields']);
+
+        // Build SELECT part of the query
+        [
+            $sanitizedOptions['fields'],
+            $selectTypes,
+            $selectTypesNullable,
+        ] = $this->buildFieldSelection(
+            $sanitizedOptions['fields'],
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable
+        );
+
+        // List of finished FROM expressions, to be imploded with , + possible query values
+        $sanitizedOptions['tables'] = $this->preprocessJoins(
+            $sanitizedOptions['tables'],
+            $tableName,
+            $objectToTableFields
+        );
+
+        // List of finished WHERE expressions, to be imploded with ANDs
+        $sanitizedOptions['where'] = $this->preprocessWhere($sanitizedOptions['where'], $objectToTableFields);
+
+        // GROUP BY was defined
+        if (isset($sanitizedOptions['group']) && \count($sanitizedOptions['group']) > 0) {
+            $sanitizedOptions['group'] = $this->preprocessGroup($sanitizedOptions['group'], $objectToTableFields);
+        } else {
+            unset($sanitizedOptions['group']);
+        }
+
+        // Order was defined
+        if (isset($sanitizedOptions['order']) && \count($sanitizedOptions['order']) > 0) {
+            $sanitizedOptions['order'] = $this->preprocessOrder($sanitizedOptions['order'], $objectToTableFields);
+        } else {
+            unset($sanitizedOptions['order']);
+        }
+
+        // No limit - remove it from options
+        if ($sanitizedOptions['limit'] === 0) {
+            unset($sanitizedOptions['limit']);
+        }
+
+        // No offset - remove it from options
+        if ($sanitizedOptions['offset'] === 0) {
+            unset($sanitizedOptions['offset']);
+        }
+
+        // No lock - remove it from options
+        if ($sanitizedOptions['lock'] === false) {
+            unset($sanitizedOptions['lock']);
+        }
+
+        // Get all the data from the database
+        try {
+            $tableObjects = $this->db->fetchAll($sanitizedOptions);
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+
+        // Process the select results
+        return $this->processSelectResults($tableObjects, $selectTypes, $selectTypesNullable, $flattenFields);
+    }
+
+    /**
+     * Prepare the joins between tables part for the SQL component
+     *
+     * @param array $tables
+     * @param array $tableNames
+     * @param array $objectToTableFields
+     * @return array
+     */
+    protected function preprocessJoins(array $tables, array $tableNames, array $objectToTableFields)
+    {
+        // List of table selection, needs to be imploded with a comma for SQL query
+        $tablesProcessed = [];
+
+        // Go through table selection
+        foreach ($tables as $expression => $values) {
+            // No values, only an expression
+            if (\is_int($expression)) {
+                $expression = $values;
+                $values = null;
+            }
+
+            // Expression always has to be a string
+            if (!\is_string($expression)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "tables" / table join definition, expression is not a string: ' .
+                    DBDebug::sanitizeData($expression)
+                );
+            }
+
+            // No expression, only a table name
+            if (\strpos($expression, ':') === false) {
+                // Make sure the table alias exists
+                if (!isset($tableNames[$expression])) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "tables" / table join definition, alias not found: ' .
+                        DBDebug::sanitizeData($expression)
+                    );
+                }
+
+                // Quoting not necessary, will be handled by SQL component
+                $tablesProcessed[] = $tableNames[$expression] . ' ' . $expression;
+            } else { // An expression with : variables
+                // Replace all expressions of all involved repositories
+                foreach ($objectToTableFields as $table => $tableFields) {
+                    foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                        $expression = \str_replace(
+                            ':' . $table . '.' . $objFieldName . ':',
+                            $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
+                            $expression,
+                            $count
+                        );
+                    }
+                }
+
+                // Replace all table names and insert the aliases
+                foreach ($tableNames as $tableNameAlias => $tableNameReal) {
+                    $expression = \str_replace(
+                        ':' . $tableNameAlias . ':',
+                        $this->db->quoteIdentifier($tableNameReal) . ' ' . $this->db->quoteIdentifier($tableNameAlias),
+                        $expression
+                    );
+                }
+
+                // If we still have unresolved expressions, something went wrong
+                if (\strpos($expression, ':') !== false) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "tables" / table join definition, ' .
+                        'unconverted objects/table names found in expression: ' .
+                        DBDebug::sanitizeData($expression)
+                    );
+                }
+
+                // Add expression to from tables
+                if ($values === null) {
+                    $tablesProcessed[] = $expression;
+                } else {
+                    $tablesProcessed[$expression] = $values;
+                }
+            }
+        }
+
+        return $tablesProcessed;
+    }
+
+    /**
+     * Prepare the WHERE clauses for SQL component
+     *
+     * @param array $whereOptions
+     * @param array $objectToTableFields
+     * @return array
+     */
+    protected function preprocessWhere(array $whereOptions, array $objectToTableFields)
+    {
+        // List of finished WHERE expressions, to be imploded with ANDs
+        $whereProcessed = [];
+
+        // Go through table selection
+        foreach ($whereOptions as $expression => $values) {
+            // Switch around expression and values if there are no values
+            if (\is_int($expression)) {
+                $expression = $values;
+                $values = null;
+            }
+
+            // Expression always has to be a string
+            if (!\is_string($expression)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "where" definition, expression is not a string: ' .
+                    DBDebug::sanitizeData($expression)
+                );
+            }
+
+            // No expression, only a table field name
+            if (\strpos($expression, ':') === false) {
+                // Values have to be defined for us to make a predefined equals query
+                if (isset($values)) {
+                    // Get separated table and field parts
+                    $fieldParts = \explode('.', $expression);
+
+                    // Field was not found
+                    if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                        throw DBDebug::createException(
+                            DBInvalidOptionException::class,
+                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Invalid "where" definition, field name not found: ' .
+                            DBDebug::sanitizeData($expression)
+                        );
+                    }
+
+                    // Convert field name
+                    $expression = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+                }
+            } else { // Freestyle expression
+                // Replace all expressions of all involved repositories
+                foreach ($objectToTableFields as $table => $tableFields) {
+                    foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                        $expression = \str_replace(
+                            ':' . $table . '.' . $objFieldName . ':',
+                            $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
+                            $expression,
+                            $count
+                        );
+                    }
+                }
+
+                // If we still have unresolved expressions, something went wrong
+                if (\strpos($expression, ':') !== false) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "where" definition, unresolved colons remain in expression: ' .
+                        DBDebug::sanitizeData($expression)
+                    );
+                }
+            }
+
+            // Add the where definition to the processed list
+            if (isset($values)) {
+                $whereProcessed[$expression] = $values;
+            } else {
+                $whereProcessed[] = $expression;
+            }
+        }
+
+        return $whereProcessed;
+    }
+
+    /**
+     * Build GROUP BY clause and add query values
+     *
+     * @param array $groupByOptions
+     * @param array $objectToTableFields
+     * @return array
+     */
+    private function preprocessGroup(array $groupByOptions, array $objectToTableFields)
+    {
+        // List of finished WHERE expressions, to be imploded with ANDs
+        $groupByProcessed = [];
+
+        // Go through table selection
+        foreach ($groupByOptions as $expression => $values) {
+            // Switch around expression and values if there are no values
+            if (\is_int($expression)) {
+                $expression = $values;
+                $values = null;
+            }
+
+            // Expression always has to be a string
+            if (!\is_string($expression)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "group" / group by definition, expression is not a string: ' .
+                    DBDebug::sanitizeData($expression)
+                );
+            }
+
+            // No expression, only a table field name
+            if (\strpos($expression, ':') === false) {
+                // Get separated table and field parts
+                $fieldParts = \explode('.', $expression);
+
+                // Field was not found
+                if (!isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "group" / group by definition, field name not found in any repository: ' .
+                        DBDebug::sanitizeData($expression) . ' within ' . DBDebug::sanitizeData($groupByOptions)
+                    );
+                }
+            } else { // Freestyle expression - not allowed
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "group" / group by definition, no variables are allowed in expression: ' .
+                    DBDebug::sanitizeData($expression)
+                );
+            }
+
+            // Add to list of finished expressions
+            $groupByProcessed[] = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+        }
+
+        return $groupByProcessed;
+    }
+
+    /**
+     * Prepare the ORDER BY clauses for SQL component
+     *
+     * @param array $orderOptions
+     * @param array $objectToTableFields
+     * @return array
+     */
+    protected function preprocessOrder(array $orderOptions, array $objectToTableFields)
+    {
+        // List of finished WHERE expressions, to be imploded with ANDs
+        $orderProcessed = [];
+
+        // Go through table selection
+        foreach ($orderOptions as $expression => $direction) {
+            // If there is no explicit order we set it to ASC
+            if (\is_int($expression)) {
+                $expression = $direction;
+                $direction = null;
+            }
+
+            // Expression always has to be a string
+            if (!\is_string($expression)) {
+                throw DBDebug::createException(
+                    DBInvalidOptionException::class,
+                    [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                    'Invalid "order" / order by definition, expression is not a string: ' .
+                    DBDebug::sanitizeData($expression)
+                );
+            }
+
+            // No expression, only a table field name
+            if (\strpos($expression, ':') === false) {
+                // Get separated table and field parts
+                $fieldParts = \explode('.', $expression);
+
+                // Field was found - convert it
+                if (count($fieldParts) === 2 && isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                    $expression = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+                }
+            } else { // Freestyle expression
+                // Replace all field names with the sql field name and escape characters around it
+                foreach ($objectToTableFields as $table => $tableFields) {
+                    foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                        $expression = \str_replace(
+                            ':' . $table . '.' . $objFieldName . ':',
+                            chr(27) . $table . '.' . $sqlFieldName . chr(27),
+                            $expression,
+                            $count
+                        );
+                    }
+                }
+
+                // If we still have unresolved expressions, something went wrong
+                if (\strpos($expression, ':') !== false) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Invalid "order" / order by definition, unconverted object names found in expression: ' .
+                        DBDebug::sanitizeData($expression)
+                    );
+                }
+
+                // Replace the escape markers back to colons
+                $expression = str_replace(chr(27), ':', $expression);
+            }
+
+            // Add order entry to processed list
+            if ($direction === null) {
+                $orderProcessed[] = $expression;
+            } else {
+                $orderProcessed[$expression] = $direction;
+            }
+        }
+
+        return $orderProcessed;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function selectOne(array $query): ?array
+    {
+        $query['limit'] = 1;
+
+        // Return just the one retrieved entry
+        $results = $this->selectQuery($query);
+        return \array_pop($results);
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function selectFlattenedFields(array $query): array
+    {
+        // Freeform query was detected
+        if (isset($query['query']) || isset($query['parameters'])) {
+            return $this->selectQueryFreeform($query, true);
+        }
+
+        // Regular structured query
+        return $this->selectQuery($query, true);
+    }
+}
