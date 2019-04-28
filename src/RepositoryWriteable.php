@@ -18,7 +18,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     public function update(array $query): int
     {
         // Process options and make sure all values are valid
-        $sanitizedQuery = $this->processOptions([
+        $sanitizedQuery = $this->validateQueryOptions([
             'changes' => [],
             'where' => [],
             'order' => [],

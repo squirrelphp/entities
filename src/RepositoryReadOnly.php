@@ -24,6 +24,13 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     protected $config;
 
     /**
+     * Conversion from table results to object
+     *
+     * @var array
+     */
+    protected $tableToObjectFields = [];
+
+    /**
      * Conversion from object to table fields
      *
      * @var array
@@ -65,6 +72,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     {
         $this->db = $db;
         $this->config = $config;
+        $this->tableToObjectFields = $config->getTableToObjectFields();
         $this->objectToTableFields = $config->getObjectToTableFields();
         $this->objectTypes = $config->getObjectTypes();
         $this->objectTypesNullable = $config->getObjectTypesNullable();
@@ -73,50 +81,161 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * @inheritDoc
      */
-    public function selectOne(array $query)
+    public function count(array $query): int
     {
-        if (isset($query['limit']) && $query['limit'] !== 1) {
+        // Basic query counting the rows
+        $sanitizedQuery = [
+            'table' => $this->config->getTableName(),
+            'fields' => [
+                'num' => 'COUNT(*)',
+            ],
+        ];
+
+        // Make sure lock is valid and only added if set to true
+        if ($this->booleanSettingValidation($query['lock'] ?? false, 'lock') === true) {
+            $sanitizedQuery['lock'] = true;
+        }
+
+        // Add WHERE restrictions
+        if (\count($query['where'] ?? []) > 0) {
+            $sanitizedQuery['where'] = $this->preprocessWhere($query['where']);
+        }
+
+        try {
+            $count = $this->db->fetchOne($sanitizedQuery);
+        } catch (DBInvalidOptionException $e) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'Row limit cannot be set for selectOne query: ' . DBDebug::sanitizeData($query)
+                $e->getMessage()
             );
         }
 
-        $query['limit'] = 1;
-
-        // Return found objects and just return the one
-        $results = $this->select($query);
-        return \array_pop($results);
+        // Return count as int
+        return \intval($count['num']);
     }
 
     /**
      * @inheritDoc
      */
-    public function select(array $query): array
+    public function select(array $query): RepositorySelectQueryInterface
     {
         // Process options and make sure all values are valid
-        $sanitizedQuery = $this->processOptions([
+        $sanitizedQuery = $this->prepareSelectQueryForLowerLayer($this->validateQueryOptions([
             'where' => [],
             'order' => [],
             'limit' => 0,
             'offset' => 0,
             'fields' => [],
             'lock' => false,
-        ], $query);
+        ], $query));
 
-        // Return found objects
-        return $this->selectQuery($sanitizedQuery);
+        try {
+            return new RepositorySelectQuery($this->db->select($sanitizedQuery), $this->config);
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function fetch(RepositorySelectQueryInterface $selectQuery)
+    {
+        // Make sure the same repository configuration is used
+        $this->compareRepositoryConfigMustBeEqual($selectQuery->getConfig());
+
+        try {
+            $result = $this->db->fetch($selectQuery->getQuery());
+            return ( $result===null ? null : $this->convertResultToObject($result) );
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function clear(RepositorySelectQueryInterface $selectQuery): void
+    {
+        // Make sure the same repository configuration is used
+        $this->compareRepositoryConfigMustBeEqual($selectQuery->getConfig());
+
+        try {
+            $this->db->clear($selectQuery->getQuery());
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
     }
 
     /**
-     * Process options and make sure all values are valid
-     *
-     * @param array $validOptions List of valid options and default values for them
-     * @param array $options List of provided options which need to be processed
-     * @return array
+     * @inheritDoc
      */
-    protected function processOptions(array $validOptions, array $options)
+    public function fetchOne(array $query)
+    {
+        if (isset($query['limit']) && $query['limit'] !== 1) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Row limit cannot be set for fetchOne query: ' . DBDebug::sanitizeData($query)
+            );
+        }
+
+        $query['limit'] = 1;
+
+        // Use our internal functions to not repeat ourselves
+        $selectQuery = $this->select($query);
+        $result = $this->fetch($selectQuery);
+        $this->clear($selectQuery);
+
+        // Return the result object
+        return $result;
+    }
+
+    public function fetchAll(array $query)
+    {
+        // Whether to flatten fields and just return an array of values instead of objects
+        if (isset($query['flattenFields'])) {
+            $flattenFields = $this->booleanSettingValidation($query['flattenFields'], 'flattenFields');
+            unset($query['flattenFields']);
+        }
+
+        // Process options and make sure all values are valid
+        $sanitizedQuery = $this->prepareSelectQueryForLowerLayer($this->validateQueryOptions([
+            'where' => [],
+            'order' => [],
+            'limit' => 0,
+            'offset' => 0,
+            'fields' => [],
+            'lock' => false,
+        ], $query));
+
+        try {
+            // Get all the data from the database
+            $tableResults = $this->db->fetchAll($sanitizedQuery);
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+
+        // Special case: Flatten all field values and return an array
+        if (($flattenFields ?? false) === true) {
+            return $this->convertResultsToFlattenedResults($tableResults);
+        }
+
+        return \array_map([$this, 'convertResultToObject'], $tableResults);
+    }
+
+    protected function validateQueryOptions(array $validOptions, array $options)
     {
         // One field shortcut - convert to fields array
         if (isset($validOptions['fields']) && isset($options['field']) && !isset($options['fields'])) {
@@ -164,12 +283,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $sanitizedOptions;
     }
 
-    /**
-     * @param array $query
-     * @param bool $flattenFields Whether to flatten the return field values and remove field names
-     * @return array
-     */
-    private function selectQuery(array $query, bool $flattenFields = false): array
+    private function prepareSelectQueryForLowerLayer(array $query): array
     {
         // Set the table variable for SQL component
         $query['table'] = $this->config->getTableName();
@@ -210,80 +324,89 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             unset($query['lock']);
         }
 
-        try {
-            // Get all the data from the database
-            $tableObjects = $this->db->fetchAll($query);
-        } catch (DBInvalidOptionException $e) {
+        return $query;
+    }
+
+    private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
+    {
+        // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
+        if (!\is_bool($shouldBeBoolean)
+            && $shouldBeBoolean !== 1
+            && $shouldBeBoolean !== 0
+        ) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $settingName . ' set to a non-boolean value: ' . DBDebug::sanitizeData($shouldBeBoolean)
             );
         }
 
-        // The objects to return
-        $useableObjects = [];
+        return \boolval($shouldBeBoolean);
+    }
 
-        // Table rows were found
-        if (\is_array($tableObjects)) {
-            $tableToObjectFields = $this->config->getTableToObjectFields();
+    private function compareRepositoryConfigMustBeEqual(RepositoryConfigInterface $config)
+    {
+        if ($config != $this->config) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Different repository used to fetch result than to do the query!'
+            );
+        }
+    }
 
-            // Special case: Only one field name is retrieved. We reduce the
-            // values to an array of these values
-            if ($flattenFields === true) {
-                $list = [];
+    private function convertResultToObject(array $tableResult)
+    {
+        // Only create reflection class once we need it, to be resource efficient
+        if (!isset($this->reflectionClass)) {
+            $this->reflectionClass = new \ReflectionClass($this->config->getObjectClass());
+        }
 
-                // Go through table results
-                foreach ($tableObjects as $objIndex => $tableObject) {
-                    // Go through all table fields
-                    foreach ($tableObject as $fieldName => $fieldValue) {
-                        $list[] = $this->castObjVariable($fieldValue, $tableToObjectFields[$fieldName]);
-                    }
-                }
+        // Initialize object without constructor
+        $useableObject = $this->reflectionClass->newInstanceWithoutConstructor();
 
-                return $list;
+        // Go through all table
+        foreach ($tableResult as $fieldName => $fieldValue) {
+            // We ignore unknown table fields
+            if (!isset($this->tableToObjectFields[$fieldName])) {
+                continue;
             }
 
-            // Get reflection information on the class
-            if (!isset($this->reflectionClass)) {
-                $this->reflectionClass = new \ReflectionClass($this->config->getObjectClass());
+            // Get object key
+            $objKey = $this->tableToObjectFields[$fieldName];
+
+            // Get reflection property, make is accessible to reflection and cache it
+            if (!isset($this->reflectionProperties[$objKey])) {
+                $this->reflectionProperties[$objKey] = $this->reflectionClass->getProperty($objKey);
+                $this->reflectionProperties[$objKey]->setAccessible(true);
             }
 
-            // Go through table results
-            foreach ($tableObjects as $objIndex => $tableObject) {
-                // Initialize object without constructor
-                $useableObjects[$objIndex] = $this->reflectionClass->newInstanceWithoutConstructor();
+            // Set the property via reflection
+            $this->reflectionProperties[$objKey]
+                // Set new value for our current object
+                ->setValue(
+                    $useableObject,
+                    // Cast the new value to the correct type (string, int, float, bool)
+                    $this->castObjVariable($fieldValue, $this->tableToObjectFields[$fieldName])
+                );
+        }
 
-                // Go through all table
-                foreach ($tableObject as $fieldName => $fieldValue) {
-                    // We ignore unknown table fields
-                    if (!isset($tableToObjectFields[$fieldName])) {
-                        continue;
-                    }
+        return $useableObject;
+    }
 
-                    // Get object key
-                    $objKey = $tableToObjectFields[$fieldName];
+    private function convertResultsToFlattenedResults($tableResults)
+    {
+        $list = [];
 
-                    // Get reflection property, make is accessible to reflection and cache it
-                    if (!isset($this->reflectionProperties[$objKey])) {
-                        $this->reflectionProperties[$objKey] = $this->reflectionClass->getProperty($objKey);
-                        $this->reflectionProperties[$objKey]->setAccessible(true);
-                    }
-
-                    // Set the property via reflection
-                    $this->reflectionProperties[$objKey]
-                        // Set new value for our current object
-                        ->setValue(
-                            $useableObjects[$objIndex],
-                            // Cast the new value to the correct type (string, int, float, bool)
-                            $this->castObjVariable($fieldValue, $tableToObjectFields[$fieldName])
-                        );
-                }
+        // Go through table results
+        foreach ($tableResults as $objIndex => $tableObject) {
+            // Go through all table fields
+            foreach ($tableObject as $fieldName => $fieldValue) {
+                $list[] = $this->castObjVariable($fieldValue, $this->tableToObjectFields[$fieldName]);
             }
         }
 
-        // Return found objects
-        return $useableObjects;
+        return $list;
     }
 
     /**
@@ -617,59 +740,5 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             [RepositoryReadOnlyInterface::class, ActionInterface::class],
             'Unknown casting for object variable: ' . DBDebug::sanitizeData($fieldName)
         );
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function selectFlattenedFields(array $query): array
-    {
-        // Process options and make sure all values are valid
-        $sanitizedQuery = $this->processOptions([
-            'where' => [],
-            'order' => [],
-            'limit' => 0,
-            'offset' => 0,
-            'fields' => [],
-            'lock' => false,
-        ], $query);
-
-        // Return found objects
-        return $this->selectQuery($sanitizedQuery, true);
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function count(array $query): int
-    {
-        // Basic query counting the rows
-        $query = [
-            'table' => $this->config->getTableName(),
-            'fields' => [
-                'num' => 'COUNT(*)',
-            ],
-            'where' => $this->preprocessWhere($query['where'] ?? []),
-            'lock' => $query['lock'] ?? false,
-        ];
-
-        // Remove empty WHERE restrictions
-        if (\count($query['where']) === 0) {
-            unset($query['where']);
-        }
-
-        try {
-            // Get the number from the database
-            $count = $this->db->fetchOne($query);
-        } catch (DBInvalidOptionException $e) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
-            );
-        }
-
-        // Return count as int
-        return \intval($count['num']);
     }
 }

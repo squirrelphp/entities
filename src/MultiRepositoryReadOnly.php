@@ -19,54 +19,137 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
      */
     protected $db;
 
-    /**
-     * @inheritdoc
-     */
-    public function select(array $query): array
+    public function count(array $query): int
+    {
+        $sanitizedQuery = [
+            'fields' => [
+                'num' => 'COUNT(*)',
+            ],
+        ];
+
+        if (isset($query['repositories'])) {
+            $sanitizedQuery['repositories'] = $query['repositories'];
+        }
+
+        if (isset($query['tables'])) {
+            $sanitizedQuery['tables'] = $query['tables'];
+        }
+
+        if (isset($query['where'])) {
+            $sanitizedQuery['where'] = $query['where'];
+        }
+
+        if (isset($query['lock'])) {
+            $sanitizedQuery['lock'] = $query['lock'];
+        }
+
+        // Use our internal functions to not repeat ourselves
+        $selectQuery = $this->select($sanitizedQuery);
+        $result = $this->fetch($selectQuery);
+        $this->clear($selectQuery);
+
+        return $result['num'];
+    }
+
+    public function select(array $query): MultiRepositorySelectQueryInterface
     {
         // Freeform query was detected
         if (isset($query['query']) || isset($query['parameters'])) {
-            return $this->selectQueryFreeform($query);
+            [$sqlQuery, $parameters, $selectTypes, $selectTypesNullable] = $this->buildSelectQueryFreeform($query);
+        } else { // Structured query
+            [$sqlQuery, $selectTypes, $selectTypesNullable] = $this->buildSelectQueryStructured($query);
         }
-
-        // Regular structured query
-        return $this->selectQuery($query);
-    }
-
-    private function selectQueryFreeform(array $options, bool $flattenFields = false): array
-    {
-        // Process options and make sure all values are valid
-        [
-            $sanitizedOptions,
-            $tableName,
-            $objectToTableFields,
-            $objectTypes,
-            $objectTypesNullable,
-        ] = $this->processOptions([
-            'repositories' => [],
-            'fields' => [],
-            'query' => '',
-            'parameters' => [],
-        ], $options);
-
-        // Process the query
-        $sqlQuery = $this->buildFreeform($sanitizedOptions['query'], $tableName, $objectToTableFields);
-
-        // Build select part of the query
-        [$selectProcessed, $selectTypes, $selectTypesNullable] = $this->buildFieldSelection(
-            $sanitizedOptions['fields'],
-            $objectToTableFields,
-            $objectTypes,
-            $objectTypesNullable,
-            true
-        );
 
         // Get all the data from the database
         try {
-            $tableObjects = $this->db->fetchAll(
-                'SELECT ' . \implode(',', $selectProcessed) . ' FROM ' . $sqlQuery,
-                $sanitizedOptions['parameters']
+            return new MultiRepositorySelectQuery(
+                $this->db->select($sqlQuery, $parameters ?? []),
+                $selectTypes,
+                $selectTypesNullable
             );
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function fetch(MultiRepositorySelectQueryInterface $selectQuery): ?array
+    {
+        try {
+            $result = $this->db->fetch($selectQuery->getQuery());
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+
+        if ($result === null) {
+            return null;
+        }
+
+        return $this->processSelectResult($result, $selectQuery->getTypes(), $selectQuery->getTypesNullable());
+    }
+
+    public function clear(MultiRepositorySelectQueryInterface $selectQuery): void
+    {
+        try {
+            $this->db->clear($selectQuery->getQuery());
+        } catch (DBInvalidOptionException $e) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage()
+            );
+        }
+    }
+
+    public function fetchOne(array $query): ?array
+    {
+        if (isset($query['limit']) && $query['limit'] !== 1) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Row limit cannot be set for fetchOne query: ' . DBDebug::sanitizeData($query)
+            );
+        }
+
+        $query['limit'] = 1;
+
+        // Use our internal functions to not repeat ourselves
+        $selectQuery = $this->select($query);
+        $result = $this->fetch($selectQuery);
+        $this->clear($selectQuery);
+
+        // Return the result object
+        return $result;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function fetchAll(array $query): array
+    {
+        // Whether to flatten fields and just return an array of values instead of objects
+        if (isset($query['flattenFields'])) {
+            $flattenFields = $this->booleanSettingValidation($query['flattenFields'], 'flattenFields');
+            unset($query['flattenFields']);
+        }
+
+        // Freeform query was detected
+        if (isset($query['query']) || isset($query['parameters'])) {
+            [$sqlQuery, $parameters, $selectTypes, $selectTypesNullable] = $this->buildSelectQueryFreeform($query);
+        } else { // Structured query
+            [$sqlQuery, $selectTypes, $selectTypesNullable] = $this->buildSelectQueryStructured($query);
+        }
+
+        // Get all the data from the database
+        try {
+            $tableResults = $this->db->fetchAll($sqlQuery, $parameters ?? []);
         } catch (DBInvalidOptionException $e) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
@@ -76,7 +159,24 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         }
 
         // Process the select results
-        return $this->processSelectResults($tableObjects, $selectTypes, $selectTypesNullable, $flattenFields);
+        $processedResults = $this->processSelectResults($tableResults, $selectTypes, $selectTypesNullable);
+
+        // Flatten all values into a one-dimensional array if requested
+        if (($flattenFields ?? false) === true) {
+            $list = [];
+
+            // Go through table results
+            foreach ($processedResults as $objIndex => $objEntry) {
+                // Go through all table fields
+                foreach ($objEntry as $fieldName => $fieldValue) {
+                    $list[] = $fieldValue;
+                }
+            }
+
+            return $list;
+        }
+
+        return $processedResults;
     }
 
     /**
@@ -112,20 +212,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 case 'limit':
                 case 'offset':
                 case 'lock':
-                    break;
-                // Handled in a special way by this class
-                case 'flattenFields':
-                    // Conversion of value does not match the original value, so we have a very wrong type
-                    if (!\is_bool($optVal) && \intval(\boolval($optVal)) !== \intval($optVal)) {
-                        throw DBDebug::createException(
-                            DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                            'Option key ' . DBDebug::sanitizeData($optKey) .
-                            ' had an invalid value which cannot be converted correctly'
-                        );
-                    }
-
-                    $options[$optKey] = \boolval($optVal);
                     break;
                 // Already type hinted "query" as string
                 case 'query':
@@ -385,6 +471,113 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         return [$sanitizedOptions, $tableName, $objectToTableFields, $objectTypes, $objectTypesNullable];
     }
 
+    private function buildSelectQueryStructured(array $query): array
+    {
+        // Process options and make sure all values are valid
+        [
+            $sanitizedOptions,
+            $tableName,
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+        ] = $this->processOptions([
+            'repositories' => [],
+            'fields' => [],
+            'tables' => [],
+            'where' => [],
+            'group' => [],
+            'order' => [],
+            'limit' => 0,
+            'offset' => 0,
+            'lock' => false,
+        ], $query);
+
+        // Build SELECT part of the query
+        [$sanitizedOptions['fields'], $selectTypes, $selectTypesNullable] = $this->buildFieldSelection(
+            $sanitizedOptions['fields'],
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable
+        );
+
+        // List of finished FROM expressions, to be imploded with , + possible query values
+        $sanitizedOptions['tables'] = $this->preprocessJoins(
+            $sanitizedOptions['tables'],
+            $tableName,
+            $objectToTableFields
+        );
+
+        // List of finished WHERE expressions, to be imploded with ANDs
+        $sanitizedOptions['where'] = $this->preprocessWhere($sanitizedOptions['where'], $objectToTableFields);
+
+        // GROUP BY was defined
+        if (isset($sanitizedOptions['group']) && \count($sanitizedOptions['group']) > 0) {
+            $sanitizedOptions['group'] = $this->preprocessGroup($sanitizedOptions['group'], $objectToTableFields);
+        } else {
+            unset($sanitizedOptions['group']);
+        }
+
+        // Order was defined
+        if (isset($sanitizedOptions['order']) && \count($sanitizedOptions['order']) > 0) {
+            $sanitizedOptions['order'] = $this->preprocessOrder($sanitizedOptions['order'], $objectToTableFields);
+        } else {
+            unset($sanitizedOptions['order']);
+        }
+
+        // No limit - remove it from options
+        if ($sanitizedOptions['limit'] === 0) {
+            unset($sanitizedOptions['limit']);
+        }
+
+        // No offset - remove it from options
+        if ($sanitizedOptions['offset'] === 0) {
+            unset($sanitizedOptions['offset']);
+        }
+
+        // No lock - remove it from options
+        if ($sanitizedOptions['lock'] === false) {
+            unset($sanitizedOptions['lock']);
+        }
+
+        return [$sanitizedOptions, $selectTypes, $selectTypesNullable];
+    }
+
+    private function buildSelectQueryFreeform(array $options): array
+    {
+        // Process options and make sure all values are valid
+        [
+            $sanitizedOptions,
+            $tableName,
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+        ] = $this->processOptions([
+            'repositories' => [],
+            'fields' => [],
+            'query' => '',
+            'parameters' => [],
+        ], $options);
+
+        // Process the query
+        $sqlQuery = $this->buildFreeform($sanitizedOptions['query'], $tableName, $objectToTableFields);
+
+        // Build select part of the query
+        [$selectProcessed, $selectTypes, $selectTypesNullable] = $this->buildFieldSelection(
+            $sanitizedOptions['fields'],
+            $objectToTableFields,
+            $objectTypes,
+            $objectTypesNullable,
+            true
+        );
+
+        return [
+            'SELECT ' . \implode(',', $selectProcessed) . ' FROM ' . $sqlQuery,
+            $sanitizedOptions['parameters'],
+            $selectTypes,
+            $selectTypesNullable,
+        ];
+    }
+
     /**
      * Build freeform query by replacing object names and object field names with the
      * actual table names and table field names
@@ -588,155 +781,56 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
      * @param array $tableObjects
      * @param array $selectTypes
      * @param array $selectTypesNullable
-     * @param bool $flattenFields
      * @return array
      */
     private function processSelectResults(
         array $tableObjects,
         array $selectTypes,
-        array $selectTypesNullable,
-        bool $flattenFields = false
+        array $selectTypesNullable
     ) {
         // Go through result set
         foreach ($tableObjects as $entryCount => $entry) {
-            foreach ($entry as $key => $value) {
-                // Special case of nullable types
-                if (\is_null($value) && $selectTypesNullable[$key] === true) {
-                    $tableObjects[$entryCount][$key] = null;
-                    continue;
-                }
-
-                switch ($selectTypes[$key]) {
-                    case 'int':
-                        $tableObjects[$entryCount][$key] = \intval($value);
-                        break;
-                    case 'bool':
-                        $tableObjects[$entryCount][$key] = \boolval($value);
-                        break;
-                    case 'float':
-                        $tableObjects[$entryCount][$key] = \floatval($value);
-                        break;
-                    case 'string':
-                        $tableObjects[$entryCount][$key] = \strval($value);
-                        break;
-                    default:
-                        throw DBDebug::createException(
-                            DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                            'Unknown casting for object variable ' . DBDebug::sanitizeData($key)
-                        );
-                }
-            }
-        }
-
-        // Flatten all values into a one-dimensional array
-        if ($flattenFields === true) {
-            $list = [];
-
-            // Go through table results
-            foreach ($tableObjects as $objIndex => $tableObject) {
-                // Go through all table fields
-                foreach ($tableObject as $fieldName => $fieldValue) {
-                    $list[] = $fieldValue;
-                }
-            }
-
-            return $list;
+            $tableObjects[$entryCount] = $this->processSelectResult($entry, $selectTypes, $selectTypesNullable);
         }
 
         return $tableObjects;
     }
 
-    private function selectQuery(array $query, bool $flattenFields = false): array
-    {
-        // Process options and make sure all values are valid
-        [
-            $sanitizedOptions,
-            $tableName,
-            $objectToTableFields,
-            $objectTypes,
-            $objectTypesNullable,
-        ] = $this->processOptions([
-            'repositories' => [],
-            'fields' => [],
-            'tables' => [],
-            'where' => [],
-            'group' => [],
-            'order' => [],
-            'limit' => 0,
-            'offset' => 0,
-            'flattenFields' => false,
-            'lock' => false,
-        ], $query);
+    private function processSelectResult(
+        array $entry,
+        array $selectTypes,
+        array $selectTypesNullable
+    ) {
+        foreach ($entry as $key => $value) {
+            // Special case of nullable types
+            if (\is_null($value) && $selectTypesNullable[$key] === true) {
+                $entry[$key] = null;
+                continue;
+            }
 
-        // Only handle flattening in this class, do not pass it along
-        $flattenFields = ($sanitizedOptions['flattenFields'] || $flattenFields === true);
-        unset($sanitizedOptions['flattenFields']);
-
-        // Build SELECT part of the query
-        [
-            $sanitizedOptions['fields'],
-            $selectTypes,
-            $selectTypesNullable,
-        ] = $this->buildFieldSelection(
-            $sanitizedOptions['fields'],
-            $objectToTableFields,
-            $objectTypes,
-            $objectTypesNullable
-        );
-
-        // List of finished FROM expressions, to be imploded with , + possible query values
-        $sanitizedOptions['tables'] = $this->preprocessJoins(
-            $sanitizedOptions['tables'],
-            $tableName,
-            $objectToTableFields
-        );
-
-        // List of finished WHERE expressions, to be imploded with ANDs
-        $sanitizedOptions['where'] = $this->preprocessWhere($sanitizedOptions['where'], $objectToTableFields);
-
-        // GROUP BY was defined
-        if (isset($sanitizedOptions['group']) && \count($sanitizedOptions['group']) > 0) {
-            $sanitizedOptions['group'] = $this->preprocessGroup($sanitizedOptions['group'], $objectToTableFields);
-        } else {
-            unset($sanitizedOptions['group']);
+            switch ($selectTypes[$key]) {
+                case 'int':
+                    $entry[$key] = \intval($value);
+                    break;
+                case 'bool':
+                    $entry[$key] = \boolval($value);
+                    break;
+                case 'float':
+                    $entry[$key] = \floatval($value);
+                    break;
+                case 'string':
+                    $entry[$key] = \strval($value);
+                    break;
+                default:
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Unknown casting for object variable ' . DBDebug::sanitizeData($key)
+                    );
+            }
         }
 
-        // Order was defined
-        if (isset($sanitizedOptions['order']) && \count($sanitizedOptions['order']) > 0) {
-            $sanitizedOptions['order'] = $this->preprocessOrder($sanitizedOptions['order'], $objectToTableFields);
-        } else {
-            unset($sanitizedOptions['order']);
-        }
-
-        // No limit - remove it from options
-        if ($sanitizedOptions['limit'] === 0) {
-            unset($sanitizedOptions['limit']);
-        }
-
-        // No offset - remove it from options
-        if ($sanitizedOptions['offset'] === 0) {
-            unset($sanitizedOptions['offset']);
-        }
-
-        // No lock - remove it from options
-        if ($sanitizedOptions['lock'] === false) {
-            unset($sanitizedOptions['lock']);
-        }
-
-        // Get all the data from the database
-        try {
-            $tableObjects = $this->db->fetchAll($sanitizedOptions);
-        } catch (DBInvalidOptionException $e) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
-            );
-        }
-
-        // Process the select results
-        return $this->processSelectResults($tableObjects, $selectTypes, $selectTypesNullable, $flattenFields);
+        return $entry;
     }
 
     /**
@@ -1051,29 +1145,20 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         return $orderProcessed;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public function selectOne(array $query): ?array
+    private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {
-        $query['limit'] = 1;
-
-        // Return just the one retrieved entry
-        $results = $this->selectQuery($query);
-        return \array_pop($results);
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function selectFlattenedFields(array $query): array
-    {
-        // Freeform query was detected
-        if (isset($query['query']) || isset($query['parameters'])) {
-            return $this->selectQueryFreeform($query, true);
+        // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
+        if (!\is_bool($shouldBeBoolean)
+            && $shouldBeBoolean !== 1
+            && $shouldBeBoolean !== 0
+        ) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                $settingName . ' set to a non-boolean value: ' . DBDebug::sanitizeData($shouldBeBoolean)
+            );
         }
 
-        // Regular structured query
-        return $this->selectQuery($query, true);
+        return \boolval($shouldBeBoolean);
     }
 }

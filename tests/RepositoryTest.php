@@ -4,8 +4,11 @@ namespace Squirrel\Entities\Tests;
 
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryReadOnly;
+use Squirrel\Entities\RepositorySelectQuery;
 use Squirrel\Entities\RepositoryWriteable;
+use Squirrel\Entities\Tests\TestClasses\ObjData;
 use Squirrel\Queries\DBInterface;
+use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
@@ -150,7 +153,22 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('defaultConnection', $this->repositoryConfig->getConnectionName());
     }
 
-    public function testSelect()
+    /**
+     * Set up mock DB for fetchAll
+     *
+     * @param array $query
+     * @param array $results
+     */
+    protected function dbSetupFetchAll(array $query, array $results)
+    {
+        $this->db
+            ->shouldReceive('fetchAll')
+            ->once()
+            ->with($query)
+            ->andReturn($results);
+    }
+
+    public function testFetchAll()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -164,10 +182,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -177,22 +195,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    /**
-     * Set up mock DB for findBy tests
-     *
-     * @param array $query
-     * @param array $results
-     */
-    protected function dbSetupSelect(array $query, array $results)
-    {
-        $this->db
-            ->shouldReceive('fetchAll')
-            ->once()
-            ->with($query)
-            ->andReturn($results);
-    }
-
-    public function testSelectWithLock()
+    public function testFetchAllWithLock()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -208,10 +211,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
                 ':isGreat: = ?' => true,
@@ -223,7 +226,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testSelectNoRestrictions()
+    public function testFetchAllNoRestrictions()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -234,16 +237,16 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([]);
+        $results = $this->repository->fetchAll([]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testSelectNoRestrictionsLimitOffset()
+    public function testFetchAllNoRestrictionsLimitOffset()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -256,16 +259,16 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select(['limit' => 2, 'offset' => 5]);
+        $results = $this->repository->fetchAll(['limit' => 2, 'offset' => 5]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testSelectLimitOffsetOrderByNameOnlySomeFields()
+    public function testFetchAllLimitOffsetOrderByNameOnlySomeFields()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -285,10 +288,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([
+        $results = $this->repository->fetchAll([
             'fields' => [
                 'firstName',
                 'street',
@@ -304,7 +307,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testSelectFlattenedField()
+    public function testFetchAllFlattenedField()
     {
         // What values we want to see and return in our DB class
         $results = [['id' => '63'], ['id' => '87']];
@@ -321,34 +324,36 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->selectFlattenedFields([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
             'fields' => [
                 'id',
             ],
+            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([63, 87], $results);
 
         // Make call to repository
-        $results = $this->repository->selectFlattenedFields([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
             'field' => 'id',
+            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([63, 87], $results);
     }
 
-    public function testSelectFlattenedFields()
+    public function testFetchAllFlattenedFields()
     {
         // What values we want to see and return in our DB class
         $results = [['id' => '63', 'first_name' => 'ladida'], ['id' => '87', 'first_name' => 'nice']];
@@ -366,10 +371,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->selectFlattenedFields([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -377,13 +382,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'id',
                 'firstName',
             ],
+            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([63, 'ladida', 87, 'nice'], $results);
     }
 
-    public function testSelectWithNULL()
+    public function testFetchAllWithNULL()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -401,10 +407,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'street' => null,
             ],
@@ -414,7 +420,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $obj2], $results);
     }
 
-    public function testSelectComplexWhereAndOrder()
+    public function testFetchAllComplexWhereAndOrder()
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -441,10 +447,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->select([
+        $results = $this->repository->fetchAll([
             'where' => [
                 'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
                 'firstName' => ['Laumann'],
@@ -463,79 +469,103 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testSelectOne()
+    /**
+     * Set up mock DB for select cyclus
+     *
+     * @param array $query
+     * @param array $results
+     */
+    protected function dbSetupSelect(array $query, array $results)
     {
-        $repository = \Mockery::mock(RepositoryReadOnly::class)->makePartial();
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
 
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($query)
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andReturn($results);
+
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->with($dbSelectQuery);
+    }
+
+    public function testFetchOne()
+    {
         // What values returned by the findBy method
-        $selectResults = [['id' => '63']];
+        $selectResults = $this->basicData['dbResults1'];
 
-        // Define the where part of the query
-        $where = [
-            'lastName' => 'Baumann',
+        $expectedQuery = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
         ];
 
-        // Options, second argument to findOneBy
-        $options = [
-            'where' => $where,
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        // Make call to repository
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
             'order' => [
                 'firstName',
             ],
-        ];
-
-        // We expect this internal call
-        $repository
-            ->shouldReceive('select')
-            ->once()
-            ->with(\Mockery::mustBe($options + ['limit' => 1]))
-            ->andReturn($selectResults);
-
-        // Make call to repository
-        $results = $repository->selectOne($options);
+        ]);
 
         // Make sure the correct results were returned
-        $this->assertEquals($selectResults[0], $results);
+        $this->assertEquals($this->basicData['obj1'], $results);
     }
 
-    public function testSelectOneValidLimit()
+    public function testFetchOneValidLimit()
     {
-        $repository = \Mockery::mock(RepositoryReadOnly::class)->makePartial();
-
         // What values returned by the findBy method
-        $selectResults = [['id' => '63']];
+        $selectResults = $this->basicData['dbResults1'];
 
-        // Define the where part of the query
-        $where = [
-            'lastName' => 'Baumann',
+        $expectedQuery = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
         ];
 
-        // Options, second argument to findOneBy
-        $options = [
-            'where' => $where,
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        // Make call to repository
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
             'order' => [
                 'firstName',
             ],
             'limit' => 1,
-        ];
-
-        // We expect this internal call
-        $repository
-            ->shouldReceive('select')
-            ->once()
-            ->with(\Mockery::mustBe($options))
-            ->andReturn($selectResults);
-
-        // Make call to repository
-        $results = $repository->selectOne($options);
+        ]);
 
         // Make sure the correct results were returned
-        $this->assertEquals($selectResults[0], $results);
+        $this->assertEquals($this->basicData['obj1'], $results);
     }
 
     public function testCount()
     {
         // What values we want to see and return in our DB class
-        $results = ['num' => '13'];
+        $dbResult = ['num' => '13'];
 
         // Define the structured query we expect to generate
         $query = [
@@ -552,7 +582,6 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             'fields' => [
                 'num' => 'COUNT(*)',
             ],
-            'lock' => false,
             'table' => $this->repositoryConfig->getTableName(),
         ];
 
@@ -561,10 +590,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('fetchOne')
             ->once()
             ->with($query)
-            ->andReturn($results);
+            ->andReturn($dbResult);
 
         // Make call to repository
-        $results = $this->repository->count([
+        $result = $this->repository->count([
             'where' => [
                 'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
                 'firstName' => ['Laumann'],
@@ -574,10 +603,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
 
         // Make sure the correct objects were returned
-        $this->assertEquals(13, $results);
+        $this->assertEquals($dbResult['num'], $result);
 
         // What values we want to see and return in our DB class
-        $results = ['num' => '13'];
+        $dbResult = ['num' => '13'];
 
         // Define the structured query we expect to generate
         $query = [
@@ -593,15 +622,15 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('fetchOne')
             ->once()
             ->with($query)
-            ->andReturn($results);
+            ->andReturn($dbResult);
 
         // Make call to repository
-        $results = $this->repository->count([
+        $result = $this->repository->count([
             'lock' => true,
         ]);
 
         // Make sure the correct objects were returned
-        $this->assertEquals(13, $results);
+        $this->assertEquals($dbResult['num'], $result);
     }
 
     public function testUpdate()
@@ -1031,7 +1060,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'order' => ['id' => 'DESC'],
             'limit' => 2,
             'offset' => 5,
@@ -1045,7 +1074,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'order' => 'dada',
         ]);
     }
@@ -1056,7 +1085,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'unknown' => 'dada',
             ],
@@ -1069,7 +1098,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 0,
             ],
@@ -1082,7 +1111,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 ':unresolvedOption: = ?' => 'test',
             ],
@@ -1095,7 +1124,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -1111,7 +1140,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -1127,7 +1156,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -1143,7 +1172,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'firstName' => [['array']],
             ],
@@ -1156,7 +1185,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'firstName' => null,
             ],
@@ -1169,7 +1198,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'firstName' => 'dada',
             ],
@@ -1194,7 +1223,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Repository configuration
         $repositoryConfig = new RepositoryConfig(
@@ -1267,7 +1296,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Repository configuration
         $repositoryConfig = new RepositoryConfig(
@@ -1340,7 +1369,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Make call to repository
-        $this->repository->selectOne($options);
+        $this->repository->fetchOne($options);
     }
 
     public function testUpdateNoWhere()
@@ -1544,7 +1573,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'floatVal' => 'float_val',
                 'isGreat' => 'is_great_yay',
             ],
-            TestClasses\ObjData::class,
+            ObjData::class,
             [
                 'id' => 'int',
                 'firstName' => 'string',
@@ -1552,7 +1581,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'street' => 'string',
                 'number' => 'int',
                 'floatVal' => 'float',
-                'isGreat' => 'unknown',
+                'isGreat' => 'unknown', // not a valid type
             ],
             [
                 'id' => false,
@@ -1580,10 +1609,38 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupSelect($query, $results);
+        $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $repository->select([
+        $repository->fetchAll([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+        ]);
+    }
+
+    public function testRepositoryConfigEqualFetchExceptionFromDbClass()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Define the structured query we expect to generate
+        $query = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+        ];
+
+        // Set up DB class mock
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($query)
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Make call to repository
+        $this->repository->select([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -1591,6 +1648,133 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
     }
 
     public function testSelectExceptionFromDbClass()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        $repositoryConfig = new RepositoryConfig(
+            'defaultConnection',
+            'anotherExample', // this is different!
+            [
+                'id' => 'id',
+                'first_name' => 'firstName',
+                'last_name' => 'lastName',
+                'street' => 'street',
+                'number' => 'number',
+                'float_val' => 'floatVal',
+                'is_great_yay' => 'isGreat',
+            ],
+            [
+                'id' => 'id',
+                'firstName' => 'first_name',
+                'lastName' => 'last_name',
+                'street' => 'street',
+                'number' => 'number',
+                'floatVal' => 'float_val',
+                'isGreat' => 'is_great_yay',
+            ],
+            TestClasses\ObjData::class,
+            [
+                'id' => 'int',
+                'firstName' => 'string',
+                'lastName' => 'string',
+                'street' => 'string',
+                'number' => 'int',
+                'floatVal' => 'float',
+                'isGreat' => 'bool',
+            ],
+            [
+                'id' => false,
+                'firstName' => false,
+                'lastName' => false,
+                'street' => true,
+                'number' => false,
+                'floatVal' => false,
+                'isGreat' => false,
+            ]
+        );
+
+        $wrongConfigQuery = new RepositorySelectQuery($dbSelectQuery, $repositoryConfig);
+
+        $this->repository->fetch($wrongConfigQuery);
+    }
+
+    public function testFetchExceptionFromDbClass()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Define the structured query we expect to generate
+        $query = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+        ];
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($query)
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Make call to repository
+        $selectResult = $this->repository->select([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+        ]);
+
+        $this->repository->fetch($selectResult);
+    }
+
+    public function testClearExceptionFromDbClass()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Define the structured query we expect to generate
+        $query = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+        ];
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($query)
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Make call to repository
+        $queryResult = $this->repository->select([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+        ]);
+
+        $this->repository->clear($queryResult);
+    }
+
+    public function testFetchAllExceptionFromDbClass()
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1611,7 +1795,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Make call to repository
-        $this->repository->select([
+        $this->repository->fetchAll([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -1631,7 +1815,6 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             'fields' => [
                 'num' => 'COUNT(*)',
             ],
-            'lock' => false,
             'table' => $this->repositoryConfig->getTableName(),
         ];
 

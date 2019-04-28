@@ -8,9 +8,22 @@ namespace Squirrel\Entities;
 interface MultiRepositoryReadOnlyInterface
 {
     /**
+     * Count number of entries. The options can be:
+     *
+     * - 'repositories': involved repositories as a name to RepositoryReadOnly / RepositoryBuilderReadOnlyInterface list
+     * - 'tables': how tables are connected and which are selected (optional, default is all)
+     * - 'where':  WHERE restrictions
+     * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (optional)
+     *
+     * @param array $query
+     * @return int
+     */
+    public function count(array $query): int;
+
+    /**
      * Select query. The options can be:
      *
-     * - 'repositories': involved repositories as a name to RepositoryConfigInterface / RepositoryReadOnly list
+     * - 'repositories': involved repositories as a name to RepositoryReadOnly / RepositoryBuilderReadOnlyInterface list
      * - 'tables': how tables are connected and which are selected (optional, default is all)
      * - 'fields': what to select as a name to field name list
      * - 'where':  WHERE restrictions
@@ -18,7 +31,6 @@ interface MultiRepositoryReadOnlyInterface
      * - 'order':  ORDER BY definitions (optional)
      * - 'limit':  how many results to get (optional)
      * - 'offset': at what record number to start (optional)
-     * - 'flattenFields': Whether to return a one dimensional array of just values instead of arrays (optional)
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (optional)
      *
      * A special possibility is a freeform query, with the following options:
@@ -27,7 +39,6 @@ interface MultiRepositoryReadOnlyInterface
      * - 'fields': what to select as a name to field name list
      * - 'query':  Query as a string
      * - 'parameters': Array of query value parameters
-     * - 'flattenFields': Whether to return a one dimensional array of just values instead of arrays (optional)
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (optional)
      *
      * Freeform queries should almost never be necessary and is considered bad practice, yet it is still a possibility
@@ -35,9 +46,24 @@ interface MultiRepositoryReadOnlyInterface
      * still be necessary or useful for performance or other reasons
      *
      * @param array $query
-     * @return array
+     * @return MultiRepositorySelectQueryInterface
      */
-    public function select(array $query): array;
+    public function select(array $query): MultiRepositorySelectQueryInterface;
+
+    /**
+     * Find one entry from a result set and return it as an array
+     *
+     * @param MultiRepositorySelectQueryInterface $selectQuery
+     * @return array|null
+     */
+    public function fetch(MultiRepositorySelectQueryInterface $selectQuery): ?array;
+
+    /**
+     * Clear existing result set
+     *
+     * @param MultiRepositorySelectQueryInterface $selectQuery
+     */
+    public function clear(MultiRepositorySelectQueryInterface $selectQuery): void;
 
     /**
      * Select query and return one entry. The query options are the same as with the select function
@@ -45,15 +71,16 @@ interface MultiRepositoryReadOnlyInterface
      * @param array $query
      * @return array
      */
-    public function selectOne(array $query): ?array;
+    public function fetchOne(array $query): ?array;
 
     /**
-     * Select query where the results are flattened to field values, no field names / entries.
+     * Select query and return all entries.  The query options are the same as with the select function,
+     * except for flattenFields:
      *
-     * The query options are otherwise identical to the select function
+     * 'flattenFields': Whether to return a one dimensional array of just values instead of arrays (optional)
      *
      * @param array $query
      * @return array
      */
-    public function selectFlattenedFields(array $query): array;
+    public function fetchAll(array $query): array;
 }

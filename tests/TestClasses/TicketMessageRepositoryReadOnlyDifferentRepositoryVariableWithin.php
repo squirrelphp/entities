@@ -3,13 +3,22 @@
 namespace Squirrel\Entities\Tests\TestClasses;
 
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Entities\RepositorySelectQueryInterface;
 
 class TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin implements RepositoryReadOnlyInterface
 {
     /**
      * @inheritDoc
      */
-    public function select(array $query): array
+    public function select(array $query): RepositorySelectQueryInterface
+    {
+        return \Mockery::mock(RepositorySelectQueryInterface::class);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetch(RepositorySelectQueryInterface $selectQuery)
     {
         return [];
     }
@@ -17,7 +26,14 @@ class TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin implement
     /**
      * @inheritDoc
      */
-    public function selectOne(array $query)
+    public function clear(RepositorySelectQueryInterface $selectQuery): void
+    {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchOne(array $query)
     {
         return [];
     }
@@ -25,7 +41,7 @@ class TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin implement
     /**
      * @inheritDoc
      */
-    public function selectFlattenedFields(array $query): array
+    public function fetchAll(array $query)
     {
         return [];
     }

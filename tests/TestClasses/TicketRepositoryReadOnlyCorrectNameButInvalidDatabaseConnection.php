@@ -2,9 +2,9 @@
 
 namespace Squirrel\Entities\Tests\TestClasses;
 
-use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryConfigInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Entities\RepositorySelectQueryInterface;
 
 class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements RepositoryReadOnlyInterface
 {
@@ -19,9 +19,9 @@ class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements
     protected $config;
 
     /**
-     * @param RepositoryConfig $config
+     * @param RepositoryConfigInterface $config
      */
-    public function __construct(RepositoryConfig $config)
+    public function __construct(RepositoryConfigInterface $config)
     {
         $this->db = new \stdClass();
         $this->config = $config;
@@ -30,7 +30,15 @@ class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements
     /**
      * @inheritDoc
      */
-    public function select(array $query): array
+    public function select(array $query): RepositorySelectQueryInterface
+    {
+        return \Mockery::mock(RepositorySelectQueryInterface::class);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetch(RepositorySelectQueryInterface $selectQuery)
     {
         return [];
     }
@@ -38,7 +46,14 @@ class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements
     /**
      * @inheritDoc
      */
-    public function selectOne(array $query)
+    public function clear(RepositorySelectQueryInterface $selectQuery): void
+    {
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchOne(array $query)
     {
         return [];
     }
@@ -46,7 +61,7 @@ class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements
     /**
      * @inheritDoc
      */
-    public function selectFlattenedFields(array $query): array
+    public function fetchAll(array $query)
     {
         return [];
     }

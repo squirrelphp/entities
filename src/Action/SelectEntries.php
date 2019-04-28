@@ -101,10 +101,12 @@ class SelectEntries implements ActionInterface
 
     /**
      * Execute SELECT query and return a list of objects that matched it
+     *
+     * @return object[]
      */
-    public function getEntries(): array
+    public function getAllEntries(): array
     {
-        return $this->repository->select([
+        return $this->repository->fetchAll([
             'where' => $this->where,
             'order' => $this->orderBy,
             'fields' => $this->fields,
@@ -116,10 +118,12 @@ class SelectEntries implements ActionInterface
 
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
+     *
+     * @return object|null
      */
     public function getOneEntry()
     {
-        return $this->repository->selectOne([
+        return $this->repository->fetchOne([
             'where' => $this->where,
             'order' => $this->orderBy,
             'fields' => $this->fields,
@@ -129,13 +133,29 @@ class SelectEntries implements ActionInterface
     }
 
     /**
-     * Execute SELECT query and return the fields as a list of values - no objects
+     * Execute SELECT query and return the fields as a list of flattened values - no objects
      *
-     * @return string[]|int[]|bool[]|null[]
+     * @return array<bool|int|float|string|null>
      */
     public function getFlattenedFields(): array
     {
-        return $this->repository->selectFlattenedFields([
+        return $this->repository->fetchAll([
+            'where' => $this->where,
+            'order' => $this->orderBy,
+            'fields' => $this->fields,
+            'limit' => $this->limitTo,
+            'offset' => $this->startAt,
+            'lock' => $this->blocking,
+            'flattenFields' => true,
+        ]);
+    }
+
+    /**
+     * @return SelectIterator
+     */
+    public function getIterator()
+    {
+        return new SelectIterator($this->repository, [
             'where' => $this->where,
             'order' => $this->orderBy,
             'fields' => $this->fields,

@@ -7,6 +7,7 @@ use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryConfigInterface;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\Tests\TestClasses\TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection;
+use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
@@ -300,11 +301,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->select([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -327,7 +328,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testSelectOne()
+    public function testFetchOne()
     {
         // The query we want to receive
         $expectedQuery = [
@@ -352,13 +353,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 
         // What the database returns
         $resultsFromDb = [
-            [
                 'ticket.ticketId' => '54',
                 'ticket.floaty' => '0.3',
                 'ticket.open' => '1',
                 'ticket.title' => 'Dadaism',
                 'ticket.lastUpdate' => null,
-            ],
         ];
 
         // After the data was processed according to types
@@ -370,15 +369,28 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             'ticket.lastUpdate' => null,
         ];
 
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
         // Fetching results - return the stored results
         $this->db
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('select')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
             ->andReturn($resultsFromDb);
 
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->with($dbSelectQuery);
+
         // Attempt select
-        $results = $this->queryHandler->selectOne([
+        $results = $this->queryHandler->fetchOne([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -395,6 +407,149 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.ticketId' => [77, 88, 193],
                 'ticket.open' => true,
             ],
+        ]);
+
+        // Make sure we received the correct sanitized results
+        $this->assertSame($resultsProcessed, $results);
+    }
+
+    public function testFetchOneNoResult()
+    {
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.floaty' => 'ticket.ticket_floaty',
+                'ticket.open' => 'ticket.ticket_open',
+                'ticket.title' => 'ticket.ticket_title',
+                'ticket.lastUpdate' => 'ticket.last_update',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+            'limit' => 1,
+        ];
+
+        // What the database returns
+        $resultsFromDb = null;
+
+        // After the data was processed according to types
+        $resultsProcessed = null;
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        // Fetching results - return the stored results
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andReturn($resultsFromDb);
+
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->with($dbSelectQuery);
+
+        // Attempt select
+        $results = $this->queryHandler->fetchOne([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+                'ticket.title',
+                'ticket.lastUpdate',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+        ]);
+
+        // Make sure we received the correct sanitized results
+        $this->assertSame($resultsProcessed, $results);
+    }
+
+    public function testCount()
+    {
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'COUNT(*) AS "num"',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+            'lock' => true,
+        ];
+
+        // What the database returns
+        $resultsFromDb = [
+            'num' => '33',
+        ];
+
+        // After the data was processed according to types
+        $resultsProcessed = 33;
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        // Fetching results - return the stored results
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($dbSelectQuery);
+
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andReturn($resultsFromDb);
+
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->with($dbSelectQuery);
+
+        // Attempt select
+        $results = $this->queryHandler->count([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'tables' => [
+                'ticket',
+                'message',
+                'email',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+            'lock' => true,
         ]);
 
         // Make sure we received the correct sanitized results
@@ -445,11 +600,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->selectFlattenedFields([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -464,6 +619,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'limit' => 3,
             'lock' => true,
+            'flattenFields' => true,
         ]);
 
         // Make sure we received the correct sanitized results
@@ -521,11 +677,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->selectFlattenedFields([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -541,76 +697,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'limit' => 3,
             'lock' => true,
-        ]);
-
-        // Make sure we received the correct sanitized results
-        $this->assertSame($resultsProcessed, $results);
-    }
-
-    public function testFlattenedFieldLegacy()
-    {
-        // The query we want to receive
-        $expectedQuery = [
-            'fields' => [
-                'ticket.ticketId' => 'ticket.ticket_id',
-            ],
-            'tables' => [
-                'databasename.tickets ticket',
-                'tickets_messages message',
-                'db74.emails email',
-            ],
-            'where' => [
-                'ticket.ticket_id' => 77,
-                'ticket.ticket_open' => 0,
-            ],
-            'limit' => 3,
-            'lock' => true,
-        ];
-
-        // What the database returns
-        $resultsFromDb = [
-            [
-                'ticket.ticketId' => '54',
-            ],
-            [
-                'ticket.ticketId' => '33',
-            ],
-            [
-                'ticket.ticketId' => '89',
-            ],
-        ];
-
-        // After the data was processed according to types
-        $resultsProcessed = [
-            54,
-            33,
-            89,
-        ];
-
-        // Fetching results - return the stored results
-        $this->db
-            ->shouldReceive('fetchAll')
-            ->once()
-            ->with($expectedQuery)
-            ->andReturn($resultsFromDb);
-
-        // Attempt select
-        $results = $this->queryHandler->select([
-            'repositories' => [
-                'ticket' => $this->ticketRepository,
-                'message' => $this->ticketMessageRepository,
-                'email' => $this->emailRepository,
-            ],
-            'fields' => [
-                'ticket.ticketId',
-            ],
-            'where' => [
-                'ticket.ticketId' => '77',
-                'ticket.open' => false,
-            ],
-            'limit' => 3,
             'flattenFields' => true,
-            'lock' => true,
         ]);
 
         // Make sure we received the correct sanitized results
@@ -668,11 +755,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->select([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -728,11 +815,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->select([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
             ],
@@ -891,11 +978,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($dbResults);
 
         // Attempt select
-        $results = $this->queryHandler->select($this->complicatedQuery);
+        $results = $this->queryHandler->fetchAll($this->complicatedQuery);
 
         // Make sure we received the correct sanitized results
         $this->assertSame($dbResultsSanitized, $results);
@@ -1049,7 +1136,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($dbResults);
 
         // Attempt select
-        $results = $this->queryHandler->select($queryFreeform);
+        $results = $this->queryHandler->fetchAll($queryFreeform);
 
         // Make sure we received the correct sanitized results
         $this->assertSame($dbResultsSanitized, $results);
@@ -1104,8 +1191,10 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
             ->andReturn($dbResults);
 
+        $this->queryFreeform['flattenFields'] = true;
+
         // Attempt select
-        $results = $this->queryHandler->selectFlattenedFields($this->queryFreeform);
+        $results = $this->queryHandler->fetchAll($this->queryFreeform);
 
         // Make sure we received the correct sanitized results
         $this->assertSame($dbResultsSanitized, $results);
@@ -1408,7 +1497,18 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->complicatedQuery['flattenFields'] = 5;
 
         // Attempt select
-        $this->queryHandler->select($this->complicatedQuery);
+        $this->queryHandler->fetchAll($this->complicatedQuery);
+    }
+
+    public function testFetchOneInvalidLimit()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Try to test with some invalid ORDER value
+        $this->complicatedQuery['limit'] = 5;
+
+        // Attempt select
+        $this->queryHandler->fetchOne($this->complicatedQuery);
     }
 
     public function testInvalidRepositoryFieldType()
@@ -1511,7 +1611,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($dbResults);
 
         // Attempt select
-        $this->queryHandler->select($this->complicatedQuery);
+        $this->queryHandler->fetchAll($this->complicatedQuery);
     }
 
     public function testBadRepositoryForReflection()
@@ -1536,10 +1636,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        $ticketMessageRepository = new TestClasses\TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin(
-            $this->db,
-            $this->ticketMessageRepositoryConfig
-        );
+        $ticketMessageRepository = new TestClasses\TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin();
 
         $this->complicatedQuery['repositories'] = [
             'ticket' => $this->ticketRepository,
@@ -1566,7 +1663,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->expectException(DBInvalidOptionException::class);
 
         // Attempt select
-        $this->queryHandler->select([
+        $this->queryHandler->fetchAll([
             'repositories' => $this->queryFreeform['repositories'],
             'fields' => [],
             'query' => $this->queryFreeform['query'],
@@ -1628,13 +1725,173 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 
         // Fetching results - return the stored results
         $this->db
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('select')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Attempt select
         $this->queryHandler->select([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+        ]);
+    }
+
+    public function testFetchExceptionFromDbClass()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.floaty' => 'ticket.ticket_floaty',
+                'ticket.open' => 'ticket.ticket_open',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+        ];
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($dbSelectQuery);
+        $this->db
+            ->shouldReceive('fetch')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Attempt select
+        $queryResult = $this->queryHandler->select([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+        ]);
+
+        $this->queryHandler->fetch($queryResult);
+    }
+
+    public function testClearExceptionFromDbClass()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.floaty' => 'ticket.ticket_floaty',
+                'ticket.open' => 'ticket.ticket_open',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+        ];
+
+        $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
+
+        $this->db
+            ->shouldReceive('select')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($dbSelectQuery);
+        $this->db
+            ->shouldReceive('clear')
+            ->once()
+            ->with($dbSelectQuery)
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Attempt select
+        $queryResult = $this->queryHandler->select([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+        ]);
+
+        $this->queryHandler->clear($queryResult);
+    }
+
+    public function testFetchAllExceptionFromDbClass()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.floaty' => 'ticket.ticket_floaty',
+                'ticket.open' => 'ticket.ticket_open',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+        ];
+
+        // Fetching results - return the stored results
+        $this->db
+            ->shouldReceive('fetchAll')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Attempt select
+        $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -1684,13 +1941,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Attempt select
-        $this->queryHandler->select($this->queryFreeform);
+        $this->queryHandler->fetchAll($this->queryFreeform);
     }
 
     public function testRepositoriesWithTheSameConnection()
     {
-        $db2 = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
-
         $ticketRepository = new TestClasses\TicketRepositoryBuilderReadOnly(
             new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
         );
@@ -1752,10 +2007,10 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
-        $results = $this->queryHandler->select([
+        $results = $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'ticket2' => $ticketRepository2,
@@ -1825,11 +2080,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $this->queryHandler->select([
+        $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'ticket2' => $ticketRepository2,
@@ -1892,11 +2147,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $this->queryHandler->select([
+        $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'ticket2' => $ticketRepository2,
@@ -1950,11 +2205,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with($expectedQuery)
+            ->with($expectedQuery, [])
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $this->queryHandler->select([
+        $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $ticketRepository,
             ],

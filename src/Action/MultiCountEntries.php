@@ -40,14 +40,16 @@ class MultiCountEntries implements ActionInterface
         $this->queryHandler = $queryHandler;
     }
 
-    public function inRepositories(array $repositories)
+    public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
+        return $this;
     }
 
-    public function connectedBy(array $repositoryConnections)
+    public function joinTables(array $repositoryConnections): self
     {
         $this->connections = $repositoryConnections;
+        return $this;
     }
 
     public function where(array $whereClauses): self
@@ -67,17 +69,11 @@ class MultiCountEntries implements ActionInterface
      */
     public function getNumber(): int
     {
-        $results = $this->queryHandler->select([
-            'fields' => [
-                'num' => 'COUNT(*)',
-            ],
+        return $this->queryHandler->count([
             'repositories' => $this->repositories,
             'tables' => $this->connections,
             'where' => $this->where,
-            'flattenFields' => true,
             'lock' => $this->blocking,
         ]);
-
-        return $results[0] ?? 0;
     }
 }

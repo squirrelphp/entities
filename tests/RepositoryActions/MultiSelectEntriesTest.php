@@ -2,30 +2,40 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\SelectEntries;
-use Squirrel\Entities\Action\SelectIterator;
+use Squirrel\Entities\Action\MultiSelectEntries;
+use Squirrel\Entities\Action\MultiSelectIterator;
+use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 
-class SelectEntriesTest extends \PHPUnit\Framework\TestCase
+class MultiSelectEntriesTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    private $multiRepository;
+
+    private $repository1;
+    private $repository2;
 
     protected function setUp(): void
     {
-        $this->repository = \Mockery::mock(RepositoryReadOnlyInterface::class);
+        $this->multiRepository = \Mockery::mock(MultiRepositoryReadOnlyInterface::class);
+
+        $this->repository1 = \Mockery::mock(RepositoryReadOnlyInterface::class);
+        $this->repository2 = \Mockery::mock(RepositoryReadOnlyInterface::class);
     }
 
     public function testNoDataGetEntries()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchAll')
             ->once()
             ->with([
+                'fields' => [],
+                'repositories' => [],
+                'tables' => [],
                 'where' => [],
                 'order' => [],
-                'fields' => [],
+                'group' => [],
                 'limit' => 0,
                 'offset' => 0,
                 'lock' => false,
@@ -39,9 +49,13 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetEntries()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
         $selectBuilder
+            ->inRepositories([
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ])
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -57,14 +71,20 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'otherField',
             ]);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchAll')
             ->once()
             ->with([
+                'repositories' => [
+                    'ticket' => $this->repository1,
+                    'email' => $this->repository2,
+                ],
+                'tables' => [],
                 'where' => [
                     'responseId' => 5,
                     'otherField' => '333',
                 ],
+                'group' => [],
                 'order' => [
                     'responseId' => 'DESC',
                 ],
@@ -85,26 +105,39 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetEntriesFieldAndStringOrder()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
         $selectBuilder
+            ->inRepositories([
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ])
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
             ])
+            ->groupBy('otherField')
             ->orderBy('responseId')
             ->startAt(13)
             ->limitTo(45)
             ->blocking()
             ->field('responseId');
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchAll')
             ->once()
             ->with([
+                'repositories' => [
+                    'ticket' => $this->repository1,
+                    'email' => $this->repository2,
+                ],
+                'tables' => [],
                 'where' => [
                     'responseId' => 5,
                     'otherField' => '333',
+                ],
+                'group' => [
+                    'otherField',
                 ],
                 'order' => [
                     'responseId',
@@ -125,15 +158,18 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testNoDataGetOneEntry()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchOne')
             ->once()
             ->with([
+                'fields' => [],
+                'repositories' => [],
+                'tables' => [],
                 'where' => [],
                 'order' => [],
-                'fields' => [],
+                'group' => [],
                 'offset' => 0,
                 'lock' => false,
             ])
@@ -146,12 +182,19 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetOneEntry()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
         $selectBuilder
+            ->inRepositories([
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ])
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
+            ])
+            ->groupBy([
+                'responseId',
             ])
             ->orderBy([
                 'responseId' => 'DESC',
@@ -163,13 +206,21 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'otherField',
             ]);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchOne')
             ->once()
             ->with([
+                'repositories' => [
+                    'ticket' => $this->repository1,
+                    'email' => $this->repository2,
+                ],
+                'tables' => [],
                 'where' => [
                     'responseId' => 5,
                     'otherField' => '333',
+                ],
+                'group' => [
+                    'responseId',
                 ],
                 'order' => [
                     'responseId' => 'DESC',
@@ -190,15 +241,18 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testNoDataGetFlattenedFields()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchAll')
             ->once()
             ->with([
+                'fields' => [],
+                'repositories' => [],
+                'tables' => [],
                 'where' => [],
                 'order' => [],
-                'fields' => [],
+                'group' => [],
                 'limit' => 0,
                 'offset' => 0,
                 'lock' => false,
@@ -213,13 +267,22 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testIterator()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
-        $expectedResult = new SelectIterator($this->repository, [
+        $expectedResult = new MultiSelectIterator($this->multiRepository, [
+            'repositories' => [
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ],
+            'tables' => [
+                'ticket',
+                'email',
+            ],
             'where' => [
                 'responseId' => 5,
                 'otherField' => '333',
             ],
+            'group' => [],
             'order' => [
                 'responseId' => 'DESC',
             ],
@@ -233,6 +296,14 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
         ]);
 
         $results = $selectBuilder
+            ->inRepositories([
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ])
+            ->joinTables([
+                'ticket',
+                'email',
+            ])
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -254,9 +325,13 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetFlattenedFields()
     {
-        $selectBuilder = new SelectEntries($this->repository);
+        $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
         $selectBuilder
+            ->inRepositories([
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ])
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -272,14 +347,20 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'otherField',
             ]);
 
-        $this->repository
+        $this->multiRepository
             ->shouldReceive('fetchAll')
             ->once()
             ->with([
+                'repositories' => [
+                    'ticket' => $this->repository1,
+                    'email' => $this->repository2,
+                ],
+                'tables' => [],
                 'where' => [
                     'responseId' => 5,
                     'otherField' => '333',
                 ],
+                'group' => [],
                 'order' => [
                     'responseId' => 'DESC',
                 ],

@@ -59,9 +59,10 @@ class MultiSelectEntriesFreeform implements ActionInterface
         return $this;
     }
 
-    public function inRepositories(array $repositories)
+    public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
+        return $this;
     }
 
     public function queryAfterFROM(string $query): self
@@ -76,7 +77,7 @@ class MultiSelectEntriesFreeform implements ActionInterface
         return $this;
     }
 
-    public function freeformQueriesAreBadPractice(string $confirmWithOK): self
+    public function confirmFreeformQueriesAreBadPractice(string $confirmWithOK): self
     {
         if ($confirmWithOK === 'OK') {
             $this->confirmBadPractice = true;
@@ -87,17 +88,28 @@ class MultiSelectEntriesFreeform implements ActionInterface
     /**
      * Execute SELECT query and return a list of entries as arrays that matched it
      */
-    public function getEntries(): array
+    public function getAllEntries(): array
     {
-        if ($this->confirmBadPractice !== true) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [ActionInterface::class],
-                'No confirmation that freeform queries are bad practice'
-            );
-        }
+        $this->makeSureBadPracticeWasConfirmed();
 
-        return $this->queryHandler->select([
+        return $this->queryHandler->fetchAll([
+            'fields' => $this->fields,
+            'repositories' => $this->repositories,
+            'query' => $this->query,
+            'parameters' => $this->parameters,
+        ]);
+    }
+
+    /**
+     * Execute SELECT query and return exactly one entry, if one was found at all
+     *
+     * @return array|null
+     */
+    public function getOneEntry(): ?array
+    {
+        $this->makeSureBadPracticeWasConfirmed();
+
+        return $this->queryHandler->fetchOne([
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'query' => $this->query,
@@ -112,6 +124,31 @@ class MultiSelectEntriesFreeform implements ActionInterface
      */
     public function getFlattenedFields(): array
     {
+        $this->makeSureBadPracticeWasConfirmed();
+
+        return $this->queryHandler->fetchAll([
+            'fields' => $this->fields,
+            'repositories' => $this->repositories,
+            'query' => $this->query,
+            'parameters' => $this->parameters,
+            'flattenFields' => true,
+        ]);
+    }
+
+    public function getIterator(): MultiSelectIterator
+    {
+        $this->makeSureBadPracticeWasConfirmed();
+
+        return new MultiSelectIterator($this->queryHandler, [
+            'fields' => $this->fields,
+            'repositories' => $this->repositories,
+            'query' => $this->query,
+            'parameters' => $this->parameters,
+        ]);
+    }
+
+    private function makeSureBadPracticeWasConfirmed()
+    {
         if ($this->confirmBadPractice !== true) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
@@ -119,12 +156,5 @@ class MultiSelectEntriesFreeform implements ActionInterface
                 'No confirmation that freeform queries are bad practice'
             );
         }
-
-        return $this->queryHandler->selectFlattenedFields([
-            'fields' => $this->fields,
-            'repositories' => $this->repositories,
-            'query' => $this->query,
-            'parameters' => $this->parameters,
-        ]);
     }
 }

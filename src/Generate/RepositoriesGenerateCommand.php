@@ -53,15 +53,15 @@ namespace {namespaceOfEntity} {
         {
             $this->repository = $repository;
         }
+        
+        public function count(): \Squirrel\Entities\Action\CountEntries
+        {
+            return new \Squirrel\Entities\Action\CountEntries($this->repository);
+        }
       
         public function select(): \{namespaceOfBuilders}\SelectEntries
         {
             return new \{namespaceOfBuilders}\SelectEntries($this->repository);
-        }
-      
-        public function count(): \Squirrel\Entities\Action\CountEntries
-        {
-            return new \Squirrel\Entities\Action\CountEntries($this->repository);
         }
     }
 }
@@ -136,9 +136,9 @@ namespace {namespaceOfBuilders} {
         /**
          * @return \{namespaceOfEntity}\{classOfEntity}[]
          */
-        public function getEntries(): array
+        public function getAllEntries(): array
         {
-            return $this->selectImplementation->getEntries();
+            return $this->selectImplementation->getAllEntries();
         }
         
         public function getOneEntry(): ?\{namespaceOfEntity}\{classOfEntity}
@@ -150,6 +150,151 @@ namespace {namespaceOfBuilders} {
          * @return string[]|int[]|float[]|bool[]|null[]
          */
         public function getFlattenedFields(): array
+        {
+            return $this->selectImplementation->getFlattenedFields();
+        }
+        
+        public function getIterator(): SelectIterator
+        {
+            return new SelectIterator($this->selectImplementation->getIterator());
+        }
+    }
+    
+    class SelectIterator implements \Squirrel\Entities\Action\ActionInterface, \Iterator
+    {
+        /**
+         * \Squirrel\Entities\Action\SelectIterator
+         */
+        private $iteratorInstance;
+    
+        public function __construct(\Squirrel\Entities\Action\SelectIterator $iterator)
+        {
+            $this->iteratorInstance = $iterator;
+        }
+    
+        /**
+         * @return \{namespaceOfEntity}\{classOfEntity}|null
+         */
+        public function current()
+        {
+            return $this->iteratorInstance->current();
+        }
+    
+        public function next()
+        {
+            $this->iteratorInstance->next();
+        }
+    
+        /**
+         * @return int
+         */
+        public function key()
+        {
+            return $this->iteratorInstance->key();
+        }
+    
+        /**
+         * @return bool
+         */
+        public function valid()
+        {
+            return $this->iteratorInstance->valid();
+        }
+    
+        public function rewind()
+        {
+            $this->iteratorInstance->rewind();
+        }
+    
+        public function clear()
+        {
+            $this->iteratorInstance->clear();
+        }
+    }
+    
+    class SelectIterator implements \Squirrel\Entities\Action\ActionInterface, \Iterator
+    {
+        /**
+         * @var \Squirrel\Entities\Action\SelectEntries
+         */
+        private $selectImplementation;
+      
+        public function __construct(\Squirrel\Entities\RepositoryReadOnlyInterface $repository)
+        {
+            $this->selectImplementation = new \Squirrel\Entities\Action\SelectEntries($repository);
+        }
+        
+        public function field(string $onlyGetThisField): self
+        {
+            $this->selectImplementation->field($onlyGetThisField);
+            return $this;
+        }
+      
+        public function fields(array $onlyGetTheseFields): self
+        {
+            $this->selectImplementation->fields($onlyGetTheseFields);
+            return $this;
+        }
+        
+        public function where(array $whereClauses): self
+        {
+            $this->selectImplementation->where($whereClauses);
+            return $this;
+        }
+      
+        /**
+         * @param array|string $orderByClauses
+         * @return SelectEntries
+         */
+        public function orderBy($orderByClauses): self
+        {
+            $this->selectImplementation->orderBy($orderByClauses);
+            return $this;
+        }
+      
+        public function startAt(int $startAtNumber): self
+        {
+            $this->selectImplementation->startAt($startAtNumber);
+            return $this;
+        }
+      
+        public function limitTo(int $numberOfEntries): self
+        {
+            $this->selectImplementation->limitTo($numberOfEntries);
+            return $this;
+        }
+      
+        public function blocking(bool $active = true): self
+        {
+            $this->selectImplementation->blocking($active);
+            return $this;
+        }
+        
+        /**
+         * @return \{namespaceOfEntity}\{classOfEntity}[]
+         */
+        public function getAllEntries(): array
+        {
+            return $this->selectImplementation->getAllEntries();
+        }
+        
+        public function getOneEntry(): ?\{namespaceOfEntity}\{classOfEntity}
+        {
+            return $this->selectImplementation->getOneEntry();
+        }
+        
+        /**
+         * @return string[]|int[]|float[]|bool[]|null[]
+         */
+        public function getFlattenedFields(): array
+        {
+            return $this->selectImplementation->getFlattenedFields();
+        }
+        
+        /**
+         * @return string[]|int[]|float[]|bool[]|null[]
+         */
+        public function getIterator(): array
         {
             return $this->selectImplementation->getFlattenedFields();
         }

@@ -144,9 +144,9 @@ class MultiSelectEntries implements ActionInterface
     /**
      * Execute SELECT query and return a list of entries as arrays that matched it
      */
-    public function getEntries(): array
+    public function getAllEntries(): array
     {
-        return $this->queryHandler->select([
+        return $this->queryHandler->fetchAll([
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'tables' => $this->connections,
@@ -166,19 +166,16 @@ class MultiSelectEntries implements ActionInterface
      */
     public function getOneEntry(): ?array
     {
-        $results = $this->queryHandler->select([
+        return $this->queryHandler->fetchOne([
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'tables' => $this->connections,
             'where' => $this->where,
             'order' => $this->orderBy,
             'group' => $this->groupBy,
-            'limit' => 1,
             'offset' => $this->startAt,
             'lock' => $this->blocking,
         ]);
-
-        return \array_pop($results);
     }
 
     /**
@@ -188,7 +185,23 @@ class MultiSelectEntries implements ActionInterface
      */
     public function getFlattenedFields(): array
     {
-        return $this->queryHandler->selectFlattenedFields([
+        return $this->queryHandler->fetchAll([
+            'fields' => $this->fields,
+            'repositories' => $this->repositories,
+            'tables' => $this->connections,
+            'where' => $this->where,
+            'order' => $this->orderBy,
+            'group' => $this->groupBy,
+            'limit' => $this->limitTo,
+            'offset' => $this->startAt,
+            'lock' => $this->blocking,
+            'flattenFields' => true,
+        ]);
+    }
+
+    public function getIterator(): MultiSelectIterator
+    {
+        return new MultiSelectIterator($this->queryHandler, [
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'tables' => $this->connections,

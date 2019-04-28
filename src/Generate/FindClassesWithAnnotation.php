@@ -2,8 +2,6 @@
 
 namespace Squirrel\Entities\Generate;
 
-use League\Flysystem\FilesystemInterface;
-
 /**
  * Use PHP tokens to find out which classes are decorated with our entity annotation
  */

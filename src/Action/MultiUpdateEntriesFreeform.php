@@ -42,9 +42,10 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         $this->queryHandler = $queryHandler;
     }
 
-    public function inRepositories(array $repositories)
+    public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
+        return $this;
     }
 
     public function query(string $query): self
@@ -59,7 +60,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         return $this;
     }
 
-    public function freeformQueriesAreBadPractice(string $confirmWithOK): self
+    public function confirmFreeformQueriesAreBadPractice(string $confirmWithOK): self
     {
         if ($confirmWithOK === 'OK') {
             $this->confirmBadPractice = true;
@@ -72,13 +73,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
      */
     public function write(): void
     {
-        if ($this->confirmBadPractice !== true) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [ActionInterface::class],
-                'No confirmation that freeform queries are bad practice'
-            );
-        }
+        $this->makeSureBadPracticeWasConfirmed();
 
         $this->queryHandler->update([
             'repositories' => $this->repositories,
@@ -94,6 +89,17 @@ class MultiUpdateEntriesFreeform implements ActionInterface
      */
     public function writeAndReturnAffectedNumber(): int
     {
+        $this->makeSureBadPracticeWasConfirmed();
+
+        return $this->queryHandler->update([
+            'repositories' => $this->repositories,
+            'query' => $this->query,
+            'parameters' => $this->parameters,
+        ]);
+    }
+
+    private function makeSureBadPracticeWasConfirmed()
+    {
         if ($this->confirmBadPractice !== true) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
@@ -101,11 +107,5 @@ class MultiUpdateEntriesFreeform implements ActionInterface
                 'No confirmation that freeform queries are bad practice'
             );
         }
-
-        return $this->queryHandler->update([
-            'repositories' => $this->repositories,
-            'query' => $this->query,
-            'parameters' => $this->parameters,
-        ]);
     }
 }
