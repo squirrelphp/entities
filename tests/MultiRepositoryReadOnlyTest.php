@@ -348,7 +348,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.ticket_id' => [77, 88, 193],
                 'ticket.ticket_open' => 1,
             ],
-            'limit' => 1,
         ];
 
         // What the database returns
@@ -433,7 +432,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.ticket_id' => [77, 88, 193],
                 'ticket.ticket_open' => 1,
             ],
-            'limit' => 1,
         ];
 
         // What the database returns

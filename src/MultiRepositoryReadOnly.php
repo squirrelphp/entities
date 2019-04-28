@@ -44,9 +44,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         }
 
         // Use our internal functions to not repeat ourselves
-        $selectQuery = $this->select($sanitizedQuery);
-        $result = $this->fetch($selectQuery);
-        $this->clear($selectQuery);
+        $result = $this->fetchOne($sanitizedQuery);
 
         return $result['num'];
     }
@@ -117,8 +115,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 'Row limit cannot be set for fetchOne query: ' . DBDebug::sanitizeData($query)
             );
         }
-
-        $query['limit'] = 1;
 
         // Use our internal functions to not repeat ourselves
         $selectQuery = $this->select($query);
