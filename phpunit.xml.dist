@@ -5,7 +5,7 @@
          xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/6.3/phpunit.xsd"
          backupGlobals="false"
          colors="true"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/autoload.php"
 >
     <testsuites>
         <testsuite name="Unit Tests">
@@ -15,7 +15,10 @@
 
     <filter>
         <whitelist>
-            <directory>src</directory>
+            <directory suffix=".php">src</directory>
+            <exclude>
+                <directory>src/Generate/PHPFilesInDirectoryGetContents.php</directory>
+            </exclude>
         </whitelist>
     </filter>
 </phpunit>

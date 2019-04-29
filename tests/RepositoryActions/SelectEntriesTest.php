@@ -8,17 +8,36 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 {
+    /**
+     * @var RepositoryReadOnlyInterface
+     */
     private $repository;
+
+    /**
+     * @var SelectEntries
+     */
+    private $selectBuilder;
+
+    /**
+     * @var SelectIterator
+     */
+    private $selectIteratorClass;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryReadOnlyInterface::class);
+        $this->selectBuilder = new SelectEntries($this->repository);
+        $this->selectIteratorClass = SelectIterator::class;
+    }
+
+    private function getSelector($query)
+    {
+        $iteratorClass = $this->selectIteratorClass;
+        return new $iteratorClass($this->repository, $query);
     }
 
     public function testNoDataGetEntries()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
         $this->repository
             ->shouldReceive('fetchAll')
             ->once()
@@ -32,16 +51,14 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getAllEntries();
+        $results = $this->selectBuilder->getAllEntries();
 
         $this->assertEquals([], $results);
     }
 
     public function testGetEntries()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
-        $selectBuilder
+        $this->selectBuilder
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -78,16 +95,14 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getAllEntries();
+        $results = $this->selectBuilder->getAllEntries();
 
         $this->assertEquals([], $results);
     }
 
     public function testGetEntriesFieldAndStringOrder()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
-        $selectBuilder
+        $this->selectBuilder
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -118,15 +133,13 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getAllEntries();
+        $results = $this->selectBuilder->getAllEntries();
 
         $this->assertEquals([], $results);
     }
 
     public function testNoDataGetOneEntry()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
         $this->repository
             ->shouldReceive('fetchOne')
             ->once()
@@ -139,16 +152,14 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getOneEntry();
+        $results = $this->selectBuilder->getOneEntry();
 
         $this->assertEquals([], $results);
     }
 
     public function testGetOneEntry()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
-        $selectBuilder
+        $this->selectBuilder
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -183,15 +194,13 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getOneEntry();
+        $results = $this->selectBuilder->getOneEntry();
 
         $this->assertEquals([], $results);
     }
 
     public function testNoDataGetFlattenedFields()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
         $this->repository
             ->shouldReceive('fetchAll')
             ->once()
@@ -206,16 +215,14 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getFlattenedFields();
+        $results = $this->selectBuilder->getFlattenedFields();
 
         $this->assertEquals([], $results);
     }
 
     public function testIterator()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
-        $expectedResult = new SelectIterator($this->repository, [
+        $expectedResult = $this->getSelector([
             'where' => [
                 'responseId' => 5,
                 'otherField' => '333',
@@ -232,7 +239,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             'lock' => true,
         ]);
 
-        $results = $selectBuilder
+        $results = $this->selectBuilder
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -254,9 +261,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetFlattenedFields()
     {
-        $selectBuilder = new SelectEntries($this->repository);
-
-        $selectBuilder
+        $this->selectBuilder
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
@@ -294,7 +299,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn([]);
 
-        $results = $selectBuilder->getFlattenedFields();
+        $results = $this->selectBuilder->getFlattenedFields();
 
         $this->assertEquals([], $results);
     }

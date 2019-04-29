@@ -4,7 +4,6 @@ namespace Squirrel\Entities\Generate;
 
 use Doctrine\Common\Annotations\AnnotationReader;
 use Squirrel\Entities\Annotation\EntityProcessor;
-use Symfony\Component\Finder\Finder;
 
 /**
  * Generate repositories and service definitions for SQLMapper entities
@@ -22,9 +21,10 @@ class RepositoriesGenerateCommand
     private $sourceCodeDirectories;
 
     /**
-     * @var string
+     * @var array
      */
-    private $repositoryPhpFileBlueprintReadOnly = <<<'EOD'
+    private $repositoryPhpFileBlueprint = [
+        'ReadOnly' => <<<'EOD'
 <?php
 // phpcs:ignoreFile -- created by SquirrelPHP library, do not alter
 /*
@@ -213,12 +213,9 @@ namespace {namespaceOfBuilders} {
     }
 }
 
-EOD;
-
-    /**
-     * @var string
-     */
-    private $repositoryPhpFileBlueprintWriteable = <<<'EOD'
+EOD
+        ,
+        'Writeable' => <<<'EOD'
 <?php
 // phpcs:ignoreFile -- created by SquirrelPHP library, do not alter
 /*
@@ -235,36 +232,36 @@ EOD;
 namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderWriteableInterface;
     use Squirrel\Entities\RepositoryWriteableInterface;
-  
-    class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements 
+
+    class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements
         RepositoryBuilderWriteableInterface
     {
         /**
          * @var RepositoryWriteableInterface
          */
         private $repository;
-        
+
         public function __construct(RepositoryWriteableInterface $repository)
         {
             $this->repository = $repository;
             parent::__construct($repository);
         }
-      
+
         public function insert(): \Squirrel\Entities\Action\InsertEntry
         {
             return new \Squirrel\Entities\Action\InsertEntry($this->repository);
         }
-        
+
         public function insertOrUpdate(): \Squirrel\Entities\Action\InsertOrUpdateEntry
         {
             return new \Squirrel\Entities\Action\InsertOrUpdateEntry($this->repository);
         }
-      
+
         public function update(): \Squirrel\Entities\Action\UpdateEntries
         {
             return new \Squirrel\Entities\Action\UpdateEntries($this->repository);
         }
-      
+
         public function delete(): \Squirrel\Entities\Action\DeleteEntries
         {
             return new \Squirrel\Entities\Action\DeleteEntries($this->repository);
@@ -272,15 +269,26 @@ namespace {namespaceOfEntity} {
     }
 }
 
-EOD;
+EOD
+        ,
+    ];
+
+    /**
+     * @var PHPFilesInDirectoryGetContents
+     */
+    private $PHPFilesInDirectoryGetContents;
 
     /**
      * @param string[] $sourceCodeDirectories
+     * @param PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents
      */
-    public function __construct(array $sourceCodeDirectories)
-    {
+    public function __construct(
+        array $sourceCodeDirectories,
+        PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents
+    ) {
         $this->findClassesWithAnnotation = new FindClassesWithAnnotation();
         $this->sourceCodeDirectories = $sourceCodeDirectories;
+        $this->PHPFilesInDirectoryGetContents = $PHPFilesInDirectoryGetContents;
     }
 
     /**
@@ -298,27 +306,10 @@ EOD;
 
         // Go through directories
         foreach ($this->sourceCodeDirectories as $directory) {
-            // Find the files in the directory
-            $sourceFinder = new Finder();
-            $sourceFinder->in($directory)->files()->name('*.php');
-
             // Go through files which were found
-            foreach ($sourceFinder as $file) {
-                // Safety check because Finder can return false if the file was not found
-                if ($file->getRealPath()===false) {
-                    throw new \InvalidArgumentException('File in source directory not found');
-                }
-
-                // Get file contents
-                $fileContents = \file_get_contents($file->getRealPath());
-
-                // Another safety check because file_get_contents can return false if the file was not found
-                if ($fileContents===false) {
-                    throw new \InvalidArgumentException('File in source directory could not be retrieved');
-                }
-
+            foreach (($this->PHPFilesInDirectoryGetContents)($directory) as $fileData) {
                 // Get all possible entity classes with our annotation
-                $classes = $this->findClassesWithAnnotation->__invoke($fileContents);
+                $classes = $this->findClassesWithAnnotation->__invoke($fileData['contents']);
 
                 // Go through the possible entity classes
                 foreach ($classes as $class) {
@@ -333,89 +324,32 @@ EOD;
                     if (isset($repositoryConfig)) {
                         $log[] = 'Entity found: ' . $namespace . '\\' . $className;
 
-                        // Replace all the variables in the repository classes blueprint
-                        $replacementFunction = function ($repositoryPhpFile, $namespace, $className) {
-                            $fullClassnameWithoutSeparator = \str_replace(
-                                '\\',
-                                '',
-                                $namespace . $className
-                            );
-                            $repositoryPhpFile = \str_replace(
-                                '{namespaceOfEntity}',
-                                $namespace,
-                                $repositoryPhpFile
-                            );
-                            $repositoryPhpFile = \str_replace(
-                                '{namespaceOfBuilders}',
-                                'Squirrel\\Entities\\Action\\' . $fullClassnameWithoutSeparator,
-                                $repositoryPhpFile
-                            );
-                            $repositoryPhpFile = \str_replace(
-                                '{classOfEntity}',
-                                $className,
-                                $repositoryPhpFile
-                            );
-                            return $repositoryPhpFile;
-                        };
-
-                        // Compile file name and file contents for repository
-                        $repositoryPhpFilename = $file->getPath() . '/' .
-                            \str_replace(
-                                '.php',
-                                '',
-                                $file->getFilename()
-                            ) . 'RepositoryReadOnly.php';
-                        $repositoryPhpFile = $replacementFunction(
-                            $this->repositoryPhpFileBlueprintReadOnly,
+                        $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
                             $namespace,
-                            $className
+                            $className,
+                            $fileData,
+                            'ReadOnly'
                         );
 
-                        // Save repository PHP file - only if it changed or doesn't exist yet
-                        if (!\file_exists($repositoryPhpFilename) ||
-                            \file_get_contents($repositoryPhpFilename) !== $repositoryPhpFile
-                        ) {
-                            \file_put_contents($repositoryPhpFilename, $repositoryPhpFile);
-                        }
-
-                        // Add PHP file to list for which we want to create a .gitignore file
-                        $gitignoreFilesForPaths[$file->getPath()][] = \str_replace(
-                            '.php',
-                            '',
-                            $file->getFilename()
-                        ) . 'RepositoryReadOnly.php';
-
-                        // Compile file name and file contents for repository
-                        $repositoryPhpFilename = $file->getPath() . '/' .
-                            \str_replace(
-                                '.php',
-                                '',
-                                $file->getFilename()
-                            ) . 'RepositoryWriteable.php';
-                        $repositoryPhpFile = $replacementFunction(
-                            $this->repositoryPhpFileBlueprintWriteable,
+                        $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
                             $namespace,
-                            $className
+                            $className,
+                            $fileData,
+                            'Writeable'
                         );
-
-                        // Save repository PHP file - only if it changed or doesn't exist yet
-                        if (!\file_exists($repositoryPhpFilename) ||
-                            \file_get_contents($repositoryPhpFilename) !== $repositoryPhpFile
-                        ) {
-                            \file_put_contents($repositoryPhpFilename, $repositoryPhpFile);
-                        }
-
-                        // Add PHP file to list for which we want to create a .gitignore file
-                        $gitignoreFilesForPaths[$file->getPath()][] = \str_replace(
-                            '.php',
-                            '',
-                            $file->getFilename()
-                        ) . 'RepositoryWriteable.php';
                     }
                 }
             }
         }
 
+        // Go through all paths where we created repository files
+        $this->createGitignoreFiles($gitignoreFilesForPaths);
+
+        return $log;
+    }
+
+    private function createGitignoreFiles(array $gitignoreFilesForPaths)
+    {
         // Go through all paths where we created repository files
         foreach ($gitignoreFilesForPaths as $path => $files) {
             // Make sure all files are unique / no duplicates
@@ -440,7 +374,51 @@ EOD;
                 );
             }
         }
+    }
 
-        return $log;
+    private function generateRepositoryFile(string $namespace, string $className, array $fileData, string $type)
+    {
+        $phpFilename = \str_replace('.php', '', $fileData['filename']) . 'Repository' . $type . '.php';
+
+        // Compile file name and file contents for repository
+        $fullPhpFilename = $fileData['path'] . '/' . $phpFilename;
+        $fileContents = $this->repositoryFileContentsFillInBlueprint(
+            $this->repositoryPhpFileBlueprint[$type],
+            $namespace,
+            $className
+        );
+
+        // Save repository PHP file - only if it changed or doesn't exist yet
+        if (!\file_exists($fullPhpFilename) || \file_get_contents($fullPhpFilename) !== $fileContents) {
+            \file_put_contents($fullPhpFilename, $fileContents);
+        }
+
+        // Add PHP file to list for which we want to create a .gitignore file
+        return $phpFilename;
+    }
+
+    private function repositoryFileContentsFillInBlueprint($repositoryPhpFile, $namespace, $className)
+    {
+        $fullClassnameWithoutSeparator = \str_replace(
+            '\\',
+            '',
+            $namespace . $className
+        );
+        $repositoryPhpFile = \str_replace(
+            '{namespaceOfEntity}',
+            $namespace,
+            $repositoryPhpFile
+        );
+        $repositoryPhpFile = \str_replace(
+            '{namespaceOfBuilders}',
+            'Squirrel\\Entities\\Action\\' . $fullClassnameWithoutSeparator,
+            $repositoryPhpFile
+        );
+        $repositoryPhpFile = \str_replace(
+            '{classOfEntity}',
+            $className,
+            $repositoryPhpFile
+        );
+        return $repositoryPhpFile;
     }
 }

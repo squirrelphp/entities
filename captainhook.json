@@ -35,7 +35,7 @@
                 "conditions": []
             },
             {
-                "action": "vendor/bin/phpcs --standard=ruleset.xml --extensions=php --cache src bin tests",
+                "action": "vendor/bin/phpcs --standard=ruleset.xml --extensions=php --cache --ignore=tests/TestEntities src bin tests",
                 "options": [],
                 "conditions": []
             }

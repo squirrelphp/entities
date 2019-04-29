@@ -39,7 +39,10 @@ $input = new ArgvInput(null, $inputDefinition);
 $srcDirectories = $input->getOption('source-dir');
 
 // Execute command to generate repositories
-$cmd = new \Squirrel\Entities\Generate\RepositoriesGenerateCommand($srcDirectories);
+$cmd = new \Squirrel\Entities\Generate\RepositoriesGenerateCommand(
+    $srcDirectories,
+    new \Squirrel\Entities\Generate\PHPFilesInDirectoryGetContents()
+);
 $log = $cmd();
 
 // Add summary of processed entities

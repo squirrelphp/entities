@@ -39,7 +39,10 @@ class FindClassesWithAnnotation
                     $namespaceStarted = false;
 
                     // We have found the SQLMapper annotation - so there can be entities in this file
-                    if ($importClassName === 'Squirrel\\Entities\\Annotation') {
+                    if ($importClassName === 'Squirrel\\Entities\\Annotation'
+                        || $importClassName === 'Squirrel\\Entities\\Annotation\\Entity'
+                        || $importClassName === 'Squirrel\\Entities\\Annotation\\Field'
+                    ) {
                         $annotationUseFound = true;
                     }
                 }
