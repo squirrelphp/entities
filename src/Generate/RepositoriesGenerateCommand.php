@@ -75,7 +75,7 @@ namespace {namespaceOfBuilders} {
      * so we instead imitate it. This way the implementation in SelectEntries can change
      * and this generated class has no ties to how it "works" or how the repository is used.
      */
-    class SelectEntries implements \Squirrel\Entities\Action\ActionInterface
+    class SelectEntries implements \Squirrel\Entities\Action\ActionInterface, \IteratorAggregate
     {
         /**
          * @var \Squirrel\Entities\Action\SelectEntries

@@ -7,7 +7,7 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 /**
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
  */
-class SelectEntries implements ActionInterface
+class SelectEntries implements ActionInterface, \IteratorAggregate
 {
     /**
      * @var RepositoryReadOnlyInterface Repository we call to execute the built query
