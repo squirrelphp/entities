@@ -33,7 +33,11 @@ trait SelectIteratorTrait
     private $lastResult;
 
     /**
-     * @return object|array|null
+     * SelectEntries: Returns the entity object or null
+     * MultiSelectEntries: Return an array with a result entry or null
+     *
+     * We avoid the return type hint here so code analyzers don't get
+     * confused by generated repositories and their different type hint
      */
     public function current()
     {

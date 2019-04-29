@@ -102,7 +102,9 @@ class SelectEntries implements ActionInterface
     /**
      * Execute SELECT query and return a list of objects that matched it
      *
-     * @return object[]
+     * Returns object[] (from the entity class), we avoid the return type hint
+     * here to code analyzers don't get confused by generated repositories
+     * and their different type hint
      */
     public function getAllEntries(): array
     {
@@ -119,7 +121,9 @@ class SelectEntries implements ActionInterface
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
      *
-     * @return object|null
+     * Returns object (from the entity class) or null if no entry was found, we avoid
+     * the return type hint here to code analyzers don't get confused by
+     * generated repositories and their different type hint
      */
     public function getOneEntry()
     {
