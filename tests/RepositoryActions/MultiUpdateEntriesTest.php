@@ -5,6 +5,7 @@ namespace Squirrel\Entities\Tests\RepositoryActions;
 use Squirrel\Entities\Action\MultiUpdateEntries;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
 {
@@ -38,7 +39,9 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn(8);
 
-        $results = $builder->writeAndReturnAffectedNumber();
+        $results = $builder
+            ->confirmNoWhereRestrictions()
+            ->writeAndReturnAffectedNumber();
 
         $this->assertEquals(8, $results);
     }
@@ -150,5 +153,29 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $builder->write();
 
         $this->assertTrue(true);
+    }
+
+    public function testNoWhereNoConfirmation()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $builder = new MultiUpdateEntries($this->multiRepository);
+
+        $this->multiRepository
+            ->shouldReceive('update')
+            ->once()
+            ->with([
+                'repositories' => [],
+                'tables' => [],
+                'changes' => [],
+                'where' => [],
+                'order' => [],
+                'limit' => 0,
+            ])
+            ->andReturn(8);
+
+        $results = $builder->writeAndReturnAffectedNumber();
+
+        $this->assertEquals(8, $results);
     }
 }

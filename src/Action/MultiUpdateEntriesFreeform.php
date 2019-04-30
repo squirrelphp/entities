@@ -98,7 +98,8 @@ class MultiUpdateEntriesFreeform implements ActionInterface
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
-                'No confirmation that freeform queries are bad practice'
+                'No confirmation that freeform queries are bad practice - ' .
+                'call "confirmFreeformQueriesAreBadPractice" with "OK" to confirm the freeform query'
             );
         }
     }

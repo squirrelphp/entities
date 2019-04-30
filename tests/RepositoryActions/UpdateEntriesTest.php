@@ -4,6 +4,7 @@ namespace Squirrel\Entities\Tests\RepositoryActions;
 
 use Squirrel\Entities\Action\UpdateEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
 {
@@ -28,7 +29,9 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
                 'limit' => 0,
             ]);
 
-        $updateBuilder->write();
+        $updateBuilder
+            ->confirmNoWhereRestrictions()
+            ->write();
 
         $this->assertTrue(true);
     }
@@ -48,7 +51,9 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
             ])
             ->andReturn(89);
 
-        $result = $updateBuilder->writeAndReturnAffectedNumber();
+        $result = $updateBuilder
+            ->confirmNoWhereRestrictions()
+            ->writeAndReturnAffectedNumber();
 
         $this->assertEquals(89, $result);
     }
@@ -177,5 +182,24 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $updateBuilder->write();
 
         $this->assertTrue(true);
+    }
+
+    public function testNoWhereNoConfirmation()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $updateBuilder = new UpdateEntries($this->repository);
+
+        $this->repository
+            ->shouldReceive('update')
+            ->once()
+            ->with([
+                'changes' => [],
+                'where' => [],
+                'order' => [],
+                'limit' => 0,
+            ]);
+
+        $updateBuilder->write();
     }
 }

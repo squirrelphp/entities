@@ -22,9 +22,9 @@ class DeleteEntries implements ActionInterface
     private $where = [];
 
     /**
-     * @var bool We need to confirmation before we delete all entries
+     * @var bool We need to confirmation before we execute a query without WHERE restriction
      */
-    private $deleteAll = false;
+    private $confirmNoWhere = false;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {
@@ -37,9 +37,9 @@ class DeleteEntries implements ActionInterface
         return $this;
     }
 
-    public function confirmDeleteAll(): self
+    public function confirmNoWhereRestrictions(): self
     {
-        $this->deleteAll = true;
+        $this->confirmNoWhere = true;
         return $this;
     }
 
@@ -69,11 +69,12 @@ class DeleteEntries implements ActionInterface
     private function accidentalDeleteAllCheck()
     {
         // Make sure there is no accidental "delete everything"
-        if (\count($this->where) === 0 && $this->deleteAll !== true) {
+        if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
-                'No restricting "where" arguments defined for DELETE'
+                'No restricting "where" arguments defined for DELETE ' .
+                'and no override confirmation with "confirmNoWhereRestrictions" call'
             );
         }
     }

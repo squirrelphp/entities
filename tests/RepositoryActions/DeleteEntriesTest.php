@@ -26,7 +26,7 @@ class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
             ->andReturn(5);
 
         $deleteBuilder
-            ->confirmDeleteAll()
+            ->confirmNoWhereRestrictions()
             ->write();
 
         $this->assertTrue(true);

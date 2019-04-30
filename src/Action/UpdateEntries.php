@@ -3,6 +3,8 @@
 namespace Squirrel\Entities\Action;
 
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\DBDebug;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Update query builder as a fluent object - build query and execute it
@@ -33,6 +35,11 @@ class UpdateEntries implements ActionInterface
      * @var int How many results should be returned
      */
     private $limitTo = 0;
+
+    /**
+     * @var bool We need to confirmation before we execute a query without WHERE restriction
+     */
+    private $confirmNoWhere = false;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {
@@ -71,6 +78,12 @@ class UpdateEntries implements ActionInterface
         return $this;
     }
 
+    public function confirmNoWhereRestrictions(): self
+    {
+        $this->confirmNoWhere = true;
+        return $this;
+    }
+
     /**
      * Write changes to database
      */
@@ -86,6 +99,16 @@ class UpdateEntries implements ActionInterface
      */
     public function writeAndReturnAffectedNumber(): int
     {
+        // Make sure there is no accidental "delete everything"
+        if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [ActionInterface::class],
+                'No restricting "where" arguments defined for UPDATE ' .
+                'and no override confirmation with "confirmNoWhereRestrictions" call'
+            );
+        }
+
         return $this->repository->update([
             'changes' => $this->changes,
             'where' => $this->where,
