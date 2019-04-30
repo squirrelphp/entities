@@ -257,16 +257,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
      */
     public function delete(array $where): int
     {
-        // We need specific WHERE restrictions, otherwise there is a huge risk
-        // of overwriting to many entries
-        if (\count($where) === 0) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'No restricting "where" arguments defined for DELETE'
-            );
-        }
-
         // Generate the WHERE part of the query
         $where = $this->preprocessWhere($where);
 

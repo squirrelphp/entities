@@ -73,7 +73,7 @@ class InsertOrUpdateEntry implements ActionInterface
      */
     public function write(): void
     {
-        $this->repository->insertOrUpdate($this->values, $this->index, $this->valuesOnUpdate);
+        $this->writeAndReturnWhatHappened();
     }
 
     /**

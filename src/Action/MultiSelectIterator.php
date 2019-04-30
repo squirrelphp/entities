@@ -4,6 +4,7 @@ namespace Squirrel\Entities\Action;
 
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\MultiRepositorySelectQueryInterface;
+use Squirrel\Queries\Builder\SelectIteratorTrait;
 
 /**
  * Iterator returned by MultiSelectEntries to be used in a foreach loop
@@ -15,7 +16,7 @@ class MultiSelectIterator implements \Iterator, ActionInterface
     /**
      * @var MultiRepositoryReadOnlyInterface
      */
-    private $repository;
+    private $source;
 
     /**
      * @var MultiRepositorySelectQueryInterface|null
@@ -24,7 +25,7 @@ class MultiSelectIterator implements \Iterator, ActionInterface
 
     public function __construct(MultiRepositoryReadOnlyInterface $repository, array $query)
     {
-        $this->repository = $repository;
+        $this->source = $repository;
         $this->query = $query;
     }
 }

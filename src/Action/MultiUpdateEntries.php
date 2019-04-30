@@ -99,14 +99,7 @@ class MultiUpdateEntries implements ActionInterface
      */
     public function write(): void
     {
-        $this->queryHandler->update([
-            'repositories' => $this->repositories,
-            'tables' => $this->connections,
-            'changes' => $this->changes,
-            'where' => $this->where,
-            'order' => $this->orderBy,
-            'limit' => $this->limitTo,
-        ]);
+        $this->writeAndReturnAffectedNumber();
     }
 
     /**

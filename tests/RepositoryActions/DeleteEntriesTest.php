@@ -4,6 +4,7 @@ namespace Squirrel\Entities\Tests\RepositoryActions;
 
 use Squirrel\Entities\Action\DeleteEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
 {
@@ -24,7 +25,9 @@ class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
             ->with([])
             ->andReturn(5);
 
-        $deleteBuilder->write();
+        $deleteBuilder
+            ->confirmDeleteAll()
+            ->write();
 
         $this->assertTrue(true);
     }
@@ -51,5 +54,20 @@ class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
         $results = $deleteBuilder->writeAndReturnAffectedNumber();
 
         $this->assertEquals(55, $results);
+    }
+
+    public function testNoWhereNoConfirmation()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $deleteBuilder = new DeleteEntries($this->repository);
+
+        $this->repository
+            ->shouldReceive('delete')
+            ->once()
+            ->with([])
+            ->andReturn(5);
+
+        $deleteBuilder->write();
     }
 }

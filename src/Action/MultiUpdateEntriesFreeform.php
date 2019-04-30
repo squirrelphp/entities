@@ -73,13 +73,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
      */
     public function write(): void
     {
-        $this->makeSureBadPracticeWasConfirmed();
-
-        $this->queryHandler->update([
-            'repositories' => $this->repositories,
-            'query' => $this->query,
-            'parameters' => $this->parameters,
-        ]);
+        $this->writeAndReturnAffectedNumber();
     }
 
     /**

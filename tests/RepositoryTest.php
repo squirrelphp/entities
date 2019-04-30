@@ -1054,6 +1054,28 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResults, $results);
     }
 
+    public function testDeleteNoWhere()
+    {
+        // What values we want to see and return in our DB class
+        $expectedResults = 17;
+
+        // Define the structured query we expect to generate
+        $query = [];
+
+        // What we expect to get
+        $this->db
+            ->shouldReceive('delete')
+            ->once()
+            ->with($this->repositoryConfig->getTableName(), $query)
+            ->andReturn($expectedResults);
+
+        // Make call to repository
+        $results = $this->repository->delete([]);
+
+        // Make sure the correct objects were returned
+        $this->assertEquals($expectedResults, $results);
+    }
+
     public function testSelectUnknownOption()
     {
         // Expect an exception
@@ -1130,6 +1152,22 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ],
             'fields' => [
                 'badFieldName',
+            ],
+        ]);
+    }
+
+    public function testSelectIllegalFieldsName()
+    {
+        // Expect an InvalidArgument exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Make call to repository
+        $this->repository->fetchAll([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+            'fields' => [
+                5,
             ],
         ]);
     }
@@ -1535,15 +1573,6 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
-    }
-
-    public function testRemoveNoWhere()
-    {
-        // Expect an InvalidArgument exception
-        $this->expectException(DBInvalidOptionException::class);
-
-        // Make call to repository
-        $this->repository->delete([]);
     }
 
     public function testBadObjValueCasting()

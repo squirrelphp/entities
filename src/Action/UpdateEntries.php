@@ -76,12 +76,7 @@ class UpdateEntries implements ActionInterface
      */
     public function write(): void
     {
-        $this->repository->update([
-            'changes' => $this->changes,
-            'where' => $this->where,
-            'order' => $this->orderBy,
-            'limit' => $this->limitTo,
-        ]);
+        $this->writeAndReturnAffectedNumber();
     }
 
     /**

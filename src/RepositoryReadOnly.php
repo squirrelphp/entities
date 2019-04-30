@@ -141,6 +141,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function fetch(RepositorySelectQueryInterface $selectQuery)
     {
         // Make sure the same repository configuration is used
@@ -158,6 +161,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
+    /**
+     * @inheritDoc
+     */
     public function clear(RepositorySelectQueryInterface $selectQuery): void
     {
         // Make sure the same repository configuration is used
@@ -198,6 +204,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $result;
     }
 
+    /**
+     * @inheritDoc
+     */
     public function fetchAll(array $query)
     {
         // Whether to flatten fields and just return an array of values instead of objects
@@ -290,7 +299,22 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         // Field names were restricted
         if (\count($query['fields']) > 0) {
-            $query['fields'] = $this->convertNamesToTable($query['fields']);
+            // Go through all provided field names
+            foreach ($query['fields'] as $key => $fieldName) {
+                // If we do not know a field name this is super bad
+                if (!\is_string($fieldName)) {
+                    throw DBDebug::createException(
+                        DBInvalidOptionException::class,
+                        [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                        'Field name is not a string: ' . DBDebug::sanitizeData($fieldName)
+                    );
+                }
+
+                // Convert the name
+                $query['fields'][$key] = $this->convertNameToTable($fieldName);
+            }
+
+            $query['fields'] = \array_values($query['fields']);
         } else { // Remove fields if none were defined
             unset($query['fields']);
         }
@@ -407,38 +431,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         return $list;
-    }
-
-    /**
-     * Convert field names to the table names
-     *
-     * @param array $fieldNames
-     * @return array
-     *
-     * @throws DBInvalidOptionException
-     */
-    protected function convertNamesToTable(array $fieldNames)
-    {
-        // Result of converted names
-        $convertedNames = [];
-
-        // Go through all provided field names
-        foreach ($fieldNames as $fieldName) {
-            // If we do not know a field name this is super bad
-            if (!\is_string($fieldName) || !isset($this->objectToTableFields[$fieldName])) {
-                throw DBDebug::createException(
-                    DBInvalidOptionException::class,
-                    [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                    'Unknown field name: ' . DBDebug::sanitizeData($fieldName)
-                );
-            }
-
-            // Convert the name
-            $convertedNames[] = $this->objectToTableFields[$fieldName];
-        }
-
-        // Return the converted fields
-        return $convertedNames;
     }
 
     /**
