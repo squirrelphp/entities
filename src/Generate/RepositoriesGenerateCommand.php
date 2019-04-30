@@ -37,6 +37,7 @@ class RepositoriesGenerateCommand
  * this file will be overwritten when that command is executed again, if your
  * entity still exists at that time
  */
+// @codeCoverageIgnoreStart
 
 namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
@@ -212,6 +213,7 @@ namespace {namespaceOfBuilders} {
         }
     }
 }
+// @codeCoverageIgnoreEnd
 
 EOD
         ,
@@ -228,6 +230,7 @@ EOD
  * this file will be overwritten when that command is executed again, if your
  * entity still exists at that time
  */
+// @codeCoverageIgnoreStart
 
 namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderWriteableInterface;
@@ -268,6 +271,7 @@ namespace {namespaceOfEntity} {
         }
     }
 }
+// @codeCoverageIgnoreEnd
 
 EOD
         ,
