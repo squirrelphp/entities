@@ -10,7 +10,7 @@ use Squirrel\Entities\Annotation as SQL;
 class User
 {
     /**
-     * @SQL\Field("user_id", type="int")
+     * @SQL\Field("user_id", type="int", autoincrement=true)
      *
      * @var integer
      */

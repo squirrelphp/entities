@@ -25,9 +25,9 @@ class InsertOrUpdateEntry implements ActionInterface
     private $index = [];
 
     /**
-     * @var array SET clauses for the update part of the query
+     * @var array|null SET clauses for the update part of the query
      */
-    private $valuesOnUpdate = [];
+    private $valuesOnUpdate = null;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {
@@ -73,20 +73,6 @@ class InsertOrUpdateEntry implements ActionInterface
      */
     public function write(): void
     {
-        $this->writeAndReturnWhatHappened();
-    }
-
-    /**
-     * Write changes to database and return the operation that happened in the database:
-     *
-     * "insert": Entry was inserted
-     * "update": Existing entry was updated
-     * "":       Nothing changed, existing entry was already up-to-date
-     *
-     * @return string Either returns "insert", "update" or "" to indicate what operation happened
-     */
-    public function writeAndReturnWhatHappened(): string
-    {
-        return $this->repository->insertOrUpdate($this->values, $this->index, $this->valuesOnUpdate);
+        $this->repository->insertOrUpdate($this->values, $this->index, $this->valuesOnUpdate);
     }
 }

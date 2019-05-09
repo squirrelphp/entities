@@ -43,4 +43,9 @@ interface RepositoryConfigInterface
      * @return array
      */
     public function getObjectTypesNullable(): array;
+
+    /**
+     * @return string
+     */
+    public function getAutoincrementField(): string;
 }

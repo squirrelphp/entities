@@ -18,6 +18,11 @@ class RepositoryConfig implements RepositoryConfigInterface
     private $tableName = '';
 
     /**
+     * @var string Autoincrement / SERIAL column
+     */
+    private $autoincrementField = '';
+
+    /**
      * Conversion from table to object fields
      *
      * @var array
@@ -59,7 +64,8 @@ class RepositoryConfig implements RepositoryConfigInterface
         array $objectToTableFields,
         string $objectClass,
         array $objectTypes,
-        array $objectTypesNullable
+        array $objectTypesNullable,
+        string $autoincrementField = ''
     ) {
         $this->connectionName = $connectionName;
         $this->tableName = $tableName;
@@ -68,6 +74,7 @@ class RepositoryConfig implements RepositoryConfigInterface
         $this->objectClass = $objectClass;
         $this->objectTypes = $objectTypes;
         $this->objectTypesNullable = $objectTypesNullable;
+        $this->autoincrementField = $autoincrementField;
     }
 
     /**
@@ -124,5 +131,13 @@ class RepositoryConfig implements RepositoryConfigInterface
     public function getObjectTypesNullable(): array
     {
         return $this->objectTypesNullable;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getAutoincrementField(): string
+    {
+        return $this->autoincrementField;
     }
 }

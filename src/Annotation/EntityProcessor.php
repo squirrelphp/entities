@@ -46,6 +46,7 @@ class EntityProcessor
             $objectToTableFields = [];
             $objectTypes = [];
             $objectTypesNullable = [];
+            $autoincrement = '';
 
             // Go through all public values of the class
             foreach ($annotationClass->getProperties() as $property) {
@@ -64,6 +65,10 @@ class EntityProcessor
                     $objectToTableFields[$property->getName()] = $field->name;
                     $objectTypes[$property->getName()] = $field->type;
                     $objectTypesNullable[$property->getName()] = $field->nullable;
+
+                    if ($field->autoincrement === true) {
+                        $autoincrement = $field->name;
+                    }
                 }
             }
 
@@ -75,7 +80,8 @@ class EntityProcessor
                 $objectToTableFields,
                 $annotationClass->getName(),
                 $objectTypes,
-                $objectTypesNullable
+                $objectTypesNullable,
+                $autoincrement
             );
         }
 

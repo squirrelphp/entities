@@ -141,7 +141,8 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
+            'id'
         );
 
         // Initialize repository
@@ -755,11 +756,11 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('insert')
             ->once()
-            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), \Mockery::mustBe($processedAddArray));
-
-        $this->db
-            ->shouldReceive('lastInsertId')
-            ->once()
+            ->with(
+                \Mockery::mustBe($this->repositoryConfig->getTableName()),
+                \Mockery::mustBe($processedAddArray),
+                \Mockery::mustBe('id')
+            )
             ->andReturn($lastInsertId);
 
         // Make call to repository
@@ -791,11 +792,11 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('insert')
             ->once()
-            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), \Mockery::mustBe($processedAddArray));
-
-        $this->db
-            ->shouldReceive('lastInsertId')
-            ->once()
+            ->with(
+                \Mockery::mustBe($this->repositoryConfig->getTableName()),
+                \Mockery::mustBe($processedAddArray),
+                \Mockery::mustBe('id')
+            )
             ->andReturn($lastInsertId);
 
         // Make call to repository
@@ -856,13 +857,13 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], []);
+        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], null);
 
         // Make call to repository
-        $result = $this->repository->insertOrUpdate($objectAsArray, ['id']);
+        $this->repository->insertOrUpdate($objectAsArray, ['id']);
 
         // Make sure the correct objects were returned
-        $this->assertEquals('insert', $result);
+        $this->assertTrue(true);
     }
 
     /**
@@ -878,20 +879,19 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         string $tableName,
         array $fields,
         array $indexFields,
-        array $updateFields,
+        ?array $updateFields,
         int $returnValue = 1
     ) {
         // DB calls
         $this->db
-            ->shouldReceive('upsert')
+            ->shouldReceive('insertOrUpdate')
             ->once()
             ->with(
                 \Mockery::mustBe($tableName),
                 \Mockery::mustBe($fields),
                 \Mockery::mustBe($indexFields),
                 \Mockery::mustBe($updateFields)
-            )
-            ->andReturn($returnValue);
+            );
     }
 
     public function testInsertOrUpdateNoChange()
@@ -919,13 +919,13 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], [], 0);
+        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], null, 0);
 
         // Make call to repository
-        $result = $this->repository->insertOrUpdate($objectAsArray, ['id']);
+        $this->repository->insertOrUpdate($objectAsArray, ['id']);
 
         // Make sure the correct objects were returned
-        $this->assertEquals('', $result);
+        $this->assertTrue(true);
     }
 
     public function testInsertOrUpdateCustomUpdate()
@@ -963,14 +963,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], $updateAsArray);
 
         // Make call to repository
-        $result = $this->repository->insertOrUpdate($objectAsArray, ['id'], [
+        $this->repository->insertOrUpdate($objectAsArray, ['id'], [
             'number' => '888',
             'floatVal' => '13.93',
             'isGreat' => '1',
         ]);
 
         // Make sure the correct objects were returned
-        $this->assertEquals('insert', $result);
+        $this->assertTrue(true);
     }
 
     public function testInsertOrUpdateCustomUpdate2()
@@ -1008,14 +1008,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], $updateAsArray, 2);
 
         // Make call to repository
-        $result = $this->repository->insertOrUpdate($objectAsArray, ['id'], [
+        $this->repository->insertOrUpdate($objectAsArray, ['id'], [
             ':number: = :number: + 1',
             'floatVal' => '13.93',
             'isGreat' => '1',
         ]);
 
         // Make sure the correct objects were returned
-        $this->assertEquals('update', $result);
+        $this->assertTrue(true);
     }
 
     public function testDelete()
@@ -1916,7 +1916,11 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('insert')
             ->once()
-            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), \Mockery::mustBe($processedAddArray))
+            ->with(
+                \Mockery::mustBe($this->repositoryConfig->getTableName()),
+                \Mockery::mustBe($processedAddArray),
+                \Mockery::mustBe('id')
+            )
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Make call to repository
@@ -1952,13 +1956,13 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Set up DB class mock
         $this->db
-            ->shouldReceive('upsert')
+            ->shouldReceive('insertOrUpdate')
             ->once()
             ->with(
                 \Mockery::mustBe('example'),
                 \Mockery::mustBe($insertAsArray),
                 \Mockery::mustBe(['id']),
-                \Mockery::mustBe([])
+                \Mockery::mustBe(null)
             )
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
@@ -1987,5 +1991,60 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->delete([
             'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
         ]);
+    }
+
+    public function testNoAutoincrementAttemptInsertId()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Repository configuration
+        $this->repositoryConfig = new RepositoryConfig(
+            'defaultConnection',
+            'example',
+            [
+                'id' => 'id',
+                'first_name' => 'firstName',
+                'last_name' => 'lastName',
+                'street' => 'street',
+                'number' => 'number',
+                'float_val' => 'floatVal',
+                'is_great_yay' => 'isGreat',
+            ],
+            [
+                'id' => 'id',
+                'firstName' => 'first_name',
+                'lastName' => 'last_name',
+                'street' => 'street',
+                'number' => 'number',
+                'floatVal' => 'float_val',
+                'isGreat' => 'is_great_yay',
+            ],
+            TestClasses\ObjData::class,
+            [
+                'id' => 'int',
+                'firstName' => 'string',
+                'lastName' => 'string',
+                'street' => 'string',
+                'number' => 'int',
+                'floatVal' => 'float',
+                'isGreat' => 'bool',
+            ],
+            [
+                'id' => false,
+                'firstName' => false,
+                'lastName' => false,
+                'street' => true,
+                'number' => false,
+                'floatVal' => false,
+                'isGreat' => false,
+            ],
+            ''
+        );
+
+        // Initialize repository
+        $this->repository = new RepositoryWriteable($this->db, $this->repositoryConfig);
+
+        $this->testInsert();
     }
 }

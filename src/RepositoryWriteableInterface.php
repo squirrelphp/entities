@@ -22,9 +22,8 @@ interface RepositoryWriteableInterface extends RepositoryReadOnlyInterface
      * @param array $fields Fields and values to use when inserting the row
      * @param array $indexFields Field names of the unique index
      * @param array $updateFields Updates to do if an entry already exists, defaults to $fields minus $indexFields
-     * @return string Either "insert", "update" or "" (empty string means no change)
      */
-    public function insertOrUpdate(array $fields, array $indexFields = [], array $updateFields = []): string;
+    public function insertOrUpdate(array $fields, array $indexFields = [], ?array $updateFields = null): void;
 
     /**
      * Update existing fields $fields restricted by $where fields

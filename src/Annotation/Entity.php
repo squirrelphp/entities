@@ -11,16 +11,12 @@ use Doctrine\Common\Annotations\Annotation;
 class Entity
 {
     /**
-     * Name of the SQL table
-     *
-     * @var string
+     * @var string Name of the SQL table
      */
     public $name = '';
 
     /**
-     * Database connection - if empty the default connection is used
-     *
-     * @var string
+     * @var string Database connection - if empty the default connection is used
      */
     public $connection = '';
 }

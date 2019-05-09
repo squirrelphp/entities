@@ -38,9 +38,9 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
             ->with([], [], [])
             ->andReturn('insert');
 
-        $whatHappened = $insertBuilder->writeAndReturnWhatHappened();
+        $insertBuilder->write();
 
-        $this->assertEquals('insert', $whatHappened);
+        $this->assertTrue(true);
     }
 
     public function testWrite()
@@ -64,12 +64,11 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
                 'otherField' => '333',
             ], [
                 'responseId',
-            ], [])
-            ->andReturn('update');
+            ], null);
 
-        $whatHappened = $insertBuilder->writeAndReturnWhatHappened();
+        $insertBuilder->write();
 
-        $this->assertEquals('update', $whatHappened);
+        $this->assertTrue(true);
     }
 
     public function testWriteIndexIsString()
@@ -91,8 +90,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
                 'otherField' => '333',
             ], [
                 'responseId',
-            ], [])
-            ->andReturn('update');
+            ], null);
 
         $insertBuilder->write();
 
@@ -158,11 +156,10 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
                 'responseId',
             ], [
                 ':otherField: = :otherField: + 1',
-            ])
-            ->andReturn('');
+            ]);
 
-        $whatHappened = $insertBuilder->writeAndReturnWhatHappened();
+        $insertBuilder->write();
 
-        $this->assertEquals('', $whatHappened);
+        $this->assertTrue(true);
     }
 }

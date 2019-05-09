@@ -142,6 +142,16 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
      */
     public function insert(array $fields, bool $returnInsertId = false): ?string
     {
+        // Make sure we have an autoincrement field if one is requested
+        if ($returnInsertId === true && \strlen($this->config->getAutoincrementField()) === 0) {
+            throw DBDebug::createException(
+                DBInvalidOptionException::class,
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                'Insert ID requested but no autoincrement ID specified: ' .
+                DBDebug::sanitizeData($fields)
+            );
+        }
+
         // Insert fields with converted field names
         $actualFields = [];
 
@@ -155,6 +165,14 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
 
         try {
             // Delegate insert to DBAL
+            if ($returnInsertId === true) {
+                return $this->db->insert(
+                    $this->config->getTableName(),
+                    $actualFields,
+                    $this->config->getAutoincrementField()
+                );
+            }
+
             $this->db->insert($this->config->getTableName(), $actualFields);
         } catch (DBInvalidOptionException $e) {
             throw DBDebug::createException(
@@ -164,11 +182,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             );
         }
 
-        // Return insert ID if requested
-        if ($returnInsertId === true) {
-            return $this->db->lastInsertId();
-        }
-
         // Return null if no insert ID is requested
         return null;
     }
@@ -176,7 +189,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     /**
      * @inheritDoc
      */
-    public function insertOrUpdate(array $fields, array $indexFields = [], array $updateFields = []): string
+    public function insertOrUpdate(array $fields, array $indexFields = [], ?array $updateFields = null): void
     {
         // Fields after conversion to table notation
         $actualIndexFields = [];
@@ -206,31 +219,33 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             );
         }
 
-        // Processed update array
-        $actualUpdateFields = [];
+        if (isset($updateFields)) {
+            // Processed update array
+            $actualUpdateFields = [];
 
-        // Process the update part of the query
-        foreach ($updateFields as $fieldName => $fieldValue) {
-            // Freestyle update clause - make the object-to-table notation conversion
-            if (\is_int($fieldName)) {
-                $actualUpdateFields[] = $this->convertNamesToTableInString($fieldValue);
-                continue;
+            // Process the update part of the query
+            foreach ($updateFields as $fieldName => $fieldValue) {
+                // Freestyle update clause - make the object-to-table notation conversion
+                if (\is_int($fieldName)) {
+                    $actualUpdateFields[] = $this->convertNamesToTableInString($fieldValue);
+                    continue;
+                }
+
+                // Structured update clause - convert table name and cast the value
+                $actualUpdateFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
+                    $fieldValue,
+                    $fieldName
+                );
             }
-
-            // Structured update clause - convert table name and cast the value
-            $actualUpdateFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
-                $fieldValue,
-                $fieldName
-            );
         }
 
         try {
             // Call the upsert function with adjusted values
-            $result = $this->db->upsert(
+            $this->db->insertOrUpdate(
                 $this->config->getTableName(),
                 $actualFields,
                 $actualIndexFields,
-                $actualUpdateFields
+                $actualUpdateFields ?? null
             );
         } catch (DBInvalidOptionException $e) {
             throw DBDebug::createException(
@@ -239,17 +254,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 $e->getMessage()
             );
         }
-
-        // Return the information on whether the row was updated or inserted
-        switch (\intval($result)) {
-            case 1:
-                return 'insert';
-            case 2:
-                return 'update';
-        }
-
-        // Row was not changed
-        return '';
     }
 
     /**
