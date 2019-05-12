@@ -13,8 +13,12 @@ class MultiRepositoryBuilderReadOnly implements MultiRepositoryBuilderReadOnlyIn
      */
     private $multiRepositoryReadOnly;
 
-    public function __construct(MultiRepositoryReadOnlyInterface $multiRepositoryReadOnly)
+    public function __construct(?MultiRepositoryReadOnlyInterface $multiRepositoryReadOnly = null)
     {
+        if ($multiRepositoryReadOnly === null) {
+            $multiRepositoryReadOnly = new MultiRepositoryReadOnly();
+        }
+
         $this->multiRepositoryReadOnly = $multiRepositoryReadOnly;
     }
 

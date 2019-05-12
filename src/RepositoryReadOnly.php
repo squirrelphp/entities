@@ -6,6 +6,7 @@ use Squirrel\Entities\Action\ActionInterface;
 use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
+use Squirrel\Queries\LargeObject;
 
 /**
  * Repository functionality: Get data from one table and change data in that one table
@@ -506,7 +507,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @param mixed $value
      * @param null|string $fieldName
-     * @return int|float|string|array|null
+     * @return int|float|string|LargeObject|array|null
      *
      * @throws DBInvalidOptionException
      */
@@ -529,11 +530,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @param mixed $value
      * @param string|null $fieldName
-     * @return int|float|string|null
+     * @param bool $isChange
+     * @return int|float|string|LargeObject|null
      *
      * @throws DBInvalidOptionException
      */
-    protected function castOneTableVariable($value, ?string $fieldName = null)
+    protected function castOneTableVariable($value, ?string $fieldName = null, bool $isChange = false)
     {
         // Only scalar values and null are allowed
         if (!\is_null($value) && !\is_scalar($value)) {
@@ -592,6 +594,18 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 return \floatval($value);
             case 'string':
                 return \strval($value);
+        }
+
+        // Blob = binary large object
+        if ($this->objectTypes[$fieldName] === 'blob') {
+            // Large object are used for update and insert
+            if ($isChange === true) {
+                return new LargeObject(\strval($value));
+            }
+
+            // We let this escalate to an exception because blobs should not be used in WHERE clauses
+            // or similar expressions - they are considered something to access and write, but not query,
+            // except for NULL if a blob is nullable
         }
 
         // Always throw an exception we if hit unchartered territory
@@ -724,6 +738,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             case 'float':
                 return \floatval($value);
             case 'string':
+            case 'blob':
                 return \strval($value);
         }
 

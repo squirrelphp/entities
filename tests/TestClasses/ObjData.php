@@ -46,4 +46,9 @@ class ObjData
      * @var int
      */
     public $unused = 0;
+
+    /**
+     * @var string
+     */
+    public $picture;
 }

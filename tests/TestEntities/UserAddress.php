@@ -46,6 +46,13 @@ class UserAddress
     private $city = '';
 
     /**
+     * @Field("picture", type="blob")
+     *
+     * @var string
+     */
+    private $picture = '';
+
+    /**
      * Initialize the object with an array - not used by repository, just for testing
      *
      * @param array $data
@@ -95,5 +102,13 @@ class UserAddress
     public function getCity(): string
     {
         return $this->city;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPicture(): string
+    {
+        return $this->picture;
     }
 }

@@ -106,7 +106,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
 
             // No variables are contained in SQL
             if (\strpos($fieldName, ':') === false) {
-                $fieldValue = $this->castOneTableVariable($fieldValue, $fieldName);
+                $fieldValue = $this->castOneTableVariable($fieldValue, $fieldName, true);
                 $fieldName = $this->convertNameToTable($fieldName);
             } else { // Variables are contained in SQL
                 // Cast change values - can be scalar or array
@@ -159,7 +159,8 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         foreach ($fields as $fieldName => $fieldValue) {
             $actualFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
                 $fieldValue,
-                $fieldName
+                $fieldName,
+                true
             );
         }
 
@@ -215,7 +216,8 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         foreach ($fields as $fieldName => $fieldValue) {
             $actualFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
                 $fieldValue,
-                $fieldName
+                $fieldName,
+                true
             );
         }
 
@@ -234,7 +236,8 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 // Structured update clause - convert table name and cast the value
                 $actualUpdateFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
                     $fieldValue,
-                    $fieldName
+                    $fieldName,
+                    true
                 );
             }
         }

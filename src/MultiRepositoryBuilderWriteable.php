@@ -13,8 +13,12 @@ class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly imp
      */
     private $multiRepositoryWriteable;
 
-    public function __construct(MultiRepositoryWriteableInterface $multiRepositoryWriteable)
+    public function __construct(?MultiRepositoryWriteableInterface $multiRepositoryWriteable = null)
     {
+        if ($multiRepositoryWriteable === null) {
+            $multiRepositoryWriteable = new MultiRepositoryWriteable();
+        }
+
         $this->multiRepositoryWriteable = $multiRepositoryWriteable;
         parent::__construct($multiRepositoryWriteable);
     }

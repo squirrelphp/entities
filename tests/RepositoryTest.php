@@ -10,6 +10,7 @@ use Squirrel\Entities\Tests\TestClasses\ObjData;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
+use Squirrel\Queries\LargeObject;
 use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
 class RepositoryTest extends \PHPUnit\Framework\TestCase
@@ -41,6 +42,11 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
      */
     protected function setUp(): void
     {
+        \Hamcrest\Util::registerGlobalFunctions();
+
+        $picture1 = md5('somevalue', true);
+        $picture2 = md5('othervalue', true);
+
         $obj1 = new TestClasses\ObjData();
         $obj1->id = 5;
         $obj1->firstName = 'Andreas';
@@ -49,6 +55,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $obj1->number = 888;
         $obj1->floatVal = 13.93;
         $obj1->isGreat = true;
+        $obj1->picture = $picture1;
 
         $obj2 = new TestClasses\ObjData();
         $obj2->id = 13;
@@ -58,6 +65,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $obj2->number = 934;
         $obj2->floatVal = 7.2;
         $obj2->isGreat = false;
+        $obj2->picture = $picture2;
 
         $this->basicData = [
             'dbResults1' => [
@@ -70,6 +78,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                     'float_val' => '13.93',
                     'is_great_yay' => '1',
                     'blabla' => '5',
+                    'picture' => $picture1,
                 ],
             ],
             'dbResults2' => [
@@ -82,6 +91,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                     'float_val' => '13.93',
                     'is_great_yay' => '1',
                     'blabla' => '5',
+                    'picture' => $picture1,
                 ],
                 [
                     'id' => 13,
@@ -92,6 +102,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                     'float_val' => '7.2',
                     'is_great_yay' => '0',
                     'blabla' => '77',
+                    'picture' => $picture2,
                 ],
             ],
             'obj1' => $obj1,
@@ -113,6 +124,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => 'number',
                 'float_val' => 'floatVal',
                 'is_great_yay' => 'isGreat',
+                'picture' => 'picture',
             ],
             [
                 'id' => 'id',
@@ -122,6 +134,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => 'number',
                 'floatVal' => 'float_val',
                 'isGreat' => 'is_great_yay',
+                'picture' => 'picture',
             ],
             TestClasses\ObjData::class,
             [
@@ -132,6 +145,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => 'int',
                 'floatVal' => 'float',
                 'isGreat' => 'bool',
+                'picture' => 'blob',
             ],
             [
                 'id' => false,
@@ -141,6 +155,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
+                'picture' => true,
             ],
             'id'
         );
@@ -748,6 +763,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $processedAddArray['number'] = intval($processedAddArray['number']);
         $processedAddArray['float_val'] = floatval($processedAddArray['float_val']);
         $processedAddArray['is_great_yay'] = intval($processedAddArray['is_great_yay']);
+        $processedAddArray['picture'] = new LargeObject($processedAddArray['picture']);
 
         // Last insert ID
         $lastInsertId = 77;
@@ -758,7 +774,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->once()
             ->with(
                 \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                \Mockery::mustBe($processedAddArray),
+                equalTo($processedAddArray),
                 \Mockery::mustBe('id')
             )
             ->andReturn($lastInsertId);
@@ -784,6 +800,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $processedAddArray['float_val'] = floatval($processedAddArray['float_val']);
         $processedAddArray['is_great_yay'] = intval($processedAddArray['is_great_yay']);
         $processedAddArray['street'] = null;
+        $processedAddArray['picture'] = new LargeObject($processedAddArray['picture']);
 
         // Last insert ID
         $lastInsertId = 77;
@@ -794,7 +811,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->once()
             ->with(
                 \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                \Mockery::mustBe($processedAddArray),
+                equalTo($processedAddArray),
                 \Mockery::mustBe('id')
             )
             ->andReturn($lastInsertId);
@@ -818,12 +835,13 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $processedAddArray['number'] = intval($processedAddArray['number']);
         $processedAddArray['float_val'] = floatval($processedAddArray['float_val']);
         $processedAddArray['is_great_yay'] = intval($processedAddArray['is_great_yay']);
+        $processedAddArray['picture'] = new LargeObject($processedAddArray['picture']);
 
         // Set up DB class mock
         $this->db
             ->shouldReceive('insert')
             ->once()
-            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), \Mockery::mustBe($processedAddArray));
+            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), equalTo($processedAddArray));
 
         // Make call to repository
         $results = $this->repository->insert($objectAsArray, false);
@@ -873,14 +891,12 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
      * @param array $fields
      * @param array $indexFields
      * @param array $updateFields
-     * @param int $returnValue
      */
     protected function dbSetupInsertOrUpdate(
         string $tableName,
         array $fields,
         array $indexFields,
-        ?array $updateFields,
-        int $returnValue = 1
+        ?array $updateFields
     ) {
         // DB calls
         $this->db
@@ -919,7 +935,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], null, 0);
+        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], null);
 
         // Make call to repository
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
@@ -1005,7 +1021,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Set up DB class mock
-        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], $updateAsArray, 2);
+        $this->dbSetupInsertOrUpdate('example', $insertAsArray, ['id'], $updateAsArray);
 
         // Make call to repository
         $this->repository->insertOrUpdate($objectAsArray, ['id'], [
@@ -1911,6 +1927,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $processedAddArray['number'] = intval($processedAddArray['number']);
         $processedAddArray['float_val'] = floatval($processedAddArray['float_val']);
         $processedAddArray['is_great_yay'] = intval($processedAddArray['is_great_yay']);
+        $processedAddArray['picture'] = new LargeObject($processedAddArray['picture']);
 
         // Set up DB class mock
         $this->db
@@ -1918,7 +1935,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->once()
             ->with(
                 \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                \Mockery::mustBe($processedAddArray),
+                equalTo($processedAddArray),
                 \Mockery::mustBe('id')
             )
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
