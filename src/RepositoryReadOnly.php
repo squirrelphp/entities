@@ -113,7 +113,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         // Return count as int
-        return \intval($count['num']);
+        return \intval($count['num'] ?? 0);
     }
 
     /**
@@ -245,7 +245,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return \array_map([$this, 'convertResultToObject'], $tableResults);
     }
 
-    protected function validateQueryOptions(array $validOptions, array $options)
+    protected function validateQueryOptions(array $validOptions, array $options): array
     {
         // One field shortcut - convert to fields array
         if (isset($validOptions['fields']) && isset($options['field']) && !isset($options['fields'])) {
@@ -352,6 +352,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $query;
     }
 
+    /**
+     * @param mixed $shouldBeBoolean
+     * @param string $settingName
+     * @return bool
+     */
     private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {
         // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
@@ -369,7 +374,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return \boolval($shouldBeBoolean);
     }
 
-    private function compareRepositoryConfigMustBeEqual(RepositoryConfigInterface $config)
+    private function compareRepositoryConfigMustBeEqual(RepositoryConfigInterface $config): void
     {
         if ($config != $this->config) {
             throw DBDebug::createException(
@@ -380,11 +385,16 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    private function convertResultToObject(array $tableResult)
+    private function convertResultToObject(array $tableResult): object
     {
         // Only create reflection class once we need it, to be resource efficient
         if (!isset($this->reflectionClass)) {
-            $this->reflectionClass = new \ReflectionClass($this->config->getObjectClass());
+            /**
+             * @psalm-var class-string $objectClass
+             */
+            $objectClass = $this->config->getObjectClass();
+
+            $this->reflectionClass = new \ReflectionClass($objectClass);
         }
 
         // Initialize object without constructor
@@ -419,7 +429,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $useableObject;
     }
 
-    private function convertResultsToFlattenedResults($tableResults)
+    /**
+     * @param array $tableResults
+     * @return array<int, bool|int|float|string|null>
+     */
+    private function convertResultsToFlattenedResults(array $tableResults): array
     {
         $list = [];
 
@@ -442,7 +456,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @throws DBInvalidOptionException
      */
-    protected function preprocessWhere(array $where)
+    protected function preprocessWhere(array $where): array
     {
         // SQL restrictions as an array
         $whereProcessed = [];
@@ -557,6 +571,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 $value = \intval($value);
             }
 
+            /**
+             * @var int|float|string|null $value No boolean is possible because we just typecast it above
+             */
             return $value;
         }
 
@@ -622,7 +639,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      * @param string $expression
      * @return string
      */
-    protected function convertNamesToTableInString(string $expression)
+    protected function convertNamesToTableInString(string $expression): string
     {
         // Convert all :variable: values from object to table notation
         foreach ($this->objectToTableFields as $objectName => $tableName) {
@@ -640,7 +657,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @throws DBInvalidOptionException
      */
-    protected function convertNameToTable(string $fieldName)
+    protected function convertNameToTable(string $fieldName): string
     {
         // If we do not know a field name this is super bad
         if (!isset($this->objectToTableFields[$fieldName])) {
@@ -662,7 +679,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @throws DBInvalidOptionException
      */
-    protected function preprocessOrder(array $orderOptions)
+    protected function preprocessOrder(array $orderOptions): array
     {
         // Order SQL parts
         $orderProcessed = [];

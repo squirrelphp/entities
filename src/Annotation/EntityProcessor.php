@@ -29,6 +29,7 @@ class EntityProcessor
      * Processes a class according to its Convert annotation
      *
      * @param object|string $class
+     * @psalm-param object|class-string $class
      * @return null|RepositoryConfig
      */
     public function process($class)

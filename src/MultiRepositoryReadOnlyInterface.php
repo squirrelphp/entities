@@ -16,6 +16,7 @@ interface MultiRepositoryReadOnlyInterface
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (optional)
      *
      * @param array $query
+     * @psalm-param array{repositories:array,tables?:array,where:array,lock?:bool} $query
      * @return int
      */
     public function count(array $query): int;
@@ -46,6 +47,7 @@ interface MultiRepositoryReadOnlyInterface
      * still be necessary or useful for performance or other reasons
      *
      * @param array $query
+     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array} $query
      * @return MultiRepositorySelectQueryInterface
      */
     public function select(array $query): MultiRepositorySelectQueryInterface;
@@ -69,6 +71,7 @@ interface MultiRepositoryReadOnlyInterface
      * Select query and return one entry. The query options are the same as with the select function
      *
      * @param array $query
+     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array} $query
      * @return array
      */
     public function fetchOne(array $query): ?array;
@@ -80,6 +83,7 @@ interface MultiRepositoryReadOnlyInterface
      * 'flattenFields': Whether to return a one dimensional array of just values instead of arrays (optional)
      *
      * @param array $query
+     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array} $query
      * @return array
      */
     public function fetchAll(array $query): array;

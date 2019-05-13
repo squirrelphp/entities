@@ -8,8 +8,8 @@ use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
- * QueryHandler functionality: If more than one table needs to be selected or updated
- * at once QueryHandler combines the knowledge of multiple Repository classes to create
+ * If more than one table needs to be selected or updated at once this class
+ * combines the knowledge of multiple Repository classes to create
  * a query which is simple and secure
  */
 class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
@@ -27,9 +27,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             ],
         ];
 
-        if (isset($query['repositories'])) {
-            $sanitizedQuery['repositories'] = $query['repositories'];
-        }
+        $sanitizedQuery['repositories'] = $query['repositories'];
 
         if (isset($query['tables'])) {
             $sanitizedQuery['tables'] = $query['tables'];
@@ -46,7 +44,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         // Use our internal functions to not repeat ourselves
         $result = $this->fetchOne($sanitizedQuery);
 
-        return $result['num'];
+        return $result['num'] ?? 0;
     }
 
     public function select(array $query): MultiRepositorySelectQueryInterface
@@ -305,7 +303,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         /**
          * Name of the tables for this query
          *
-         * @var string
+         * @var array
          */
         $tableName = [];
 
@@ -783,7 +781,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         array $tableObjects,
         array $selectTypes,
         array $selectTypesNullable
-    ) {
+    ): array {
         // Go through result set
         foreach ($tableObjects as $entryCount => $entry) {
             $tableObjects[$entryCount] = $this->processSelectResult($entry, $selectTypes, $selectTypesNullable);
@@ -796,7 +794,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         array $entry,
         array $selectTypes,
         array $selectTypesNullable
-    ) {
+    ): array {
         foreach ($entry as $key => $value) {
             // Special case of nullable types
             if (\is_null($value) && $selectTypesNullable[$key] === true) {
@@ -1141,6 +1139,11 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         return $orderProcessed;
     }
 
+    /**
+     * @param mixed $shouldBeBoolean
+     * @param string $settingName
+     * @return bool
+     */
     private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {
         // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean

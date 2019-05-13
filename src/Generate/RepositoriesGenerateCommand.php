@@ -321,12 +321,17 @@ EOD
                     $namespace = $class[0];
                     $className = $class[1];
 
+                    /**
+                     * @psalm-var class-string $fullClassName
+                     */
+                    $fullClassName = $namespace . '\\' . $className;
+
                     // Get repository config as object from annotations
-                    $repositoryConfig = $entityProcessor->process($namespace . '\\' . $className);
+                    $repositoryConfig = $entityProcessor->process($fullClassName);
 
                     // Repository config found - this is definitely an entity
                     if (isset($repositoryConfig)) {
-                        $log[] = 'Entity found: ' . $namespace . '\\' . $className;
+                        $log[] = 'Entity found: ' . $fullClassName;
 
                         $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
                             $namespace,
@@ -352,7 +357,7 @@ EOD
         return $log;
     }
 
-    private function createGitignoreFiles(array $gitignoreFilesForPaths)
+    private function createGitignoreFiles(array $gitignoreFilesForPaths): void
     {
         // Go through all paths where we created repository files
         foreach ($gitignoreFilesForPaths as $path => $files) {
@@ -380,7 +385,7 @@ EOD
         }
     }
 
-    private function generateRepositoryFile(string $namespace, string $className, array $fileData, string $type)
+    private function generateRepositoryFile(string $namespace, string $className, array $fileData, string $type): string
     {
         $phpFilename = \str_replace('.php', '', $fileData['filename']) . 'Repository' . $type . '.php';
 
@@ -401,8 +406,11 @@ EOD
         return $phpFilename;
     }
 
-    private function repositoryFileContentsFillInBlueprint($repositoryPhpFile, $namespace, $className)
-    {
+    private function repositoryFileContentsFillInBlueprint(
+        string $repositoryPhpFile,
+        string $namespace,
+        string $className
+    ): string {
         $fullClassnameWithoutSeparator = \str_replace(
             '\\',
             '',

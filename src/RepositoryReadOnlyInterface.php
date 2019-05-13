@@ -16,6 +16,7 @@ interface RepositoryReadOnlyInterface
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (default is false)
      *
      * @param array $query Query parts as an array
+     * @psalm-param array{where?:array,lock?:bool} $query
      * @return int Number of entries
      */
     public function count(array $query): int;
@@ -33,6 +34,7 @@ interface RepositoryReadOnlyInterface
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (default is false)
      *
      * @param array $query Query parts as an array
+     * @psalm-param array{fields?:array,field?:string,where?:array,order?:array,limit?:int,offset?:int,lock?:bool} $query
      * @return RepositorySelectQueryInterface Reference to the underlying select query
      */
     public function select(array $query): RepositorySelectQueryInterface;
@@ -59,6 +61,7 @@ interface RepositoryReadOnlyInterface
      * $query can have the same values as with select function, except 'limit' is set to 1
      *
      * @param array $query Query parts as an array
+     * @psalm-param array{fields?:array,field?:string,where?:array,order?:array,lock?:bool} $query
      * @return object|null An entity object or null if no entry was found
      */
     public function fetchOne(array $query);
@@ -81,6 +84,7 @@ interface RepositoryReadOnlyInterface
      * necessary - fetchAll does not that do that for you
      *
      * @param array $query Query parts as an array
+     * @psalm-param array{fields?:array,field?:string,where?:array,order?:array,limit?:int,offset?:int,lock?:bool} $query
      * @return array A list of entity objects, or a list of flattened values
      */
     public function fetchAll(array $query);

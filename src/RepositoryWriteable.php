@@ -81,7 +81,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
      *
      * @throws DBInvalidOptionException
      */
-    private function preprocessChanges(array $changes)
+    private function preprocessChanges(array $changes): array
     {
         // Separate field SQL and field values
         $changesProcessed = [];

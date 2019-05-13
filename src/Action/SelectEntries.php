@@ -124,6 +124,8 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * Returns object (from the entity class) or null if no entry was found, we avoid
      * the return type hint here to code analyzers don't get confused by
      * generated repositories and their different type hint
+     *
+     * @psalm-suppress MissingReturnType
      */
     public function getOneEntry()
     {

@@ -10,7 +10,7 @@ interface RepositoryWriteableInterface extends RepositoryReadOnlyInterface
     /**
      * Insert a new entry with the given fields and return newly created ID (if applicable)
      *
-     * @param array $fields Fields and values to use when inserting the row
+     * @param array<string, mixed> $fields Fields and values to use when inserting the row
      * @param bool $returnInsertId Whether there is an insert ID created which should be returned
      * @return string|null Newly inserted ID if $returnInsertId was set to true
      */
@@ -19,9 +19,9 @@ interface RepositoryWriteableInterface extends RepositoryReadOnlyInterface
     /**
      * Insert a new entry or update the existing entry (UPSERT/MERGE)
      *
-     * @param array $fields Fields and values to use when inserting the row
-     * @param array $indexFields Field names of the unique index
-     * @param array $updateFields Updates to do if an entry already exists, defaults to $fields minus $indexFields
+     * @param array<string, mixed> $fields Fields and values to use when inserting the row
+     * @param string[] $indexFields Field names of the unique index
+     * @param array|null $updateFields Updates to do if an entry already exists, defaults to $fields minus $indexFields
      */
     public function insertOrUpdate(array $fields, array $indexFields = [], ?array $updateFields = null): void;
 
@@ -36,6 +36,7 @@ interface RepositoryWriteableInterface extends RepositoryReadOnlyInterface
      * - 'limit':   how many results to get
      *
      * @param array $query Query parts as an array
+     * @psalm-param array{changes?:array,where?:array,order?:array,limit?:int} $query
      * @return int How many entries were affected by the update
      */
     public function update(array $query): int;

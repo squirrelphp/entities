@@ -147,7 +147,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
         ]);
     }
 
-    private function makeSureBadPracticeWasConfirmed()
+    private function makeSureBadPracticeWasConfirmed(): void
     {
         if ($this->confirmBadPractice !== true) {
             throw DBDebug::createException(
