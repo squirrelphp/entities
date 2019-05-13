@@ -207,7 +207,7 @@ namespace {namespaceOfBuilders} {
             $this->iteratorInstance->rewind();
         }
     
-        public function clear()
+        public function clear(): void
         {
             $this->iteratorInstance->clear();
         }
