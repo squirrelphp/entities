@@ -39,7 +39,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
             ->andReturn([]);
 
         $results = $selectBuilder
-            ->confirmFreeformQueriesAreBadPractice('OK')
+            ->confirmFreeformQueriesAreNotRecommended('OK')
             ->getAllEntries();
 
         $this->assertEquals([], $results);
@@ -61,7 +61,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
             ->withParameters([
                 5,
             ])
-            ->confirmFreeformQueriesAreBadPractice('OK');
+            ->confirmFreeformQueriesAreNotRecommended('OK');
 
         $this->multiRepository
             ->shouldReceive('fetchAll')
@@ -100,7 +100,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
             ->withParameters([
                 5,
             ])
-            ->confirmFreeformQueriesAreBadPractice('OK');
+            ->confirmFreeformQueriesAreNotRecommended('OK');
 
         $this->multiRepository
             ->shouldReceive('fetchOne')
@@ -142,7 +142,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
             ->andReturn([]);
 
         $results = $selectBuilder
-            ->confirmFreeformQueriesAreBadPractice('OK')
+            ->confirmFreeformQueriesAreNotRecommended('OK')
             ->getFlattenedFields();
 
         $this->assertEquals([], $results);
@@ -176,7 +176,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
             ->withParameters([
                 5,
             ])
-            ->confirmFreeformQueriesAreBadPractice('OK')
+            ->confirmFreeformQueriesAreNotRecommended('OK')
             ->getIterator();
 
         $this->assertEquals($expectedResult, $results);

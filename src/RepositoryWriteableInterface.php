@@ -26,20 +26,13 @@ interface RepositoryWriteableInterface extends RepositoryReadOnlyInterface
     public function insertOrUpdate(array $fields, array $indexFields = [], ?array $updateFields = null): void;
 
     /**
-     * Update existing fields $fields restricted by $where fields
+     * Update entries with $changes restricted by $where
      *
-     * $query can have the following contents (key-value):
-     *
-     * - 'changes': SET clause with changes
-     * - 'where':   WHERE restrictions
-     * - 'order':   ORDER BY definitions
-     * - 'limit':   how many results to get
-     *
-     * @param array $query Query parts as an array
-     * @psalm-param array{changes?:array,where?:array,order?:array,limit?:int} $query
+     * @param array $changes Changes to be saved
+     * @param array $where Restrictions on which entries to update
      * @return int How many entries were affected by the update
      */
-    public function update(array $query): int;
+    public function update(array $changes, array $where): int;
 
     /**
      * Remove entries according to $where restrictions

@@ -656,13 +656,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Define the structured query we expect to generate
         $query = [
-            'changes' => [
+            $this->repositoryConfig->getTableName(),
+            [
                 'last_name' => 'Rotmann',
                 'first_name' => 'Laumann',
                 $this->db->quoteIdentifier('street') . ' = CONCAT(?,?)' => ['First', 'Second'],
                 $this->db->quoteIdentifier('last_name') . ' = 13',
             ],
-            'where' => [
+            [
                 'last_name' => ['Baumann', 'Rotmann', 'Salamander'],
                 'first_name' => ['Laumann'],
                 $this->db->quoteIdentifier('is_great_yay') . ' >= ? OR ' .
@@ -672,79 +673,64 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 ],
                 $this->db->quoteIdentifier('last_name') . ' != ' . $this->db->quoteIdentifier('first_name'),
             ],
-            'table' => $this->repositoryConfig->getTableName(),
         ];
 
         // What we expect to get
         $this->db
             ->shouldReceive('update')
             ->once()
-            ->with($query)
+            ->with($query[0], $query[1], $query[2])
             ->andReturn($expectedResults);
 
         // Make call to repository
         $results = $this->repository->update([
-            'changes' => [
-                'lastName' => 'Rotmann',
-                'firstName' => 'Laumann',
-                ':street: = CONCAT(?,?)' => ['First', 'Second'],
-                ':lastName: = 13',
-            ],
-            'where' => [
-                'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
-                'firstName' => ['Laumann'],
-                ':isGreat: >= ? OR :isGreat: <= ?' => [13, 6],
-                ':lastName: != :firstName:',
-            ],
+            'lastName' => 'Rotmann',
+            'firstName' => 'Laumann',
+            ':street: = CONCAT(?,?)' => ['First', 'Second'],
+            ':lastName: = 13',
+        ], [
+            'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
+            'firstName' => ['Laumann'],
+            ':isGreat: >= ? OR :isGreat: <= ?' => [13, 6],
+            ':lastName: != :firstName:',
         ]);
 
         // Make sure the correct objects were returned
         $this->assertEquals($expectedResults, $results);
     }
 
-    public function testUpdateWithNULLAndOrderAndLimit()
+    public function testUpdateWithNULL()
     {
         // What values we want to see and return in our DB class
         $expectedResults = 17;
 
         // Define the structured query we expect to generate
         $query = [
-            'changes' => [
+            $this->repositoryConfig->getTableName(),
+            [
                 'last_name' => 'Rotmann',
                 'street' => null,
             ],
-            'where' => [
+            [
                 'last_name' => ['Baumann', 'Rotmann', 'Salamander'],
                 'first_name' => ['Laumann'],
             ],
-            'order' => [
-                'first_name',
-            ],
-            'limit' => 3,
-            'table' => $this->repositoryConfig->getTableName(),
         ];
 
         // What we expect to get
         $this->db
             ->shouldReceive('update')
             ->once()
-            ->with($query)
+            ->with($query[0], $query[1], $query[2])
             ->andReturn($expectedResults);
 
         // Make call to repository
         $results = $this->repository->update([
-            'changes' => [
-                'lastName' => 'Rotmann',
-                'street' => null,
-            ],
-            'where' => [
-                'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
-                'firstName' => ['Laumann'],
-            ],
-            'order' => [
-                'firstName',
-            ],
-            'limit' => 3,
+            'lastName' => 'Rotmann',
+            'street' => null,
+        ], [
+            'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
+            'firstName' => ['Laumann'],
         ]);
 
         // Make sure the correct objects were returned
@@ -1426,29 +1412,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->fetchOne($options);
     }
 
-    public function testUpdateNoWhere()
-    {
-        // Expect an InvalidArgument exception
-        $this->expectException(DBInvalidOptionException::class);
-
-        // Make call to repository
-        $this->repository->update([
-            'changes' => [
-                'firstName' => 'Sexyhexy',
-            ],
-        ]);
-    }
-
     public function testUpdateNoChanges()
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->update([
-            'where' => [
-                'firstName' => 'Sexyhexy',
-            ],
+        $this->repository->update([], [
+            'firstName' => 'Sexyhexy',
         ]);
     }
 
@@ -1459,12 +1430,9 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->update([
-            'changes' => [
-                0,
-            ],
-            'where' => [
-                'firstName' => 'Sexyhexy',
-            ],
+            0,
+        ], [
+            'firstName' => 'Sexyhexy',
         ]);
     }
 
@@ -1475,13 +1443,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->update([
-            'changes' => [
-                'firstNameInvalid' => 'Sexyhexy',
-            ],
-            'where' => [
-                'lastName' => 'Baumann',
-                'isGreat' => false,
-            ],
+            'firstNameInvalid' => 'Sexyhexy',
+        ], [
+            'lastName' => 'Baumann',
+            'isGreat' => false,
         ]);
     }
 
@@ -1492,13 +1457,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->update([
-            'changes' => [
-                ':firstNameInvalid: = 5',
-            ],
-            'where' => [
-                'lastName' => 'Baumann',
-                'isGreat' => false,
-            ],
+            ':firstNameInvalid: = 5',
+        ], [
+            'lastName' => 'Baumann',
+            'isGreat' => false,
         ]);
     }
 
@@ -1509,13 +1471,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->update([
-            'changes' => [
-                'lastName' => null,
-            ],
-            'where' => [
-                'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
-                'firstName' => ['Laumann'],
-            ],
+            'lastName' => null,
+        ], [
+            'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
+            'firstName' => ['Laumann'],
         ]);
     }
 
@@ -1898,17 +1857,14 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('update')
             ->once()
-            ->with($query)
+            ->with($query['table'], $query['changes'], $query['where'])
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Make call to repository
         $this->repository->update([
-            'changes' => [
-                'lastName' => 'Rotmann',
-            ],
-            'where' => [
-                'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
-            ],
+            'lastName' => 'Rotmann',
+        ], [
+            'lastName' => ['Baumann', 'Rotmann', 'Salamander'],
         ]);
     }
 

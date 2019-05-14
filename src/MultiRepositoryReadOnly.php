@@ -257,15 +257,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             );
         }
 
-        // SET changes in update query need to be defined
-        if (isset($validOptions['changes']) && \count($sanitizedOptions['changes']) === 0) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                'No "changes" / SET definition'
-            );
-        }
-
         // Query in freeform selects and updates needs to not be empty
         if (isset($validOptions['query']) && \strlen($sanitizedOptions['query']) === 0) {
             throw DBDebug::createException(

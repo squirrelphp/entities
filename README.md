@@ -373,24 +373,6 @@ $foundRows = $userRepositoryWriteable // \Application\Entity\UserRepositoryWrite
 
 The number of affected rows is just the rows which match the WHERE clause in the database. You can use `write` instead if you are not interested in this number.
 
-The following example sets `active` to false for a maximum of five entries which do not have a picture, ordered by the lowest balance first (balance ascending):
-
-```php
-$userRepositoryWriteable // \Application\Entity\UserRepositoryWriteable instance
-    ->update()
-    ->set([
-        'active' => false,
-    ])
-    ->where([
-        'picture' => null,
-    ])
-    ->orderBy([
-        'balance' => 'ASC',
-    ])
-    ->limitTo(5)
-    ->write();
-```
-
 You can do an UPDATE without a WHERE clause, updating all entries in the table, but you need to explicitely tell the builder because we want to avoid accidental "UPDATE all" queries:
 
 ```php
@@ -668,67 +650,9 @@ $entriesNumber = $multiBuilder
 // $entriesNumber now contains the number of visits of userId = 5
 ```
 
-### Update queries
-
-```php
-$foundRowsNumber = $multiBuilder
-    ->update()
-    ->set([
-        'visit.timestamp' => time(),
-    ])
-    ->inRepositories([
-        'user' => $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly instance
-        'visit' => $visitRepositoryReadOnly // \Application\Entity\VisitRepositoryReadOnly instance
-    ])
-    ->where([
-        ':user.userId: = :visit.userId:',
-        'user.userId' => 5,
-    ])
-    ->writeAndReturnAffectedNumber();
-```
-
-The options are basically the same as with a singular repository - you can define an order, a limit and define a custom way of joining the tables:
-
-```php
-$multiBuilder
-    ->update()
-    ->set([
-        'visit.timestamp' => time(),
-    ])
-    ->inRepositories([
-        'user' => $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly instance
-        'visit' => $visitRepositoryReadOnly // \Application\Entity\VisitRepositoryReadOnly instance
-    ])
-    ->joinTables([
-        ':visit: LEFT JOIN :user: ON (:user.userId: = :visit.userId: AND :user.active: = ?)' => true,
-    ])
-    ->where([
-        ':user.userId: IS NULL',
-    ])
-    ->orderBy('visitId')
-    ->limitTo(10)
-    ->write();
-```
-
-If you want to update all entries and not specify WHERE restrictions, you need to explicitely state that to avoid accidental updates of all rows:
-
-```php
-$multiBuilder
-    ->update()
-    ->set([
-        'visit.timestamp' => time(),
-    ])
-    ->inRepositories([
-        'user' => $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly instance
-        'visit' => $visitRepositoryReadOnly // \Application\Entity\VisitRepositoryReadOnly instance
-    ])
-    ->confirmNoWhereRestrictions()
-    ->write();
-```
-
 ### Freeform select queries
 
-Sometimes you might want to create a more complex SELECT query, for example with subqueries or other functionality that is not directly supported by the multi repository select builder. Freeform queries give you that freedom, although it is recommended to use them sparingly, as they cannot be checked as rigorously as regular queries.
+Sometimes you might want to create a more complex SELECT query, for example with subqueries or other functionality that is not directly supported by the multi repository select builder. Freeform queries give you that freedom, although it is recommended to use them sparingly, as they cannot be checked as rigorously as regular queries and they are more likely to only work for a specific database system (as there are often syntax/behavior differences between vendors). Using vendor-specific functionality might be a good use case for freeform queries, as long as you keep in mind that you are writing non-portable SQL.
 
 ```php
 $entries = $multiBuilder
@@ -736,30 +660,28 @@ $entries = $multiBuilder
     ->fields([
         'userId' => 'user.userId',
         'isActive' => 'user.active',
-        'visitTimestamp' => 'visit.timestamp',
     ])
     ->inRepositories([
         'user' => $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly instance
         'visit' => $visitRepositoryReadOnly // \Application\Entity\VisitRepositoryReadOnly instance
     ])
-    ->queryAfterFROM(':user:, :visit: WHERE :user.userId: = :visit.userId: AND :user.userId: = ?')
+    ->queryAfterFROM(':user: WHERE :user.userId: = ? AND NOT EXISTS ( SELECT * FROM :visit: WHERE :user.userId: = :visit.userId: )')
     ->withParameters([5])
-    ->confirmFreeformQueriesAreBadPractice('OK')
+    ->confirmFreeformQueriesAreNotRecommended('OK')
     ->getAllEntries();
     
 foreach ($entries as $entry) {
     // Each $entry has the following data in it:
     // - $entry['userId'] as an integer
     // - $entry['isActive'] as a boolean
-    // - $entry['visitTimestamp'] as an integer
 }
 ```
 
-Getting and casting the fields is done in the same way as with a fully structured select query, but everything after `SELECT ... FROM` can be freely defined - how the tables are joined, what is checked, etc. You need to call `confirmFreeformQueriesAreBadPractice` with 'OK' in the query builder to make sure you have understood that freeform queries are not the recommended way of using this library.
+Getting and casting the fields is done in the same way as with a fully structured select query, but everything after `SELECT ... FROM` can be freely defined - how the tables are joined, what is checked, etc. You need to call `confirmFreeformQueriesAreNotRecommended` with 'OK' in the query builder to make it clear that you have made a conscious decision to use freeform queries.
 
 ### Freeform update queries
 
-Freeform update queries are not recommended either, but sometimes you might have no other way of executing a query, and having full freedom can enable queries which are much more efficient than doing multiple other queries - like subselects. The general way it works is by defining `query` and `withParameters`:
+Freeform update queries are not recommended either, but sometimes you might have no other way of executing a query, and having full freedom can enable queries which are much more efficient than doing multiple other queries / multiple UPDATEs. The general way it works is by defining `query` and `withParameters`:
 
 ```php
 $multiBuilder
@@ -770,8 +692,10 @@ $multiBuilder
     ])
     ->query('UPDATE :user:, :visit: SET :visit.timestamp: = ? WHERE :user.userId: = :visit.userId: AND :user.userId: = ?')
     ->withParameters([time(), 5])
-    ->confirmFreeformQueriesAreBadPractice('OK')
+    ->confirmFreeformQueriesAreNotRecommended('OK')
     ->write();
 ```
 
-You can use `writeAndReturnAffectedNumber` (instead of using `write`) to find out how many entries were found for the UPDATE.
+The above query also shows the main drawback of multi table UPDATE queries - they are almost never portable to other database systems (because they are not part of the SQL standard), as the above query would work for MySQL, but would fail for Postgres or SQLite, as they have a different syntax / different restrictions. In many cases this might be fine if you get a real benefit from having such a custom query.
+
+You can use `writeAndReturnAffectedNumber` (instead of using `write`) to find out how many entries were found for the UPDATE. You need to call `confirmFreeformQueriesAreNotRecommended` with 'OK' in the query builder to make it clear that you have made a conscious decision to use freeform queries.

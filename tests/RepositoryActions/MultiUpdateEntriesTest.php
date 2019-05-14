@@ -29,18 +29,11 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->multiRepository
             ->shouldReceive('update')
             ->once()
-            ->with([
-                'repositories' => [],
-                'tables' => [],
-                'changes' => [],
-                'where' => [],
-                'order' => [],
-                'limit' => 0,
-            ])
+            ->with([], '', [])
             ->andReturn(8);
 
         $results = $builder
-            ->confirmNoWhereRestrictions()
+            ->confirmFreeformQueriesAreNotRecommended('OK')
             ->writeAndReturnAffectedNumber();
 
         $this->assertEquals(8, $results);
@@ -55,45 +48,22 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
                 'ticket' => $this->repository1,
                 'email' => $this->repository2,
             ])
-            ->joinTables([
-                'ticket',
-                'email',
+            ->query('UPDATE :ticket: SET :ticket.id: = ? WHERE :ticket.id: = ?')
+            ->withParameters([
+                13,
+                5,
             ])
-            ->set([
-                'firstName' => 'Jane',
-            ])
-            ->where([
-                'responseId' => 5,
-                'otherField' => '333',
-            ])
-            ->orderBy([
-                'responseId',
-            ])
-            ->limitTo(33);
+            ->confirmFreeformQueriesAreNotRecommended('OK');
 
         $this->multiRepository
             ->shouldReceive('update')
             ->once()
             ->with([
-                'repositories' => [
-                    'ticket' => $this->repository1,
-                    'email' => $this->repository2,
-                ],
-                'tables' => [
-                    'ticket',
-                    'email',
-                ],
-                'changes' => [
-                    'firstName' => 'Jane',
-                ],
-                'where' => [
-                    'responseId' => 5,
-                    'otherField' => '333',
-                ],
-                'order' => [
-                    'responseId',
-                ],
-                'limit' => 33,
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ], 'UPDATE :ticket: SET :ticket.id: = ? WHERE :ticket.id: = ?', [
+                13,
+                5,
             ])
             ->andReturn(565);
 
@@ -102,7 +72,7 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(565, $results);
     }
 
-    public function testGetEntriesSingular()
+    public function testGetEntriesWriteOnly()
     {
         $builder = new MultiUpdateEntries($this->multiRepository);
 
@@ -111,51 +81,31 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
                 'ticket' => $this->repository1,
                 'email' => $this->repository2,
             ])
-            ->joinTables([
-                'ticket',
-                'email',
+            ->query('UPDATE :ticket: SET :ticket.id: = ? WHERE :ticket.id: = ?')
+            ->withParameters([
+                13,
+                5,
             ])
-            ->set([
-                'firstName' => 'Jane',
-            ])
-            ->where([
-                'responseId' => 5,
-                'otherField' => '333',
-            ])
-            ->orderBy('responseId')
-            ->limitTo(33);
+            ->confirmFreeformQueriesAreNotRecommended('OK');
 
         $this->multiRepository
             ->shouldReceive('update')
             ->once()
             ->with([
-                'repositories' => [
-                    'ticket' => $this->repository1,
-                    'email' => $this->repository2,
-                ],
-                'tables' => [
-                    'ticket',
-                    'email',
-                ],
-                'changes' => [
-                    'firstName' => 'Jane',
-                ],
-                'where' => [
-                    'responseId' => 5,
-                    'otherField' => '333',
-                ],
-                'order' => [
-                    'responseId',
-                ],
-                'limit' => 33,
-            ]);
+                'ticket' => $this->repository1,
+                'email' => $this->repository2,
+            ], 'UPDATE :ticket: SET :ticket.id: = ? WHERE :ticket.id: = ?', [
+                13,
+                5,
+            ])
+            ->andReturn(565);
 
         $builder->write();
 
         $this->assertTrue(true);
     }
 
-    public function testNoWhereNoConfirmation()
+    public function testMissingConfirmation()
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -164,18 +114,9 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->multiRepository
             ->shouldReceive('update')
             ->once()
-            ->with([
-                'repositories' => [],
-                'tables' => [],
-                'changes' => [],
-                'where' => [],
-                'order' => [],
-                'limit' => 0,
-            ])
+            ->with([], '', [])
             ->andReturn(8);
 
-        $results = $builder->writeAndReturnAffectedNumber();
-
-        $this->assertEquals(8, $results);
+        $builder->writeAndReturnAffectedNumber();
     }
 }

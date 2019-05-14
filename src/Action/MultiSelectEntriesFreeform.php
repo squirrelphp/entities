@@ -77,7 +77,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
         return $this;
     }
 
-    public function confirmFreeformQueriesAreBadPractice(string $confirmWithOK): self
+    public function confirmFreeformQueriesAreNotRecommended(string $confirmWithOK): self
     {
         if ($confirmWithOK === 'OK') {
             $this->confirmBadPractice = true;
@@ -154,7 +154,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
                 'No confirmation that freeform queries are bad practice - ' .
-                'call "confirmFreeformQueriesAreBadPractice" with "OK" to confirm the freeform query'
+                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query'
             );
         }
     }

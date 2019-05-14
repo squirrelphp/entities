@@ -27,16 +27,6 @@ class UpdateEntries implements ActionInterface
     private $where = [];
 
     /**
-     * @var array ORDER BY sorting in query
-     */
-    private $orderBy = [];
-
-    /**
-     * @var int How many results should be returned
-     */
-    private $limitTo = 0;
-
-    /**
      * @var bool We need to confirmation before we execute a query without WHERE restriction
      */
     private $confirmNoWhere = false;
@@ -55,26 +45,6 @@ class UpdateEntries implements ActionInterface
     public function where(array $whereClauses): self
     {
         $this->where = $whereClauses;
-        return $this;
-    }
-
-    /**
-     * @param array|string $orderByClauses
-     * @return UpdateEntries
-     */
-    public function orderBy($orderByClauses): self
-    {
-        if (\is_string($orderByClauses)) {
-            $orderByClauses = [$orderByClauses];
-        }
-
-        $this->orderBy = $orderByClauses;
-        return $this;
-    }
-
-    public function limitTo(int $numberOfEntries): self
-    {
-        $this->limitTo = $numberOfEntries;
         return $this;
     }
 
@@ -109,11 +79,6 @@ class UpdateEntries implements ActionInterface
             );
         }
 
-        return $this->repository->update([
-            'changes' => $this->changes,
-            'where' => $this->where,
-            'order' => $this->orderBy,
-            'limit' => $this->limitTo,
-        ]);
+        return $this->repository->update($this->changes, $this->where);
     }
 }

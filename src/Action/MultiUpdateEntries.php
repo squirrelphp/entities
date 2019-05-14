@@ -8,7 +8,7 @@ use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
- * Update query builder as a fluent object - build query and execute it
+ * Update query builder as a fluent object - build freeform query and execute it
  */
 class MultiUpdateEntries implements ActionInterface
 {
@@ -23,34 +23,19 @@ class MultiUpdateEntries implements ActionInterface
     private $repositories = [];
 
     /**
-     * @var array Explicit connections between the repositories
+     * @var string Freeform query after FROM in a SELECT query
      */
-    private $connections = [];
+    private $query = '';
 
     /**
-     * @var array SET clauses for the query
+     * @var array All query parameters within the SELECT query
      */
-    private $changes = [];
+    private $parameters = [];
 
     /**
-     * @var array WHERE restrictions in query
+     * @var bool Confirmation that the programmer understands that freeform queries are seen as bad practice
      */
-    private $where = [];
-
-    /**
-     * @var array ORDER BY sorting in query
-     */
-    private $orderBy = [];
-
-    /**
-     * @var int How many results should be returned
-     */
-    private $limitTo = 0;
-
-    /**
-     * @var bool We need to confirmation before we execute a query without WHERE restriction
-     */
-    private $confirmNoWhere = false;
+    private $confirmBadPractice = false;
 
     public function __construct(MultiRepositoryWriteableInterface $queryHandler)
     {
@@ -63,47 +48,23 @@ class MultiUpdateEntries implements ActionInterface
         return $this;
     }
 
-    public function joinTables(array $repositoryConnections): self
+    public function query(string $query): self
     {
-        $this->connections = $repositoryConnections;
+        $this->query = $query;
         return $this;
     }
 
-    public function set(array $changes): self
+    public function withParameters(array $queryParameters = []): self
     {
-        $this->changes = $changes;
+        $this->parameters = $queryParameters;
         return $this;
     }
 
-    public function where(array $whereClauses): self
+    public function confirmFreeformQueriesAreNotRecommended(string $confirmWithOK): self
     {
-        $this->where = $whereClauses;
-        return $this;
-    }
-
-    /**
-     * @param array|string $orderByClauses
-     * @return MultiUpdateEntries
-     */
-    public function orderBy($orderByClauses): self
-    {
-        if (\is_string($orderByClauses)) {
-            $orderByClauses = [$orderByClauses];
+        if ($confirmWithOK === 'OK') {
+            $this->confirmBadPractice = true;
         }
-
-        $this->orderBy = $orderByClauses;
-        return $this;
-    }
-
-    public function limitTo(int $numberOfEntries): self
-    {
-        $this->limitTo = $numberOfEntries;
-        return $this;
-    }
-
-    public function confirmNoWhereRestrictions(): self
-    {
-        $this->confirmNoWhere = true;
         return $this;
     }
 
@@ -122,23 +83,24 @@ class MultiUpdateEntries implements ActionInterface
      */
     public function writeAndReturnAffectedNumber(): int
     {
-        // Make sure there is no accidental "delete everything"
-        if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
+        $this->makeSureBadPracticeWasConfirmed();
+
+        return $this->queryHandler->update(
+            $this->repositories,
+            $this->query,
+            $this->parameters
+        );
+    }
+
+    private function makeSureBadPracticeWasConfirmed(): void
+    {
+        if ($this->confirmBadPractice !== true) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
-                'No restricting "where" arguments defined for UPDATE ' .
-                'and no override confirmation with "confirmNoWhereRestrictions" call'
+                'No confirmation that freeform queries are bad practice - ' .
+                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query'
             );
         }
-
-        return $this->queryHandler->update([
-            'repositories' => $this->repositories,
-            'tables' => $this->connections,
-            'changes' => $this->changes,
-            'where' => $this->where,
-            'order' => $this->orderBy,
-            'limit' => $this->limitTo,
-        ]);
     }
 }

@@ -24,7 +24,7 @@
         "symfony/console": "^4.0",
         "symfony/finder": "^4.0",
         "doctrine/annotations": "^1.4",
-        "squirrelphp/queries": "^0.7"
+        "squirrelphp/queries": "^0.8"
     },
     "require-dev": {
         "captainhook/plugin-composer": "^4.0",

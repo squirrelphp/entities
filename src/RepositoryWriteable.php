@@ -15,28 +15,10 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     /**
      * @inheritDoc
      */
-    public function update(array $query): int
+    public function update(array $changes, array $where): int
     {
-        // Process options and make sure all values are valid
-        $sanitizedQuery = $this->validateQueryOptions([
-            'changes' => [],
-            'where' => [],
-            'order' => [],
-            'limit' => 0,
-        ], $query);
-
-        // We need specific WHERE restrictions, otherwise there is a huge risk
-        // of overwriting to many entries
-        if (\count($sanitizedQuery['where']) === 0) {
-            throw DBDebug::createException(
-                DBInvalidOptionException::class,
-                [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'No restricting "where" defined'
-            );
-        }
-
         // We need fields to update, otherwise there is nothing to do
-        if (\count($sanitizedQuery['changes']) === 0) {
+        if (\count($changes) === 0) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
@@ -44,26 +26,12 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             );
         }
 
-        $sanitizedQuery['where'] = $this->preprocessWhere($sanitizedQuery['where']);
-        $sanitizedQuery['changes'] = $this->preprocessChanges($sanitizedQuery['changes']);
-
-        // Order part of the query was defined
-        if (\count($sanitizedQuery['order']) > 0) {
-            $sanitizedQuery['order'] = $this->preprocessOrder($sanitizedQuery['order']);
-        } else {
-            unset($sanitizedQuery['order']);
-        }
-
-        // No limit - remove it from options
-        if ($sanitizedQuery['limit'] === 0) {
-            unset($sanitizedQuery['limit']);
-        }
-
-        $sanitizedQuery['table'] = $this->config->getTableName();
+        $where = $this->preprocessWhere($where);
+        $changes = $this->preprocessChanges($changes);
 
         try {
             // Execute the query
-            return $this->db->update($sanitizedQuery);
+            return $this->db->update($this->config->getTableName(), $changes, $where);
         } catch (DBInvalidOptionException $e) {
             throw DBDebug::createException(
                 DBInvalidOptionException::class,

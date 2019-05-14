@@ -22,12 +22,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->repository
             ->shouldReceive('update')
             ->once()
-            ->with([
-                'changes' => [],
-                'where' => [],
-                'order' => [],
-                'limit' => 0,
-            ]);
+            ->with([], []);
 
         $updateBuilder
             ->confirmNoWhereRestrictions()
@@ -43,12 +38,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->repository
             ->shouldReceive('update')
             ->once()
-            ->with([
-                'changes' => [],
-                'where' => [],
-                'order' => [],
-                'limit' => 0,
-            ])
+            ->with([], [])
             ->andReturn(89);
 
         $result = $updateBuilder
@@ -70,30 +60,17 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
-            ])
-            ->orderBy([
-                'dada',
-                'responseId',
-            ])
-            ->limitTo(6);
+            ]);
 
         $this->repository
             ->shouldReceive('update')
             ->once()
             ->with([
-                'changes' => [
-                    'dada' => 5,
-                    'fieldyField' => 'key',
-                ],
-                'where' => [
-                    'responseId' => 5,
-                    'otherField' => '333',
-                ],
-                'order' => [
-                    'dada',
-                    'responseId',
-                ],
-                'limit' => 6,
+                'dada' => 5,
+                'fieldyField' => 'key',
+            ], [
+                'responseId' => 5,
+                'otherField' => '333',
             ]);
 
         $updateBuilder->write();
@@ -113,75 +90,23 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
             ->where([
                 'responseId' => 5,
                 'otherField' => '333',
-            ])
-            ->orderBy([
-                'dada',
-                'responseId',
-            ])
-            ->limitTo(6);
+            ]);
 
         $this->repository
             ->shouldReceive('update')
             ->once()
             ->with([
-                'changes' => [
-                    'dada' => 5,
-                    'fieldyField' => 'key',
-                ],
-                'where' => [
-                    'responseId' => 5,
-                    'otherField' => '333',
-                ],
-                'order' => [
-                    'dada',
-                    'responseId',
-                ],
-                'limit' => 6,
+                'dada' => 5,
+                'fieldyField' => 'key',
+            ], [
+                'responseId' => 5,
+                'otherField' => '333',
             ])
             ->andReturn(75);
 
         $result = $updateBuilder->writeAndReturnAffectedNumber();
 
         $this->assertEquals(75, $result);
-    }
-
-    public function testWriteOrderByAsString()
-    {
-        $updateBuilder = new UpdateEntries($this->repository);
-
-        $updateBuilder
-            ->set([
-                'dada' => 5,
-                'fieldyField' => 'key',
-            ])
-            ->where([
-                'responseId' => 5,
-                'otherField' => '333',
-            ])
-            ->orderBy('responseId')
-            ->limitTo(6);
-
-        $this->repository
-            ->shouldReceive('update')
-            ->once()
-            ->with([
-                'changes' => [
-                    'dada' => 5,
-                    'fieldyField' => 'key',
-                ],
-                'where' => [
-                    'responseId' => 5,
-                    'otherField' => '333',
-                ],
-                'order' => [
-                    'responseId',
-                ],
-                'limit' => 6,
-            ]);
-
-        $updateBuilder->write();
-
-        $this->assertTrue(true);
     }
 
     public function testNoWhereNoConfirmation()
@@ -193,12 +118,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->repository
             ->shouldReceive('update')
             ->once()
-            ->with([
-                'changes' => [],
-                'where' => [],
-                'order' => [],
-                'limit' => 0,
-            ]);
+            ->with([], []);
 
         $updateBuilder->write();
     }
