@@ -16,8 +16,9 @@ interface MultiRepositoryWriteableInterface extends MultiRepositoryReadOnlyInter
      * still be necessary or useful for performance or other reasons
      *
      * @param array $repositories
+     * @psalm-param array{string: object} $repositories
      * @param string $query
-     * @param array $parameters
+     * @param array<int, mixed> $parameters
      * @return int
      */
     public function update(array $repositories, string $query, array $parameters = []): int;
