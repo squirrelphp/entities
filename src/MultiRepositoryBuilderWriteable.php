@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities;
 
-use Squirrel\Entities\Action\MultiUpdateEntries;
+use Squirrel\Entities\Action\MultiUpdateEntriesFreeform;
 
 class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly implements
     MultiRepositoryBuilderWriteableInterface
@@ -25,8 +25,8 @@ class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly imp
     /**
      * @inheritDoc
      */
-    public function update(): MultiUpdateEntries
+    public function updateFreeform(): MultiUpdateEntriesFreeform
     {
-        return new MultiUpdateEntries($this->multiRepositoryWriteable);
+        return new MultiUpdateEntriesFreeform($this->multiRepositoryWriteable);
     }
 }

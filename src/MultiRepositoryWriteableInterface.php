@@ -15,8 +15,7 @@ interface MultiRepositoryWriteableInterface extends MultiRepositoryReadOnlyInter
      * different behavior) yet it is still a possibility because some queries might
      * still be necessary or useful for performance or other reasons
      *
-     * @param array $repositories
-     * @psalm-param array{string: object} $repositories
+     * @param array<string, object> $repositories
      * @param string $query
      * @param array<int, mixed> $parameters
      * @return int

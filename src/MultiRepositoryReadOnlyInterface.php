@@ -42,7 +42,7 @@ interface MultiRepositoryReadOnlyInterface
      * - 'parameters': Array of query value parameters
      * - 'lock':   if to lock selected entries (SELECT ... FOR UPDATE) for transaction (optional)
      *
-     * Freeform queries should almost never be necessary and is considered bad practice, yet it is still a possibility
+     * Freeform queries should almost never be necessary and are not recommended, yet it is still a possibility
      * because some queries (for example with subqueries or other complicated parts) cannot be structured yet might
      * still be necessary or useful for performance or other reasons
      *

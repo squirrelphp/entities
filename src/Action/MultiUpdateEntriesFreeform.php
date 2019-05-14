@@ -10,7 +10,7 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 /**
  * Update query builder as a fluent object - build freeform query and execute it
  */
-class MultiUpdateEntries implements ActionInterface
+class MultiUpdateEntriesFreeform implements ActionInterface
 {
     /**
      * @var MultiRepositoryWriteableInterface

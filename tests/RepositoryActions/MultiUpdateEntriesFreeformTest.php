@@ -2,12 +2,12 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\MultiUpdateEntries;
+use Squirrel\Entities\Action\MultiUpdateEntriesFreeform;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
-class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
+class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
 {
     private $multiRepository;
 
@@ -24,7 +24,7 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testNoDataGetEntries()
     {
-        $builder = new MultiUpdateEntries($this->multiRepository);
+        $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
         $this->multiRepository
             ->shouldReceive('update')
@@ -41,7 +41,7 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetEntries()
     {
-        $builder = new MultiUpdateEntries($this->multiRepository);
+        $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
         $builder
             ->inRepositories([
@@ -74,7 +74,7 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testGetEntriesWriteOnly()
     {
-        $builder = new MultiUpdateEntries($this->multiRepository);
+        $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
         $builder
             ->inRepositories([
@@ -109,7 +109,7 @@ class MultiUpdateEntriesTest extends \PHPUnit\Framework\TestCase
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        $builder = new MultiUpdateEntries($this->multiRepository);
+        $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
         $this->multiRepository
             ->shouldReceive('update')
