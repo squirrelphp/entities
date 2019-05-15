@@ -174,7 +174,7 @@ namespace {namespaceOfBuilders} {
         }
     
         /**
-         * @return \{namespaceOfEntity}\{classOfEntity}|null
+         * @return \{namespaceOfEntity}\{classOfEntity}
          */
         public function current()
         {
