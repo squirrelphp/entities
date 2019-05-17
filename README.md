@@ -12,6 +12,17 @@ Installation
 
     composer require squirrelphp/entities
     
+Table of contents
+-----------------
+
+- [Creating entities](#creating-entities)
+- [Creating repositories](#creating-repositories)
+- [Using repositories](#using-repositories)
+- [Multi repository queries](#multi-repository-queries)
+- [Transactions](#transactions)
+- [Read-only entity objects](#read-only-entity-objects)
+- [Recommendations on how to use this library](#recommendations-on-how-to-use-this-library)
+
 Creating entities
 -----------------
 
@@ -26,7 +37,7 @@ use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
 
 /**
- * @Entity("users_address")
+ * @Entity("users")
  */
 class User
 {
@@ -96,7 +107,7 @@ The class is defined as an entity with the table name, and each class property i
 - `float` for floating point number
 - `blob` for a binary large object, called "blob" in most databases or "bytea" in Postgres, for example to store an image or file
 
-Whether the class properties are private, protected or public does not matter, you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes read-only, by having private properties and only defining getters.
+Whether the class properties are private, protected or public does not matter, you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes read-only, by having private properties and only defining getters - see [Read-only entity objects](#read-only-entity-objects) for more details on why you would want to do that.
 
 ### Defining an entity directly
 
@@ -105,7 +116,7 @@ This is not currently recommended, but if you are not using [squirrelphp/entitie
 ```php
 $repositoryConfig = new \Squirrel\Entities\RepositoryConfig(
     '', // connectionName, none defined
-    'users_address', // tableName
+    'users', // tableName
     [   // tableToObjectFields, mapping table column names to object property names
         'user_id' => 'userId',
         'active' => 'active',
@@ -699,3 +710,87 @@ $multiBuilder
 The above query also shows the main drawback of multi table UPDATE queries - they are almost never portable to other database systems (because they are not part of the SQL standard), as the above query would work for MySQL, but would fail for Postgres or SQLite, as they have a different syntax / different restrictions. In many cases this might be fine if you get a real benefit from having such a custom query.
 
 You can use `writeAndReturnAffectedNumber` (instead of using `write`) to find out how many entries were found for the UPDATE. You need to call `confirmFreeformQueriesAreNotRecommended` with 'OK' in the query builder to make it clear that you have made a conscious decision to use freeform queries.
+
+Transactions
+------------
+
+It is usually important for multiple queries to be executed within a transaction, especially when something is changed, to make sure all changes are done atomically. Using repositories this is easy by using the `Transaction` class:
+
+```php
+use Squirrel\Entities\Transaction;
+
+// Transaction class checks that all involved repositories use
+// the same database connection so a transaction is actually possible
+$transactionHandler = Transaction::withRepositories(
+    $userRepositoryWriteable, // \Application\Entity\UserRepositoryWriteable instance
+    $visitRepositoryReadOnly, // \Application\Entity\VisitRepositoryReadOnly instance
+);
+
+// Run method takes a callable and lets you define any additional arguments
+// which are then passed along
+$transactionHandler->run(
+    function (
+        int $userId,
+        \Application\Entity\UserRepositoryWriteable $userRepositoryWriteable,
+        \Application\Entity\VisitRepositoryReadOnly $visitRepositoryReadOnly
+    ) {
+        $visitsNumber = $visitRepositoryReadOnly
+            ->count()
+            ->where([
+                'userId' => $userId,
+            ])
+            ->blocking()
+            ->getNumber();
+            
+        $userRepositoryWriteable
+            ->update()
+            ->set([
+                'visitsNumber' => $visitsNumber,
+            ])
+            ->where([
+                'userId' => $userId,
+            ])
+            ->write();
+    },
+    5, // first argument passed to callable ($userId)
+    $userRepositoryWriteable, // second argument passed to callable
+    $visitRepositoryReadOnly // third argument passed to callable
+);
+```
+
+The advantage of the static `withRepositories` function is that you cannot do anything wrong without it throwing a `DBInvalidOptionException` - no invalid repositories, no different connections, etc. Internally the `Transaction` class uses class reflection to check the data and expects either `RepositoryBuilderReadOnly` instances or `RepositoryReadOnly` instances (or the `Writeable` instead of `ReadyOnly` versions).
+
+You can easily create Transaction objects yourself by just passing in an object implementing `DBInterface` (from [squirrelphp/queries](https://github.com/squirrelphp/queries)). When using the class in that way you will need to make sure yourself that all involved repositories/queries use the same connection. 
+
+Read-only entity objects
+------------------------
+
+Because this library separates reads and writes and only uses objects for reads, the entity objects do not need to be mutable - they can be immutable and read-only. If you have used other ORMs this might seem counterintuitive at first (because most ORMs are built around mutable entity objects), but it does offer new possibilities:
+
+- Immutable entity objects can be passed to templates or any services without the risk of them being changed or having any side effects on other parts of the application
+- Caching is easy: use whatever technique you like to cache entity objects if this becomes necessary, because they are just data / plain objects
+- Entity classes can be more about the logic of the entity (how to use it), offering additional functionality and leaving out all the database functionality
+- You can create interfaces for your entity objects to separate infrastructure and entity logic, defining the methods on an entity you want to provide independent of what data is in the database (and you can create aggregates/root entities with multiple read-only entities)
+- The library does not need to keep track of your entities, lazy-loading parts of them, and doing complicated things you don't really understand: everything that happens is straightforward and within your control
+- You still have the advantages of using objects to access the data instead of using unstructured data, so you can clearly define the types you are using, or implement methods returning value objects, and the code can be checked by static analyzers
+
+Having the writing queries so clearly separated from the objects also offers advantages:
+
+- It is easy to spot where something is being changed, just look for where `EntityNameRepositoryWriteable` classes are used, and only use the Writeable classes where you actually write to the repository and `EntityNameRepositoryReadOnly` everywhere else
+- Queries are not completely abstracted away from you, leaving it up to you to make simple or complicated queries according to your needs, instead of having to hope that the library creates efficient queries for you and forgetting how the data is stored and manipulated
+- You can change many rows at once, or do multi repository queries with a straightforward syntax and without learning a new query language
+- Using a command bus, or doing CQRS (Command Query Responsibility Segregation) in your application becomes an easy pattern to follow, because you always define if you are writing to or reading from a repository
+
+Recommendations on how to use this library
+------------------------------------------
+
+The following recommendations are slightly opinionated ways of using this library - you don't have to use the library this way:
+
+- Make your entity objects read-only / immutable, by defining all properties as private and never changing them, and only offer methods to get data, no setters and no keeping track of changes
+- Create a distinct class for every use-case in your application which changes something in your application, for example `OrderCreateHandler` or `UserPasswordChangeHandler`, and have one public method to execute that class
+- Put all these classes in their own directory, like `ChangeHandler`, and make sure you only ever use the `RepositoryWriteable` classes within such a directory, to avoid unintential changes
+- If the change is not super simple, create an action object (usually just a simple value object with public properties) for each handler, like `OrderCreateAction`, and make sure that object can be validated and then passed to the change handler
+- You can put those action objects in a directory like `ChangeAction`, or put them in the same directory as the change handlers
+- Only use the generated builder repositories to access and change your entities, and use `Transaction::withRepositories` for transactions
+- Only use multi repository queries when it is a conscious decision and there are no good alternatives
+- Use [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) and Symfony, which autoconfigures almost everything for you
