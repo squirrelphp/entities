@@ -20,6 +20,7 @@ Table of contents
 - [Using repositories](#using-repositories)
 - [Multi repository queries](#multi-repository-queries)
 - [Transactions](#transactions)
+- [More complex column types](#more-complex-column-types)
 - [Read-only entity objects](#read-only-entity-objects)
 - [Recommendations on how to use this library](#recommendations-on-how-to-use-this-library)
 
@@ -721,10 +722,10 @@ use Squirrel\Entities\Transaction;
 
 // Transaction class checks that all involved repositories use
 // the same database connection so a transaction is actually possible
-$transactionHandler = Transaction::withRepositories(
+$transactionHandler = Transaction::withRepositories([
     $userRepositoryWriteable, // \Application\Entity\UserRepositoryWriteable instance
     $visitRepositoryReadOnly, // \Application\Entity\VisitRepositoryReadOnly instance
-);
+]);
 
 // Run method takes a callable and lets you define any additional arguments
 // which are then passed along
@@ -762,6 +763,160 @@ The advantage of the static `withRepositories` function is that you cannot do an
 
 You can easily create Transaction objects yourself by just passing in an object implementing `DBInterface` (from [squirrelphp/queries](https://github.com/squirrelphp/queries)). When using the class in that way you will need to make sure yourself that all involved repositories/queries use the same connection. 
 
+More complex column types
+-------------------------
+
+Only `string`, `int`, `bool`, `float` and `blob` are supported as column types, yet databases support many specialized column types - like dates, times, geographic positions, IP addresses, enumerated values, JSON, etc.
+
+You should have no problems supporting such special types, but because this library is kept simple, it only supports the basic PHP types and it will be your responsibility to use or convert them to any other types, according to the needs of your application.
+
+Below is a modification of our existing example to show how you could handle non-trivial column types:
+
+```php
+namespace Application\Entity;
+
+use Squirrel\Entities\Annotation\Entity;
+use Squirrel\Entities\Annotation\Field;
+
+/**
+ * @Entity("users")
+ */
+class User
+{
+    /**
+     * @Field("user_id", type="int", autoincrement=true)
+     *
+     * @var integer
+     */
+    private $userId = 0;
+
+    /**
+     * @Field("active", type="bool")
+     *
+     * @var bool
+     */
+    private $active = false;
+    
+    /**
+     * @Field("note_data")
+     *
+     * @var string JSON data in the database
+     */
+    private $notes = '';
+
+    /**
+     * @Field("created")
+     *
+     * @var string datetime in the database
+     */
+    private $createDate = '';
+    
+    public function getUserId(): int
+    {
+        return $this->userId;
+    }
+    
+    public function isActive(): bool
+    {
+        return $this->active;
+    }
+    
+    public function getNotes(): array
+    {
+        return \json_decode($this->notes, true);
+    }
+    
+    public function getCreateDate(): \DateTimeImmutable
+    {
+        return new \DateTimeImmutable($this->createDate, new \DateTimeZone('Europe/London'));
+    }
+}
+```
+
+The entity class converts between the database and the application to give the application something it can work with in a format it understands. If squirrelphp would handle these conversions it could quickly go wrong - even something seemingly simple like a date is not self-explanatory, it always needs a time zone it is relative too.
+
+You should use the freedom of choosing how to convert your database values to application values by using value objects where it makes sense - we used `DateTimeImmutable` as a value object, but it can be custom:
+
+```php
+namespace Application\Value;
+ 
+class GeoPoint
+{
+    /**
+     * @var float
+     */
+    private $lat = 0;
+ 
+    /**
+     * @var float
+     */
+    private $lng = 0;
+    
+    public function __construct(float $lat, float $lng)
+    {
+      $this->lat = lat;
+      $this->lng = lng;
+    }
+     
+    public function getLatitude(): float
+    {
+        return $this->lat;
+    }
+     
+    public function getLongitude(): float
+    {
+        return $this->lng;
+    }
+}
+```
+
+```php
+namespace Application\Entity;
+ 
+use Application\Value\GeoPoint;
+use Squirrel\Entities\Annotation\Entity;
+use Squirrel\Entities\Annotation\Field;
+ 
+/**
+ * @Entity("users_locations")
+ */
+class UserLocation
+{
+    /**
+     * @Field("user_id", type="int")
+     *
+     * @var integer
+     */
+    private $userId = 0;
+ 
+    /**
+     * @Field("location")
+     *
+     * @var string "point" in Postgres
+     */
+    private $locationPoint = '';
+     
+    public function getUserId(): int
+    {
+        return $this->userId;
+    }
+    
+    /**
+     * Convert the point syntax from the database into a value object
+     */
+    public function getLocation(): GeoPoint
+    {
+        $point = \explode(',', \trim($this->locationPoint, '()'));
+        
+        return new GeoPoint($point[0], $point[1]);
+    }
+}
+```
+
+Here a `point` data type from Postgres is used as an example, which is then converted into the `GeoPoint` value object so the application can easily pass it around and use it. Custom data types are usually received as strings by the application and can then be processed however you want.
+
+Beware that using database-specific column types will make it harder to change database systems / make your entities and SQL code be vendor-specific. It might still be worth it to use these column types, but you should be aware of it.
+
 Read-only entity objects
 ------------------------
 
@@ -770,7 +925,7 @@ Because this library separates reads and writes and only uses objects for reads,
 - Immutable entity objects can be passed to templates or any services without the risk of them being changed or having any side effects on other parts of the application
 - Caching is easy: use whatever technique you like to cache entity objects if this becomes necessary, because they are just data / plain objects
 - Entity classes can be more about the logic of the entity (how to use it), offering additional functionality and leaving out all the database functionality
-- You can create interfaces for your entity objects to separate infrastructure and entity logic, defining the methods on an entity you want to provide independent of what data is in the database (and you can create aggregates/root entities with multiple read-only entities)
+- You can create interfaces for your entity objects to separate infrastructure and entity logic, defining the methods on an entity you want to provide independent of what data is in the database (and you can create aggregates/root entities with multiple read-only entities, the possibilities for more abstractions are plentiful)
 - The library does not need to keep track of your entities, lazy-loading parts of them, and doing complicated things you don't really understand: everything that happens is straightforward and within your control
 - You still have the advantages of using objects to access the data instead of using unstructured data, so you can clearly define the types you are using, or implement methods returning value objects, and the code can be checked by static analyzers
 
