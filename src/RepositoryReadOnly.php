@@ -4,6 +4,7 @@ namespace Squirrel\Entities;
 
 use Squirrel\Entities\Action\ActionInterface;
 use Squirrel\Queries\DBDebug;
+use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\LargeObject;
@@ -104,11 +105,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         try {
             $count = $this->db->fetchOne($sanitizedQuery);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
 
@@ -133,11 +135,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         try {
             return new RepositorySelectQuery($this->db->select($sanitizedQuery), $this->config);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -153,11 +156,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         try {
             $result = $this->db->fetch($selectQuery->getQuery());
             return ( $result===null ? null : $this->convertResultToObject($result) );
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -172,11 +176,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         try {
             $this->db->clear($selectQuery->getQuery());
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -229,11 +234,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         try {
             // Get all the data from the database
             $tableResults = $this->db->fetchAll($sanitizedQuery);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
 

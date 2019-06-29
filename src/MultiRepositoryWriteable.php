@@ -4,7 +4,7 @@ namespace Squirrel\Entities;
 
 use Squirrel\Entities\Action\ActionInterface;
 use Squirrel\Queries\DBDebug;
-use Squirrel\Queries\Exception\DBInvalidOptionException;
+use Squirrel\Queries\DBException;
 
 /**
  * QueryHandler functionality: If more than one table needs to be selected or updated
@@ -35,11 +35,12 @@ class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiR
         // Execute update query and return number of affected rows from the update
         try {
             return $this->db->change($sqlQuery, $sanitizedOptions['parameters']);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }

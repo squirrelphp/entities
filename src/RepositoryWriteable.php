@@ -4,6 +4,7 @@ namespace Squirrel\Entities;
 
 use Squirrel\Entities\Action\ActionInterface;
 use Squirrel\Queries\DBDebug;
+use Squirrel\Queries\DBException;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
@@ -32,11 +33,12 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         try {
             // Execute the query
             return $this->db->update($this->config->getTableName(), $changes, $where);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -143,11 +145,12 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             }
 
             $this->db->insert($this->config->getTableName(), $actualFields);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
 
@@ -218,11 +221,12 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 $actualIndexFields,
                 $actualUpdateFields ?? null
             );
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -238,11 +242,12 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         try {
             // Execute the query
             return $this->db->delete($this->config->getTableName(), $where);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }

@@ -4,6 +4,7 @@ namespace Squirrel\Entities;
 
 use Squirrel\Entities\Action\ActionInterface;
 use Squirrel\Queries\DBDebug;
+use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
@@ -63,11 +64,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 $selectTypes,
                 $selectTypesNullable
             );
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -76,11 +78,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     {
         try {
             $result = $this->db->fetch($selectQuery->getQuery());
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
 
@@ -95,11 +98,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     {
         try {
             $this->db->clear($selectQuery->getQuery());
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
     }
@@ -144,11 +148,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         // Get all the data from the database
         try {
             $tableResults = $this->db->fetchAll($sqlQuery, $parameters ?? []);
-        } catch (DBInvalidOptionException $e) {
+        } catch (DBException $e) {
             throw DBDebug::createException(
-                DBInvalidOptionException::class,
+                \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $e->getMessage()
+                $e->getMessage(),
+                $e->getPrevious()
             );
         }
 
