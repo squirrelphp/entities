@@ -2,9 +2,9 @@
 
 namespace Squirrel\Entities\Action;
 
+use Squirrel\Debug\Debug;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
-use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
@@ -150,7 +150,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     private function makeSureBadPracticeWasConfirmed(): void
     {
         if ($this->confirmBadPractice !== true) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
                 'No confirmation that freeform queries are bad practice - ' .

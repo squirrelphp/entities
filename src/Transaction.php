@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities;
 
-use Squirrel\Queries\DBDebug;
+use Squirrel\Debug\Debug;
 use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
@@ -49,7 +49,7 @@ class Transaction implements TransactionInterface
                     $builderRepositoryPropertyReflection->setAccessible(true);
                     $repository = $builderRepositoryPropertyReflection->getValue($repository);
                 } catch (\ReflectionException $e) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [Transaction::class],
                         'Base repository not found in builder repository via reflection. ' .
@@ -66,7 +66,7 @@ class Transaction implements TransactionInterface
                     $baseRepositoryPropertyReflection->setAccessible(true);
                     $foundConnection = $baseRepositoryPropertyReflection->getValue($repository);
                 } catch (\ReflectionException $e) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [Transaction::class],
                         'Connection not found in base repository via reflection. ' .
@@ -76,7 +76,7 @@ class Transaction implements TransactionInterface
 
                 // Make sure all repositories are using the same connection, otherwise a transaction is impossible
                 if (isset($connection) && $connection !== $foundConnection) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [TransactionInterface::class],
                         'Repositories have different database connections, transaction is not possible'
@@ -85,7 +85,7 @@ class Transaction implements TransactionInterface
 
                 $connection = $foundConnection;
             } else { // No base repository - meaning this class is invalid
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [TransactionInterface::class],
                     'Invalid class specified to create transaction (not a repository)'
@@ -95,7 +95,7 @@ class Transaction implements TransactionInterface
 
         // No connection found, meaning no repositories were defined in arguments
         if (!isset($connection)) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [TransactionInterface::class],
                 'No repositories for transaction defined'

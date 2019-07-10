@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities;
 
+use Squirrel\Debug\Debug;
 use Squirrel\Entities\Action\ActionInterface;
-use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\DBException;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
@@ -20,7 +20,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     {
         // We need fields to update, otherwise there is nothing to do
         if (\count($changes) === 0) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 'No "changes" / SET clause defined'
@@ -34,7 +34,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             // Execute the query
             return $this->db->update($this->config->getTableName(), $changes, $where);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -66,11 +66,11 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
 
             // Make sure we have a valid fieldname
             if (!\is_string($fieldName)) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'Invalid "changes" / SET definition, expression is not a string: ' .
-                    DBDebug::sanitizeData($fieldName)
+                    Debug::sanitizeData($fieldName)
                 );
             }
 
@@ -87,11 +87,11 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
 
                 // Variables still exist which were not resolved
                 if (\strpos($fieldName, ':') !== false) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [RepositoryReadOnlyInterface::class, ActionInterface::class],
                         'Unresolved colons in "changes" / SET clause: ' .
-                        DBDebug::sanitizeData($fieldName)
+                        Debug::sanitizeData($fieldName)
                     );
                 }
             }
@@ -114,11 +114,11 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     {
         // Make sure we have an autoincrement field if one is requested
         if ($returnInsertId === true && \strlen($this->config->getAutoincrementField()) === 0) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 'Insert ID requested but no autoincrement ID specified: ' .
-                DBDebug::sanitizeData($fields)
+                Debug::sanitizeData($fields)
             );
         }
 
@@ -146,7 +146,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
 
             $this->db->insert($this->config->getTableName(), $actualFields);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -169,11 +169,11 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         // Convert the index field names from object to table
         foreach ($indexFields as $fieldName) {
             if (!isset($fields[$fieldName])) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'Index field specified do not occur in data array: ' .
-                    DBDebug::sanitizeData($fieldName)
+                    Debug::sanitizeData($fieldName)
                 );
             }
 
@@ -222,7 +222,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 $actualUpdateFields ?? null
             );
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -243,7 +243,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             // Execute the query
             return $this->db->delete($this->config->getTableName(), $where);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),

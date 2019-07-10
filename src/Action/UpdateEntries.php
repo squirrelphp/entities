@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities\Action;
 
+use Squirrel\Debug\Debug;
 use Squirrel\Entities\RepositoryWriteableInterface;
-use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
@@ -71,7 +71,7 @@ class UpdateEntries implements ActionInterface
     {
         // Make sure there is no accidental "delete everything"
         if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [ActionInterface::class],
                 'No restricting "where" arguments defined for UPDATE ' .

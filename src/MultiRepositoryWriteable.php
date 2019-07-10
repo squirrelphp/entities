@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities;
 
+use Squirrel\Debug\Debug;
 use Squirrel\Entities\Action\ActionInterface;
-use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\DBException;
 
 /**
@@ -36,7 +36,7 @@ class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiR
         try {
             return $this->db->change($sqlQuery, $sanitizedOptions['parameters']);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),

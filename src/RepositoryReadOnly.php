@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities;
 
+use Squirrel\Debug\Debug;
 use Squirrel\Entities\Action\ActionInterface;
-use Squirrel\Queries\DBDebug;
 use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
@@ -106,7 +106,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         try {
             $count = $this->db->fetchOne($sanitizedQuery);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -136,7 +136,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         try {
             return new RepositorySelectQuery($this->db->select($sanitizedQuery), $this->config);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -157,7 +157,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             $result = $this->db->fetch($selectQuery->getQuery());
             return ( $result===null ? null : $this->convertResultToObject($result) );
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -177,7 +177,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         try {
             $this->db->clear($selectQuery->getQuery());
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -192,10 +192,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     public function fetchOne(array $query)
     {
         if (isset($query['limit']) && $query['limit'] !== 1) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'Row limit cannot be set for fetchOne query: ' . DBDebug::sanitizeData($query)
+                'Row limit cannot be set for fetchOne query: ' . Debug::sanitizeData($query)
             );
         }
 
@@ -235,7 +235,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             // Get all the data from the database
             $tableResults = $this->db->fetchAll($sanitizedQuery);
         } catch (DBException $e) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 \get_class($e),
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 $e->getMessage(),
@@ -266,10 +266,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         foreach ($options as $optKey => $optVal) {
             // Defined option is not in the list of valid options
             if (!isset($validOptions[$optKey])) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                    'Unknown option key ' . DBDebug::sanitizeData($optKey)
+                    'Unknown option key ' . Debug::sanitizeData($optKey)
                 );
             }
 
@@ -282,11 +282,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                     break;
                 default:
                     if (!\is_array($optVal)) {
-                        throw DBDebug::createException(
+                        throw Debug::createException(
                             DBInvalidOptionException::class,
                             [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                            'Option key ' . DBDebug::sanitizeData($optKey) .
-                            ' had a non-array value: ' . DBDebug::sanitizeData($optVal)
+                            'Option key ' . Debug::sanitizeData($optKey) .
+                            ' had a non-array value: ' . Debug::sanitizeData($optVal)
                         );
                     }
                     break;
@@ -310,10 +310,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             foreach ($query['fields'] as $key => $fieldName) {
                 // If we do not know a field name this is super bad
                 if (!\is_string($fieldName)) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                        'Field name is not a string: ' . DBDebug::sanitizeData($fieldName)
+                        'Field name is not a string: ' . Debug::sanitizeData($fieldName)
                     );
                 }
 
@@ -370,10 +370,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             && $shouldBeBoolean !== 1
             && $shouldBeBoolean !== 0
         ) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                $settingName . ' set to a non-boolean value: ' . DBDebug::sanitizeData($shouldBeBoolean)
+                $settingName . ' set to a non-boolean value: ' . Debug::sanitizeData($shouldBeBoolean)
             );
         }
 
@@ -383,7 +383,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     private function compareRepositoryConfigMustBeEqual(RepositoryConfigInterface $config): void
     {
         if ($config != $this->config) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 'Different repository used to fetch result than to do the query!'
@@ -477,11 +477,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
             // Make sure we have a valid field name
             if (!\is_string($whereName)) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'Invalid "where" definition, expression is not a string: ' .
-                    DBDebug::sanitizeData($whereName)
+                    Debug::sanitizeData($whereName)
                 );
             }
 
@@ -495,11 +495,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
                 // Variables still exist which were not resolved
                 if (\strpos($whereName, ':') !== false) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [RepositoryReadOnlyInterface::class, ActionInterface::class],
                         'Unresolved colons in "where" clause: ' .
-                        DBDebug::sanitizeData($whereName)
+                        Debug::sanitizeData($whereName)
                     );
                 }
             } else { // Key is a string, meaning normal field - value entry
@@ -559,11 +559,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     {
         // Only scalar values and null are allowed
         if (!\is_null($value) && !\is_scalar($value)) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
                 'Invalid value for field name: ' .
-                DBDebug::sanitizeData($fieldName) . ' => ' . DBDebug::sanitizeData($value)
+                Debug::sanitizeData($fieldName) . ' => ' . Debug::sanitizeData($value)
             );
         }
 
@@ -585,10 +585,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         // Make sure we know the used field name
         if (!isset($this->objectTypes[$fieldName])) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'Unknown field name: ' . DBDebug::sanitizeData($fieldName)
+                'Unknown field name: ' . Debug::sanitizeData($fieldName)
             );
         }
 
@@ -596,11 +596,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         if (\is_null($value)) {
             // Not allowed
             if ($this->objectTypesNullable[$fieldName] !== true) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'NULL value for non-nullable field name: ' .
-                    DBDebug::sanitizeData($fieldName)
+                    Debug::sanitizeData($fieldName)
                 );
             }
 
@@ -632,10 +632,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         // Always throw an exception we if hit unchartered territory
-        throw DBDebug::createException(
+        throw Debug::createException(
             DBInvalidOptionException::class,
             [RepositoryReadOnlyInterface::class, ActionInterface::class],
-            'Unknown casting for object variable: ' . DBDebug::sanitizeData($fieldName)
+            'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName)
         );
     }
 
@@ -667,10 +667,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     {
         // If we do not know a field name this is super bad
         if (!isset($this->objectToTableFields[$fieldName])) {
-            throw DBDebug::createException(
+            throw Debug::createException(
                 DBInvalidOptionException::class,
                 [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                'Unknown field name: ' . DBDebug::sanitizeData($fieldName)
+                'Unknown field name: ' . Debug::sanitizeData($fieldName)
             );
         }
 
@@ -700,11 +700,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
             // Make sure we have a valid fieldname
             if (!\is_string($fieldName)) {
-                throw DBDebug::createException(
+                throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'Invalid "order" / order by definition, expression is not a string: ' .
-                    DBDebug::sanitizeData($fieldName)
+                    Debug::sanitizeData($fieldName)
                 );
             }
 
@@ -715,11 +715,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
                 // Variables still exist which were not resolved
                 if (\strpos($fieldName, ':') !== false) {
-                    throw DBDebug::createException(
+                    throw Debug::createException(
                         DBInvalidOptionException::class,
                         [RepositoryReadOnlyInterface::class, ActionInterface::class],
                         'Unresolved colons in "order" / order by clause: ' .
-                        DBDebug::sanitizeData($fieldName)
+                        Debug::sanitizeData($fieldName)
                     );
                 }
             } else { // Specific field name
@@ -765,10 +765,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 return \strval($value);
         }
 
-        throw DBDebug::createException(
+        throw Debug::createException(
             DBInvalidOptionException::class,
             [RepositoryReadOnlyInterface::class, ActionInterface::class],
-            'Unknown casting for object variable: ' . DBDebug::sanitizeData($fieldName)
+            'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName)
         );
     }
 }
