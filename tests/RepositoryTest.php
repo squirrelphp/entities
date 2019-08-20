@@ -297,6 +297,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ],
             'order' => [
                 'last_name' => 'DESC',
+                'RAND()',
             ],
             'limit' => 2,
             'offset' => 5,
@@ -314,6 +315,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ],
             'order' => [
                 'lastName' => 'DESC',
+                'RAND()',
             ],
             'limit' => 2,
             'offset' => 5,

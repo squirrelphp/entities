@@ -691,46 +691,55 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         $orderProcessed = [];
 
         // Go through all order contraints and apply them
-        foreach ($orderOptions as $fieldName => $direction) {
+        foreach ($orderOptions as $expression => $direction) {
             // Key is a number, so we need to switch fieldName and set a default direction
-            if (\is_int($fieldName)) {
-                $fieldName = $direction;
+            if (\is_int($expression)) {
+                $expression = $direction;
                 $direction = null;
             }
 
             // Make sure we have a valid fieldname
-            if (!\is_string($fieldName)) {
+            if (!\is_string($expression)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
                     [RepositoryReadOnlyInterface::class, ActionInterface::class],
                     'Invalid "order" / order by definition, expression is not a string: ' .
-                    Debug::sanitizeData($fieldName)
+                    Debug::sanitizeData($expression)
                 );
             }
 
-            // Variables were defined, so a freestyle order
-            if (\strpos($fieldName, ':') !== false) {
-                // Convert all :variable: values from object to table notation
-                $fieldName = $this->convertNamesToTableInString($fieldName);
+            // Wether variable was found or not
+            $variableFound = (\strpos($expression, ':') !== false);
 
-                // Variables still exist which were not resolved
-                if (\strpos($fieldName, ':') !== false) {
-                    throw Debug::createException(
-                        DBInvalidOptionException::class,
-                        [RepositoryReadOnlyInterface::class, ActionInterface::class],
-                        'Unresolved colons in "order" / order by clause: ' .
-                        Debug::sanitizeData($fieldName)
-                    );
+            // Expression contains not just the field name
+            if ($variableFound === true
+                || \strpos($expression, ' ') !== false
+                || \strpos($expression, '(') !== false
+                || \strpos($expression, ')') !== false
+            ) {
+                if ($variableFound === true) {
+                    // Convert all :variable: values from object to table notation
+                    $expression = $this->convertNamesToTableInString($expression);
+
+                    // Variables still exist which were not resolved
+                    if (\strpos($expression, ':') !== false) {
+                        throw Debug::createException(
+                            DBInvalidOptionException::class,
+                            [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                            'Unresolved colons in "order" / order by clause: ' .
+                            Debug::sanitizeData($expression)
+                        );
+                    }
                 }
-            } else { // Specific field name
-                $fieldName = $this->convertNameToTable($fieldName);
+            } else { // Expression is just a field name
+                $expression = $this->convertNameToTable($expression);
             }
 
             // Add order entry to processed list
             if ($direction === null) {
-                $orderProcessed[] = $fieldName;
+                $orderProcessed[] = $expression;
             } else {
-                $orderProcessed[$fieldName] = $direction;
+                $orderProcessed[$expression] = $direction;
             }
         }
 
