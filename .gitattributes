@@ -11,3 +11,4 @@
 /phpstan.neon       export-ignore
 /psalm.xml          export-ignore
 /psalm-baseline.xml export-ignore
+/vendor-bin         export-ignore
