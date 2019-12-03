@@ -2,8 +2,12 @@
 
 namespace Squirrel\Entities\Tests\TestEntities;
 
+use Squirrel\Entities\EntityConstructorTrait;
+
 class NonRepository
 {
+    use EntityConstructorTrait;
+
     /**
      * @var int
      */

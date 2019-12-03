@@ -4,16 +4,19 @@ namespace Squirrel\Entities\Tests\TestEntities;
 
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\EntityConstructorTrait;
 
 /**
  * @Entity("users_address")
  */
 class UserAddress
 {
+    use EntityConstructorTrait;
+
     /**
      * @Field("user_id", type="int")
      *
-     * @var integer
+     * @var int
      */
     private $userId = 0;
 
@@ -52,61 +55,31 @@ class UserAddress
      */
     private $picture = '';
 
-    /**
-     * Initialize the object with an array - not used by repository, just for testing
-     *
-     * @param array $data
-     */
-    public function __construct(array $data)
-    {
-        foreach ($data as $key => $value) {
-            $this->$key = $value;
-        }
-    }
-
-    /**
-     * @return int
-     */
     public function getUserId(): int
     {
         return $this->userId;
     }
 
-    /**
-     * @return bool
-     */
     public function isAtHome(): bool
     {
         return $this->atHome;
     }
 
-    /**
-     * @return string
-     */
     public function getStreetName(): string
     {
         return $this->streetName;
     }
 
-    /**
-     * @return string
-     */
     public function getStreetNumber(): string
     {
         return $this->streetNumber;
     }
 
-    /**
-     * @return string
-     */
     public function getCity(): string
     {
         return $this->city;
     }
 
-    /**
-     * @return string
-     */
     public function getPicture(): string
     {
         return $this->picture;

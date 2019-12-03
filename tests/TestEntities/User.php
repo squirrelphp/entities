@@ -3,16 +3,19 @@
 namespace Squirrel\Entities\Tests\TestEntities;
 
 use Squirrel\Entities\Annotation as SQL;
+use Squirrel\Entities\EntityConstructorTrait;
 
 /**
  * @SQL\Entity("users")
  */
 class User
 {
+    use EntityConstructorTrait;
+
     /**
      * @SQL\Field("user_id", type="int", autoincrement=true)
      *
-     * @var integer
+     * @var int
      */
     private $userId = 0;
 
@@ -68,89 +71,50 @@ class User
     /**
      * @SQL\Field("create_date", type="int")
      *
-     * @var integer
+     * @var int
      */
     private $createDate = 0;
 
-    /**
-     * Initialize the object with an array - not used by repository, just for testing
-     *
-     * @param array $data
-     */
-    public function __construct(array $data)
-    {
-        foreach ($data as $key => $value) {
-            $this->$key = $value;
-        }
-    }
-
-    /**
-     * @return int
-     */
     public function getUserId(): int
     {
         return $this->userId;
     }
 
-    /**
-     * @return bool
-     */
     public function isActive(): bool
     {
         return $this->active;
     }
 
-    /**
-     * @return string
-     */
     public function getUserName(): string
     {
         return $this->userName;
     }
 
-    /**
-     * @return string
-     */
     public function getLoginNameMD5(): string
     {
         return $this->loginNameMD5;
     }
 
-    /**
-     * @return string
-     */
     public function getLoginPassword(): string
     {
         return $this->loginPassword;
     }
 
-    /**
-     * @return string
-     */
     public function getEmailAddress(): string
     {
         return $this->emailAddress;
     }
 
-    /**
-     * @return float
-     */
     public function getBalance(): float
     {
         return $this->balance;
     }
 
-    /**
-     * @return int|null
-     */
     public function getLocationId(): ?int
     {
         return $this->locationId;
     }
 
-    /**
-     * @return int
-     */
     public function getCreateDate(): int
     {
         return $this->createDate;
