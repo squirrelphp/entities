@@ -4,6 +4,7 @@ namespace Squirrel\Entities\Action;
 
 use Squirrel\Debug\Debug;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
+use Squirrel\Entities\RepositoryBuilderWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
@@ -18,7 +19,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
     private $queryHandler;
 
     /**
-     * @var RepositoryWriteableInterface[] Repositories used in the multi query
+     * @var array<string,RepositoryBuilderWriteableInterface|RepositoryWriteableInterface> Repositories used in the multi query
      */
     private $repositories = [];
 
@@ -43,7 +44,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
     }
 
     /**
-     * @param RepositoryWriteableInterface[] $repositories
+     * @param array<string,RepositoryBuilderWriteableInterface|RepositoryWriteableInterface> $repositories
      */
     public function inRepositories(array $repositories): self
     {

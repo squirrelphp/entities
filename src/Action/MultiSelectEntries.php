@@ -3,6 +3,7 @@
 namespace Squirrel\Entities\Action;
 
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
+use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 /**
@@ -21,7 +22,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     private $fields = [];
 
     /**
-     * @var RepositoryReadOnlyInterface[] Repositories used in the multi query
+     * @var array<string,RepositoryBuilderReadOnlyInterface|RepositoryReadOnlyInterface> Repositories used in the multi query
      */
     private $repositories = [];
 
@@ -81,7 +82,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     }
 
     /**
-     * @param RepositoryReadOnlyInterface[] $repositories
+     * @param array<string,RepositoryBuilderReadOnlyInterface|RepositoryReadOnlyInterface> $repositories
      */
     public function inRepositories(array $repositories): self
     {

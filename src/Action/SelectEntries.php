@@ -111,8 +111,6 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * Returns object[] (from the entity class), we avoid the return type hint
      * here to code analyzers don't get confused by generated repositories
      * and their different type hint
-     *
-     * @return object[]
      */
     public function getAllEntries(): array
     {
@@ -133,7 +131,6 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * the return type hint here to code analyzers don't get confused by
      * generated repositories and their different type hint
      *
-     * @return object|null
      * @psalm-suppress MissingReturnType
      */
     public function getOneEntry()
