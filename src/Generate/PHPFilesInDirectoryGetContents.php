@@ -6,7 +6,7 @@ use Symfony\Component\Finder\Finder;
 
 class PHPFilesInDirectoryGetContents
 {
-    public function __invoke(string $directory)
+    public function __invoke(string $directory): iterable
     {
         $sourceFinder = new Finder();
         $sourceFinder->in($directory)->files()->name('*.php')->sortByName();

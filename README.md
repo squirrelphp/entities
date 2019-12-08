@@ -1,7 +1,7 @@
 Squirrel Entities Component
 ===========================
 
-[![Build Status](https://img.shields.io/travis/com/squirrelphp/entities.svg)](https://travis-ci.com/squirrelphp/entities) [![Test Coverage](https://api.codeclimate.com/v1/badges/36a9f5a3b4abbaf7901c/test_coverage)](https://codeclimate.com/github/squirrelphp/entities/test_coverage) ![PHPStan](https://img.shields.io/badge/style-level%207-success.svg?style=flat-round&label=phpstan) [![Packagist Version](https://img.shields.io/packagist/v/squirrelphp/entities.svg?style=flat-round)](https://packagist.org/packages/squirrelphp/entities) [![PHP Version](https://img.shields.io/packagist/php-v/squirrelphp/entities.svg)](https://packagist.org/packages/squirrelphp/entities) [![Software License](https://img.shields.io/badge/license-MIT-success.svg?style=flat-round)](LICENSE)
+[![Build Status](https://img.shields.io/travis/com/squirrelphp/entities.svg)](https://travis-ci.com/squirrelphp/entities) [![Test Coverage](https://api.codeclimate.com/v1/badges/36a9f5a3b4abbaf7901c/test_coverage)](https://codeclimate.com/github/squirrelphp/entities/test_coverage) ![PHPStan](https://img.shields.io/badge/style-level%208-success.svg?style=flat-round&label=phpstan) [![Packagist Version](https://img.shields.io/packagist/v/squirrelphp/entities.svg?style=flat-round)](https://packagist.org/packages/squirrelphp/entities) [![PHP Version](https://img.shields.io/packagist/php-v/squirrelphp/entities.svg)](https://packagist.org/packages/squirrelphp/entities) [![Software License](https://img.shields.io/badge/license-MIT-success.svg?style=flat-round)](LICENSE)
 
 Simple & safe implementation of handling SQL entities and repositories as well as multi-table SQL queries while staying lightweight and easy to understand and use. Offers rapid application development by generating repositories (which should not be added to VCS) for entities, and [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) offers automatic integration of these repositories into Symfony.
 
@@ -11,7 +11,7 @@ Installation
 ------------
 
     composer require squirrelphp/entities
-    
+
 Table of contents
 -----------------
 
@@ -76,7 +76,7 @@ class User
      * @var string
      */
     private $city = '';
-    
+
     /**
      * @Field("balance", type="float")
      *
@@ -90,7 +90,7 @@ class User
      * @var string|null
      */
     private $picture;
-    
+
     /**
      * @Field("visits", type="int")
      *
@@ -159,7 +159,7 @@ $repositoryConfig = new \Squirrel\Entities\RepositoryConfig(
         'picture' => true,
         'visitsNumber' => false,
     ],
-    'user_id' // Table field name of the autoincrement column - if there is none this is an empty string 
+    'user_id' // Table field name of the autoincrement column - if there is none this is an empty string
 );
 ```
 
@@ -195,11 +195,11 @@ Builder repositories need to be generated for all entities, in order to have pro
 You can use the squirrel_repositories_generate command in this library to generate the repositories and .gitignore files automatically - run it like this:
 
     vendor/bin/squirrel_repositories_generate --source-dir=src
-    
+
 You can define multiple source-dirs:
 
     vendor/bin/squirrel_repositories_generate --source-dir=src/Entity --source-dir=src/Domain/Entity
-    
+
 Whenever an annotated entity is found, the following files are created in the same directory of the annotated entity:
 
 - RepositoryReadOnly builder class, by adding `RepositoryReadOnly` to the entity class name
@@ -219,7 +219,7 @@ Using repositories
 
 As a stark difference to "normal" ORMs, the entity class is only used when getting results from the database, not to write any changes to the database, which is why it does not matter how you use or design the entity classes except for the needed annotations.
 
-All examples use the generated builder repositories, not the base repositories. To see all possibilities and more details you can look at `Squirrel\Entities\RepositoryBuilderReadOnlyInterface` and `Squirrel\Entities\RepositoryBuilderWriteableInterface` 
+All examples use the generated builder repositories, not the base repositories. To see all possibilities and more details you can look at `Squirrel\Entities\RepositoryBuilderReadOnlyInterface` and `Squirrel\Entities\RepositoryBuilderWriteableInterface`
 
 ### Retrieving database entries as objects
 
@@ -234,7 +234,7 @@ $users = $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly i
         'balance' => 'DESC',
     ])
     ->getAllEntries();
-    
+
 foreach ($users as $user) {
     // Each $user entry is an instance of Application\Entity\User
 }
@@ -258,7 +258,7 @@ $users = $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly i
         'balance' => 'DESC',
     ])
     ->getAllEntries();
-    
+
 foreach ($users as $user) {
     // Only 'userId', 'active' and 'city' have been populated in the entity instances
 }
@@ -280,7 +280,7 @@ $userIds = $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly
         'balance' => 'DESC',
     ])
     ->getFlattenedFields();
-    
+
 foreach ($userIds as $userId) {
     // Each $userId is an integer with the user ID
 }
@@ -298,7 +298,7 @@ $userBuilder = $userRepositoryReadOnly // \Application\Entity\UserRepositoryRead
     ->orderBy([
         'balance' => 'DESC',
     ]);
-    
+
 foreach ($userBuilder as $user) {
     // The query is executed when the foreach loop starts,
     // and one entry after another is retrieved until no more results exist
@@ -314,8 +314,8 @@ $user = $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly in
         'userId' => 13,
     ])
     ->getOneEntry();
-    
-// $user is now either null, if the entry was not found, 
+
+// $user is now either null, if the entry was not found,
 // or an instance of Application\Entity\User
 ```
 
@@ -344,7 +344,7 @@ $activeUsersNumber = $userRepositoryReadOnly // \Application\Entity\UserReposito
         'active' => true,
     ])
     ->getNumber();
-    
+
 // $activeUsersNumber is an integer
 if ($activeUsersNumber === 0) {
     throw new \Exception('No users found!');
@@ -478,7 +478,7 @@ Multi repository queries
 
 Sometimes you might want to do queries where multiple entities are involved (or the same entity multiple times), which is where the MultiRepository classes come in. Like with regular repositories there are base repositories and builder repositories, but unlike the regular repositories they have no configuration of their own - they take all the necessary data from the involved repositories.
 
-All the examples are for the builder repositories, as they are easier to explain and use. We use the User entity again, and an additional entity called `Visit` with the following definition: 
+All the examples are for the builder repositories, as they are easier to explain and use. We use the User entity again, and an additional entity called `Visit` with the following definition:
 
 ```php
 namespace Application\Entity;
@@ -497,7 +497,7 @@ class Visit
      * @var integer
      */
     private $visitId = 0;
-    
+
     /**
      * @Field("user_id", type="int")
      *
@@ -539,7 +539,7 @@ $entries = $multiBuilder
     ])
     ->limitTo(10)
     ->getAllEntries();
-    
+
 foreach ($entries as $entry) {
     // Each $entry has the following data in it:
     // - $entry['user.userId'] as an integer
@@ -567,7 +567,7 @@ $entries = $multiBuilder
         'user.userId' => 5,
     ])
     ->getAllEntries();
-    
+
 foreach ($entries as $entry) {
     // Each $entry has the following data in it:
     // - $entry['userId'] as an integer
@@ -586,7 +586,7 @@ $entries = $multiBuilder
     ->fields([
         'visit.userId',
         'visit.timestamp',
-        'userIdWhenActive' => 'user.userId', 
+        'userIdWhenActive' => 'user.userId',
     ])
     ->inRepositories([
         'user' => $userRepositoryReadOnly // \Application\Entity\UserRepositoryReadOnly instance
@@ -608,7 +608,7 @@ $entries = $multiBuilder
     ->startAt(10)
     ->blocking()
     ->getAllEntries();
-    
+
 foreach ($entries as $entry) {
     // Each $entry has the following data in it:
     // - $entry['visit.userId'] as an integer
@@ -635,7 +635,7 @@ $selectBuilder = $multiBuilder
         ':user.userId: = :visit.userId:',
         'user.userId' => 5,
     ]);
-    
+
 foreach ($selectBuilder as $entry) {
     // Each $entry has the following data in it:
     // - $entry['userId'] as an integer
@@ -658,7 +658,7 @@ $entriesNumber = $multiBuilder
         'user.userId' => 5,
     ])
     ->getNumber();
-    
+
 // $entriesNumber now contains the number of visits of userId = 5
 ```
 
@@ -681,7 +681,7 @@ $entries = $multiBuilder
     ->withParameters([5])
     ->confirmFreeformQueriesAreNotRecommended('OK')
     ->getAllEntries();
-    
+
 foreach ($entries as $entry) {
     // Each $entry has the following data in it:
     // - $entry['userId'] as an integer
@@ -742,7 +742,7 @@ $transactionHandler->run(
             ])
             ->blocking()
             ->getNumber();
-            
+
         $userRepositoryWriteable
             ->update()
             ->set([
@@ -761,7 +761,7 @@ $transactionHandler->run(
 
 The advantage of the static `withRepositories` function is that you cannot do anything wrong without it throwing a `DBInvalidOptionException` - no invalid repositories, no different connections, etc. Internally the `Transaction` class uses class reflection to check the data and expects either `RepositoryBuilderReadOnly` instances or `RepositoryReadOnly` instances (or the `Writeable` instead of `ReadyOnly` versions).
 
-You can easily create Transaction objects yourself by just passing in an object implementing `DBInterface` (from [squirrelphp/queries](https://github.com/squirrelphp/queries)). When using the class in that way you will need to make sure yourself that all involved repositories/queries use the same connection. 
+You can easily create Transaction objects yourself by just passing in an object implementing `DBInterface` (from [squirrelphp/queries](https://github.com/squirrelphp/queries)). When using the class in that way you will need to make sure yourself that all involved repositories/queries use the same connection.
 
 More complex column types
 -------------------------
@@ -796,7 +796,7 @@ class User
      * @var bool
      */
     private $active = false;
-    
+
     /**
      * @Field("note_data")
      *
@@ -810,22 +810,22 @@ class User
      * @var string datetime in the database
      */
     private $createDate = '';
-    
+
     public function getUserId(): int
     {
         return $this->userId;
     }
-    
+
     public function isActive(): bool
     {
         return $this->active;
     }
-    
+
     public function getNotes(): array
     {
         return \json_decode($this->notes, true);
     }
-    
+
     public function getCreateDate(): \DateTimeImmutable
     {
         return new \DateTimeImmutable($this->createDate, new \DateTimeZone('Europe/London'));
@@ -839,30 +839,30 @@ You should use the freedom of choosing how to convert your database values to ap
 
 ```php
 namespace Application\Value;
- 
+
 class GeoPoint
 {
     /**
      * @var float
      */
     private $lat = 0;
- 
+
     /**
      * @var float
      */
     private $lng = 0;
-    
+
     public function __construct(float $lat, float $lng)
     {
       $this->lat = lat;
       $this->lng = lng;
     }
-     
+
     public function getLatitude(): float
     {
         return $this->lat;
     }
-     
+
     public function getLongitude(): float
     {
         return $this->lng;
@@ -872,11 +872,11 @@ class GeoPoint
 
 ```php
 namespace Application\Entity;
- 
+
 use Application\Value\GeoPoint;
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
- 
+
 /**
  * @Entity("users_locations")
  */
@@ -888,26 +888,26 @@ class UserLocation
      * @var integer
      */
     private $userId = 0;
- 
+
     /**
      * @Field("location")
      *
      * @var string "point" in Postgres
      */
     private $locationPoint = '';
-     
+
     public function getUserId(): int
     {
         return $this->userId;
     }
-    
+
     /**
      * Convert the point syntax from the database into a value object
      */
     public function getLocation(): GeoPoint
     {
         $point = \explode(',', \trim($this->locationPoint, '()'));
-        
+
         return new GeoPoint($point[0], $point[1]);
     }
 }

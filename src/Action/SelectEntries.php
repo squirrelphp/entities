@@ -15,12 +15,12 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
     private $repository;
 
     /**
-     * @var array WHERE restrictions in query
+     * @var array<int|string,mixed> WHERE restrictions in query
      */
     private $where = [];
 
     /**
-     * @var array ORDER BY sorting in query
+     * @var array<int|string,string> ORDER BY sorting in query
      */
     private $orderBy = [];
 
@@ -40,7 +40,7 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
     private $blocking = false;
 
     /**
-     * @var array Only retrieve some of the fields of the objects, default is to return all
+     * @var string[] Only retrieve some of the fields of the objects, default is to return all
      */
     private $fields = [];
 
@@ -55,12 +55,18 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
         return $this;
     }
 
+    /**
+     * @param string[] $onlyGetTheseFields
+     */
     public function fields(array $onlyGetTheseFields): self
     {
         $this->fields = $onlyGetTheseFields;
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $whereClauses
+     */
     public function where(array $whereClauses): self
     {
         $this->where = $whereClauses;
@@ -68,7 +74,7 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
     }
 
     /**
-     * @param array|string $orderByClauses
+     * @param array<int|string,string>|string $orderByClauses
      * @return SelectEntries
      */
     public function orderBy($orderByClauses): self
@@ -105,6 +111,8 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * Returns object[] (from the entity class), we avoid the return type hint
      * here to code analyzers don't get confused by generated repositories
      * and their different type hint
+     *
+     * @return object[]
      */
     public function getAllEntries(): array
     {
@@ -125,6 +133,7 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * the return type hint here to code analyzers don't get confused by
      * generated repositories and their different type hint
      *
+     * @return object|null
      * @psalm-suppress MissingReturnType
      */
     public function getOneEntry()

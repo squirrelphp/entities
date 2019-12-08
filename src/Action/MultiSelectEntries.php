@@ -16,7 +16,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     private $queryHandler;
 
     /**
-     * @var array Only retrieve these fields of the repositories
+     * @var array<int|string,string> Only retrieve these fields of the repositories
      */
     private $fields = [];
 
@@ -26,22 +26,22 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     private $repositories = [];
 
     /**
-     * @var array Explicit connections between the repositories
+     * @var array<int|string,mixed> Explicit connections between the repositories
      */
     private $connections = [];
 
     /**
-     * @var array WHERE restrictions in query
+     * @var array<int|string,mixed> WHERE restrictions in query
      */
     private $where = [];
 
     /**
-     * @var array ORDER BY sorting in query
+     * @var array<int|string,string> ORDER BY sorting in query
      */
     private $orderBy = [];
 
     /**
-     * @var array GROUP BY aggregating in query
+     * @var array<int|string,string> GROUP BY aggregating in query
      */
     private $groupBy = [];
 
@@ -71,24 +71,36 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
         return $this;
     }
 
+    /**
+     * @param array<int|string,string> $getTheseFields
+     */
     public function fields(array $getTheseFields): self
     {
         $this->fields = $getTheseFields;
         return $this;
     }
 
+    /**
+     * @param RepositoryReadOnlyInterface[] $repositories
+     */
     public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $repositoryConnections
+     */
     public function joinTables(array $repositoryConnections): self
     {
         $this->connections = $repositoryConnections;
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $whereClauses
+     */
     public function where(array $whereClauses): self
     {
         $this->where = $whereClauses;
@@ -96,7 +108,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     }
 
     /**
-     * @param array|string $orderByClauses
+     * @param array<int|string,string>|string $orderByClauses
      * @return MultiSelectEntries
      */
     public function orderBy($orderByClauses): self
@@ -110,7 +122,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     }
 
     /**
-     * @param array|string $groupByClauses
+     * @param array<int|string,string>|string $groupByClauses
      * @return MultiSelectEntries
      */
     public function groupBy($groupByClauses): self
@@ -162,7 +174,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
      *
-     * @return array|null
+     * @return array<string,mixed>|null
      */
     public function getOneEntry(): ?array
     {
@@ -181,7 +193,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return the fields as a list of values
      *
-     * @return string[]|int[]|float[]|bool[]|null[]
+     * @return array<int,mixed>
      */
     public function getFlattenedFields(): array
     {

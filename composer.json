@@ -54,7 +54,8 @@
     "scripts": {
         "post-install-cmd": ["@composer bin all install --ansi"],
         "post-update-cmd": ["@composer bin all update --ansi"],
-        "phpstan": "vendor/bin/phpstan analyse src bin --level=7",
+        "phpstan": "vendor/bin/phpstan analyse src bin --level=8",
+        "phpstan_base": "vendor/bin/phpstan analyse src --level=8 --configuration phpstan_base.neon --error-format baselineNeon > phpstan-baseline.neon",
         "psalm": "vendor/bin/psalm --show-info=false",
         "psalm_base": "vendor/bin/psalm --set-baseline=psalm-baseline.xml",
         "phpunit": "vendor/bin/phpunit --colors=always",

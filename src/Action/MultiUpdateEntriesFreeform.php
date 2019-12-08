@@ -28,7 +28,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
     private $query = '';
 
     /**
-     * @var array All query parameters within the SELECT query
+     * @var array<int,mixed> All query parameters within the SELECT query
      */
     private $parameters = [];
 
@@ -42,6 +42,9 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         $this->queryHandler = $queryHandler;
     }
 
+    /**
+     * @param RepositoryWriteableInterface[] $repositories
+     */
     public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
@@ -54,6 +57,9 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         return $this;
     }
 
+    /**
+     * @param array<int,mixed> $queryParameters
+     */
     public function withParameters(array $queryParameters = []): self
     {
         $this->parameters = $queryParameters;

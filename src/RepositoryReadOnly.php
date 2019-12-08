@@ -99,7 +99,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         // Add WHERE restrictions
-        if (\count($query['where'] ?? []) > 0) {
+        if (isset($query['where']) && \count($query['where']) > 0) {
             $sanitizedQuery['where'] = $this->preprocessWhere($query['where']);
         }
 
@@ -215,6 +215,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      */
     public function fetchAll(array $query)
     {
+        $flattenFields = false;
+
         // Whether to flatten fields and just return an array of values instead of objects
         if (isset($query['flattenFields'])) {
             $flattenFields = $this->booleanSettingValidation($query['flattenFields'], 'flattenFields');
@@ -244,13 +246,18 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         // Special case: Flatten all field values and return an array
-        if (($flattenFields ?? false) === true) {
+        if ($flattenFields === true) {
             return $this->convertResultsToFlattenedResults($tableResults);
         }
 
         return \array_map([$this, 'convertResultToObject'], $tableResults);
     }
 
+    /**
+     * @param array<string,mixed> $validOptions
+     * @param array<string,mixed> $options
+     * @return array<string,mixed>
+     */
     protected function validateQueryOptions(array $validOptions, array $options): array
     {
         // One field shortcut - convert to fields array
@@ -299,6 +306,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $sanitizedOptions;
     }
 
+    /**
+     * @param array<string,mixed> $query
+     * @return array<string,mixed>
+     */
     private function prepareSelectQueryForLowerLayer(array $query): array
     {
         // Set the table variable for SQL component
@@ -391,6 +402,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
+    /**
+     * @param array<string,mixed> $tableResult
+     */
     private function convertResultToObject(array $tableResult): object
     {
         // Only create reflection class once we need it, to be resource efficient
@@ -436,8 +450,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     }
 
     /**
-     * @param array $tableResults
-     * @return array<int, bool|int|float|string|null>
+     * @param array<int,mixed> $tableResults
+     * @return array<int,bool|int|float|string|null>
      */
     private function convertResultsToFlattenedResults(array $tableResults): array
     {
@@ -457,8 +471,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * Prepare the WHERE clauses for SQL component
      *
-     * @param array $where
-     * @return array
+     * @param array<int|string,mixed> $where
+     * @return array<int|string,mixed>
      *
      * @throws DBInvalidOptionException
      */
@@ -527,7 +541,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @param mixed $value
      * @param null|string $fieldName
-     * @return int|float|string|LargeObject|array|null
+     * @return int|float|string|LargeObject|array<int|string,mixed>|null
      *
      * @throws DBInvalidOptionException
      */
@@ -680,8 +694,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * Prepare the ORDER BY clauses for SQL component
      *
-     * @param array $orderOptions
-     * @return array
+     * @param array<int|string,mixed> $orderOptions
+     * @return array<int|string,mixed>
      *
      * @throws DBInvalidOptionException
      */

@@ -15,7 +15,7 @@ class InsertEntry implements ActionInterface
     private $repository;
 
     /**
-     * @var array VALUES clauses for the query
+     * @var array<string,mixed> VALUES clauses for the query
      */
     private $values = [];
 
@@ -24,6 +24,10 @@ class InsertEntry implements ActionInterface
         $this->repository = $repository;
     }
 
+    /**
+     * @param array<string,mixed> $values
+     * @return $this
+     */
     public function set(array $values): self
     {
         $this->values = $values;

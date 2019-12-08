@@ -17,7 +17,7 @@ class DeleteEntries implements ActionInterface
     private $repository;
 
     /**
-     * @var array WHERE restrictions in query
+     * @var array<int|string,mixed> WHERE restrictions in query
      */
     private $where = [];
 
@@ -31,6 +31,9 @@ class DeleteEntries implements ActionInterface
         $this->repository = $repository;
     }
 
+    /**
+     * @param array<int|string,mixed> $whereClauses
+     */
     public function where(array $whereClauses): self
     {
         $this->where = $whereClauses;

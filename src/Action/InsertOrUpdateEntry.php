@@ -15,17 +15,17 @@ class InsertOrUpdateEntry implements ActionInterface
     private $repository;
 
     /**
-     * @var array VALUES clauses for the query
+     * @var array<string,mixed> VALUES clauses for the query
      */
     private $values = [];
 
     /**
-     * @var array Unique index fields to determine when to update and when to insert
+     * @var string[] Unique index fields to determine when to update and when to insert
      */
     private $index = [];
 
     /**
-     * @var array|null SET clauses for the update part of the query
+     * @var array<int|string,mixed>|null SET clauses for the update part of the query
      */
     private $valuesOnUpdate = null;
 
@@ -34,6 +34,9 @@ class InsertOrUpdateEntry implements ActionInterface
         $this->repository = $repository;
     }
 
+    /**
+     * @param array<string,mixed> $values
+     */
     public function set(array $values): self
     {
         $this->values = $values;
@@ -41,7 +44,7 @@ class InsertOrUpdateEntry implements ActionInterface
     }
 
     /**
-     * @param array|string $indexFields
+     * @param string[]|string $indexFields
      * @return InsertOrUpdateEntry
      */
     public function index($indexFields): self
@@ -55,7 +58,7 @@ class InsertOrUpdateEntry implements ActionInterface
     }
 
     /**
-     * @param array|string $values
+     * @param array<int|string,mixed>|string $values
      * @return InsertOrUpdateEntry
      */
     public function setOnUpdate($values): self

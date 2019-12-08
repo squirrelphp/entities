@@ -7,7 +7,7 @@ namespace Squirrel\Entities\Generate;
  */
 class FindClassesWithAnnotation
 {
-    public function __invoke(string $fileContents)
+    public function __invoke(string $fileContents): array
     {
         // List of classes, each entry has the namespace as first element and the
         // class name as the second element

@@ -21,12 +21,12 @@ class MultiCountEntries implements ActionInterface
     private $repositories = [];
 
     /**
-     * @var array Explicit connections between the repositories
+     * @var array<int|string,mixed> Explicit connections between the repositories
      */
     private $connections = [];
 
     /**
-     * @var array WHERE restrictions in query
+     * @var array<int|string,mixed> WHERE restrictions in query
      */
     private $where = [];
 
@@ -40,18 +40,27 @@ class MultiCountEntries implements ActionInterface
         $this->queryHandler = $queryHandler;
     }
 
+    /**
+     * @param RepositoryReadOnlyInterface[] $repositories
+     */
     public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $repositoryConnections
+     */
     public function joinTables(array $repositoryConnections): self
     {
         $this->connections = $repositoryConnections;
         return $this;
     }
 
+    /**
+     * @param array<int|string,mixed> $whereClauses
+     */
     public function where(array $whereClauses): self
     {
         $this->where = $whereClauses;

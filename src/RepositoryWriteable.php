@@ -46,8 +46,8 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
     /**
      * Build update (SET) query part of all SQL queries
      *
-     * @param array $changes
-     * @return array
+     * @param array<int|string,mixed> $changes
+     * @return array<int|string,mixed>
      *
      * @throws DBInvalidOptionException
      */

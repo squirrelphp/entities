@@ -1,0 +1,22 @@
+parameters:
+	ignoreErrors:
+		-
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchOne\\(\\) expects array\\<string, array\\|bool\\|string\\>\\|string, array\\<string, array\\<int\\|string, mixed\\>\\|string\\|true\\> given\\.$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:select\\(\\) expects array\\<string, array\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
+
+		-
+			message: "#^Result of && is always false\\.$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
+
+		-
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchAll\\(\\) expects array\\<string, array\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
+

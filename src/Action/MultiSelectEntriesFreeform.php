@@ -18,7 +18,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     private $queryHandler;
 
     /**
-     * @var array Only retrieve these fields of the repositories
+     * @var array<int|string,string> Only retrieve these fields of the repositories
      */
     private $fields = [];
 
@@ -33,7 +33,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     private $query = '';
 
     /**
-     * @var array All query parameters within the SELECT query
+     * @var array<int,mixed> All query parameters within the SELECT query
      */
     private $parameters = [];
 
@@ -53,12 +53,19 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
         return $this;
     }
 
+    /**
+     * @param array<int|string,string> $getTheseFields
+     * @return $this
+     */
     public function fields(array $getTheseFields): self
     {
         $this->fields = $getTheseFields;
         return $this;
     }
 
+    /**
+     * @param RepositoryReadOnlyInterface[] $repositories
+     */
     public function inRepositories(array $repositories): self
     {
         $this->repositories = $repositories;
@@ -71,6 +78,9 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
         return $this;
     }
 
+    /**
+     * @param array<int,mixed> $queryParameters
+     */
     public function withParameters(array $queryParameters = []): self
     {
         $this->parameters = $queryParameters;
@@ -87,6 +97,8 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
 
     /**
      * Execute SELECT query and return a list of entries as arrays that matched it
+     *
+     * @return array<int,array<string,mixed>>
      */
     public function getAllEntries(): array
     {
@@ -103,7 +115,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
      *
-     * @return array|null
+     * @return array<string,mixed>|null
      */
     public function getOneEntry(): ?array
     {
@@ -120,7 +132,7 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return the fields as a list of values
      *
-     * @return string[]|int[]|float[]|bool[]|null[]
+     * @return array<bool|int|float|string|null>
      */
     public function getFlattenedFields(): array
     {
