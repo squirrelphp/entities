@@ -68,13 +68,15 @@ namespace {namespaceOfEntity} {
 }
 
 namespace {namespaceOfBuilders} {
-    /*
+    /**
      * This class exists to have proper type hints about the object(s) returned in the
      * getEntries and getOneEntry functions. All calls are delegated to the
      * SelectEntries class - because of the builder pattern we cannot extend SelectEntries
      * (because then returning self would return that class instead of this extended class)
      * so we instead imitate it. This way the implementation in SelectEntries can change
      * and this generated class has no ties to how it "works" or how the repository is used.
+     *
+     * @implements \IteratorAggregate<int,\{namespaceOfEntity}\{classOfEntity}>
      */
     class SelectEntries implements \Squirrel\Entities\Action\ActionInterface, \IteratorAggregate
     {
@@ -161,6 +163,9 @@ namespace {namespaceOfBuilders} {
         }
     }
 
+    /**
+     * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
+     */
     class SelectIterator implements \Squirrel\Entities\Action\ActionInterface, \Iterator
     {
         /**

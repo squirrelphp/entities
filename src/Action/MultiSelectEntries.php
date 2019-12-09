@@ -8,6 +8,8 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 /**
  * Select query builder as a fluent object - build query and return entries or flattened fields
+ *
+ * @implements \IteratorAggregate<int,array<string,mixed>>
  */
 class MultiSelectEntries implements ActionInterface, \IteratorAggregate
 {

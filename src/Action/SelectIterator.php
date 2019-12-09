@@ -8,6 +8,8 @@ use Squirrel\Queries\Builder\SelectIteratorTrait;
 
 /**
  * Iterator returned by SelectEntries to be used in a foreach loop
+ *
+ * @implements \Iterator<int,object>
  */
 class SelectIterator implements \Iterator, ActionInterface
 {

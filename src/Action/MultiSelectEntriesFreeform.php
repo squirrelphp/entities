@@ -10,6 +10,8 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Select query builder as a fluent object - build query and return entries or flattened fields
+ *
+ * @implements \IteratorAggregate<int,array<string,mixed>>
  */
 class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
 {

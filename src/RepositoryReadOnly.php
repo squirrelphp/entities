@@ -57,7 +57,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      * Reflection on our object class, so we can set private/protected class properties and
      * circumvent the object constructor
      *
-     * @var \ReflectionClass|null
+     * @var \ReflectionClass<object>|null
      */
     protected $reflectionClass;
 
