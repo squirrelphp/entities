@@ -96,12 +96,18 @@ namespace {namespaceOfBuilders} {
             return $this;
         }
 
+        /**
+         * @param string[] $onlyGetTheseFields
+         */
         public function fields(array $onlyGetTheseFields): self
         {
             $this->selectImplementation->fields($onlyGetTheseFields);
             return $this;
         }
 
+        /**
+         * @param array<int|string,mixed> $whereClauses
+         */
         public function where(array $whereClauses): self
         {
             $this->selectImplementation->where($whereClauses);
@@ -109,7 +115,7 @@ namespace {namespaceOfBuilders} {
         }
 
         /**
-         * @param array|string $orderByClauses
+         * @param array<int|string,string>|string $orderByClauses
          * @return SelectEntries
          */
         public function orderBy($orderByClauses): self
@@ -150,7 +156,7 @@ namespace {namespaceOfBuilders} {
         }
 
         /**
-         * @return string[]|int[]|float[]|bool[]|null[]
+         * @return array<bool|int|float|string|null>
          */
         public function getFlattenedFields(): array
         {
