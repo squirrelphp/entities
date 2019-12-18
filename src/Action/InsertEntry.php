@@ -26,7 +26,6 @@ class InsertEntry implements ActionInterface
 
     /**
      * @param array<string,mixed> $values
-     * @return $this
      */
     public function set(array $values): self
     {

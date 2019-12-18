@@ -6,12 +6,12 @@ parameters:
 			path: src/Action/SelectEntries.php
 
 		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchOne\\(\\) expects array\\<string, array\\|bool\\|string\\>\\|string, array\\<string, array\\<int\\|string, mixed\\>\\|string\\|true\\> given\\.$#"
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchOne\\(\\) expects array\\<string, array\\<int\\|string, mixed\\>\\|bool\\|int\\|string\\>\\|string, array\\<string, array\\<int\\|string, mixed\\>\\|string\\|true\\> given\\.$#"
 			count: 1
 			path: src/RepositoryReadOnly.php
 
 		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:select\\(\\) expects array\\<string, array\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:select\\(\\) expects array\\<string, array\\<int\\|string, mixed\\>\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
 			count: 1
 			path: src/RepositoryReadOnly.php
 
@@ -21,7 +21,7 @@ parameters:
 			path: src/RepositoryReadOnly.php
 
 		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchAll\\(\\) expects array\\<string, array\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
+			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchAll\\(\\) expects array\\<string, array\\<int\\|string, mixed\\>\\|bool\\|int\\|string\\>\\|string, array\\<string, mixed\\> given\\.$#"
 			count: 1
 			path: src/RepositoryReadOnly.php
 

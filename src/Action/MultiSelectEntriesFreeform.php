@@ -58,7 +58,6 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
 
     /**
      * @param array<int|string,string> $getTheseFields
-     * @return $this
      */
     public function fields(array $getTheseFields): self
     {
