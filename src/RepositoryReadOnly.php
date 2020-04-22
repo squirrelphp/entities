@@ -155,7 +155,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
 
         try {
             $result = $this->db->fetch($selectQuery->getQuery());
-            return ( $result===null ? null : $this->convertResultToObject($result) );
+            return ( $result === null ? null : $this->convertResultToObject($result) );
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
@@ -377,7 +377,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {
         // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
-        if (!\is_bool($shouldBeBoolean)
+        if (
+            !\is_bool($shouldBeBoolean)
             && $shouldBeBoolean !== 1
             && $shouldBeBoolean !== 0
         ) {
@@ -726,7 +727,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             $variableFound = (\strpos($expression, ':') !== false);
 
             // Expression contains not just the field name
-            if ($variableFound === true
+            if (
+                $variableFound === true
                 || \strpos($expression, ' ') !== false
                 || \strpos($expression, '(') !== false
                 || \strpos($expression, ')') !== false

@@ -116,7 +116,6 @@ namespace {namespaceOfBuilders} {
 
         /**
          * @param array<int|string,string>|string $orderByClauses
-         * @return SelectEntries
          */
         public function orderBy($orderByClauses): self
         {
@@ -184,10 +183,7 @@ namespace {namespaceOfBuilders} {
             $this->iteratorInstance = $iterator;
         }
 
-        /**
-         * @return \{namespaceOfEntity}\{classOfEntity}
-         */
-        public function current()
+        public function current(): \{namespaceOfEntity}\{classOfEntity}
         {
             return $this->iteratorInstance->current();
         }
@@ -197,18 +193,12 @@ namespace {namespaceOfBuilders} {
             $this->iteratorInstance->next();
         }
 
-        /**
-         * @return int
-         */
-        public function key()
+        public function key(): int
         {
             return $this->iteratorInstance->key();
         }
 
-        /**
-         * @return bool
-         */
-        public function valid()
+        public function valid(): bool
         {
             return $this->iteratorInstance->valid();
         }

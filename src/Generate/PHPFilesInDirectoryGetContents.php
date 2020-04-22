@@ -22,7 +22,7 @@ class PHPFilesInDirectoryGetContents
             $fileContents = \file_get_contents($file->getRealPath());
 
             // Another safety check because file_get_contents can return false if the file was not found
-            if ($fileContents===false) {
+            if ($fileContents === false) {
                 throw new \InvalidArgumentException('File in source directory could not be retrieved');
             }
 

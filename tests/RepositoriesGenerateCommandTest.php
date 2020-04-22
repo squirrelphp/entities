@@ -38,7 +38,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntities'],
-            new PHPFilesInDirectoryGetContents
+            new PHPFilesInDirectoryGetContents()
         );
 
         // Execute the generator
@@ -101,28 +101,34 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
                 'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries'
             );
         }
-        if (!\class_exists(
-            'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
-            false
-        )) {
+        if (
+            !\class_exists(
+                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
+                false
+            )
+        ) {
             $this->assertEquals(
                 '',
                 'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator'
             );
         }
-        if (!\class_exists(
-            'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
-            false
-        )) {
+        if (
+            !\class_exists(
+                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
+                false
+            )
+        ) {
             $this->assertEquals(
                 '',
                 'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries'
             );
         }
-        if (!\class_exists(
-            'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
-            false
-        )) {
+        if (
+            !\class_exists(
+                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
+                false
+            )
+        ) {
             $this->assertEquals(
                 '',
                 'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator'

@@ -720,7 +720,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                             // We narrow the type to bool if only bool values are used
                             if ($objectTypes[$table][$objFieldName] === 'bool' && $type === '') {
                                 $type = 'bool';
-                            } elseif ($objectTypes[$table][$objFieldName] === 'int' &&
+                            } elseif (
+                                $objectTypes[$table][$objFieldName] === 'int' &&
                                 ($type === '' || $type === 'bool')
                             ) { // We narrow the type to int if only int and bool values are used
                                 $type = 'int';
@@ -1143,7 +1144,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {
         // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
-        if (!\is_bool($shouldBeBoolean)
+        if (
+            !\is_bool($shouldBeBoolean)
             && $shouldBeBoolean !== 1
             && $shouldBeBoolean !== 0
         ) {

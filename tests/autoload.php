@@ -3,11 +3,13 @@
 use Composer\Autoload\ClassLoader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
 
-foreach ([
+foreach (
+    [
      __DIR__ . '/../../autoload.php',
      __DIR__ . '/../../../autoload.php',
      __DIR__ . '/../vendor/autoload.php',
- ] as $file) {
+    ] as $file
+) {
     if (file_exists($file)) {
         /**
          * @var ClassLoader $loader

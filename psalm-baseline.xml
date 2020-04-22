@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="3.7.2@d9cae720c1af31db9ba27c2bc1fcf9b0dd092fb0">
+<files psalm-version="3.11.2@d470903722cfcbc1cd04744c5491d3e6d13ec3d9">
   <file src="src/Action/SelectEntries.php">
     <MissingReturnType occurrences="1">
       <code>getOneEntry</code>
     </MissingReturnType>
+  </file>
+  <file src="src/MultiRepositoryReadOnly.php">
+    <PossiblyInvalidArgument occurrences="1">
+      <code>$sanitizedOptions['query']</code>
+    </PossiblyInvalidArgument>
   </file>
   <file src="src/RepositoryReadOnly.php">
     <ArgumentTypeCoercion occurrences="2">
