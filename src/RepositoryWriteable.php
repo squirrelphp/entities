@@ -13,9 +13,6 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWriteableInterface
 {
-    /**
-     * @inheritDoc
-     */
     public function update(array $changes, array $where): int
     {
         // We need fields to update, otherwise there is nothing to do
@@ -107,9 +104,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         return $changesProcessed;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function insert(array $fields, bool $returnInsertId = false): ?string
     {
         // Make sure we have an autoincrement field if one is requested
@@ -158,9 +152,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         return null;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function insertOrUpdate(array $fields, array $indexFields = [], ?array $updateFields = null): void
     {
         // Fields after conversion to table notation
@@ -231,9 +222,6 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function delete(array $where): int
     {
         // Generate the WHERE part of the query

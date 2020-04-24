@@ -13,27 +13,15 @@ class Field
     /**
      * @var string Name of the field in the SQL table
      */
-    public $name = '';
-
-    /**
-     * Type of the field in the SQL table - can be one of the following:
-     *
-     * - string (default)
-     * - int
-     * - float
-     * - bool
-     *
-     * @var string Type of the field in the SQL table
-     */
-    public $type = 'string';
-
-    /**
-     * @var bool Whether the field can be NULL as a special value in addition to the field type
-     */
-    public $nullable = false;
+    public string $name = '';
 
     /**
      * @var bool Whether this is the autoincrement field for the table - only one per table is legal!
      */
-    public $autoincrement = false;
+    public bool $autoincrement = false;
+
+    /**
+     * @var bool Whether this is a blob field (binary large object) - needed for Postgres compatibility
+     */
+    public bool $blob = false;
 }

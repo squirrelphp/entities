@@ -15,10 +15,7 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 {
-    /**
-     * @var DBInterface
-     */
-    protected $db;
+    protected DBInterface $db;
 
     public function count(array $query): int
     {
@@ -127,9 +124,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         return $result;
     }
 
-    /**
-     * @inheritdoc
-     */
     public function fetchAll(array $query): array
     {
         // Whether to flatten fields and just return an array of values instead of objects
@@ -184,9 +178,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
      * @param array $validOptions List of valid options and default values for them
      * @param array $options List of provided options which need to be processed
      * @param bool $writing Whether this is a writing operation or not
-     * @return array
      */
-    protected function processOptions(array $validOptions, array $options, bool $writing = false)
+    protected function processOptions(array $validOptions, array $options, bool $writing = false): array
     {
         // Reset DB class - needs to be set by the current options
         $dbInstance = null;
@@ -571,13 +564,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     /**
      * Build freeform query by replacing object names and object field names with the
      * actual table names and table field names
-     *
-     * @param string $query
-     * @param array $tableName
-     * @param array $objectToTableFields
-     * @return string
      */
-    protected function buildFreeform(string $query, array $tableName, array $objectToTableFields)
+    protected function buildFreeform(string $query, array $tableName, array $objectToTableFields): string
     {
         // Replace all expressions of all involved repositories
         foreach ($objectToTableFields as $table => $tableFields) {
@@ -615,13 +603,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Build SELECT part of the query
-     *
-     * @param array $selectOptions
-     * @param array $objectToTableFields
-     * @param array $objectTypes
-     * @param array $objectTypesNullable
-     * @param bool $generateSql
-     * @return array
      */
     private function buildFieldSelection(
         array $selectOptions,
@@ -629,7 +610,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         array $objectTypes,
         array $objectTypesNullable,
         bool $generateSql = false
-    ) {
+    ): array {
         // Calculated select fields
         $selectProcessed = [];
         $selectTypes = [];
@@ -768,11 +749,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Process the results retrieved from a SELECT query
-     *
-     * @param array $tableObjects
-     * @param array $selectTypes
-     * @param array $selectTypesNullable
-     * @return array
      */
     private function processSelectResults(
         array $tableObjects,
@@ -826,13 +802,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Prepare the joins between tables part for the SQL component
-     *
-     * @param array $tables
-     * @param array $tableNames
-     * @param array $objectToTableFields
-     * @return array
      */
-    protected function preprocessJoins(array $tables, array $tableNames, array $objectToTableFields)
+    protected function preprocessJoins(array $tables, array $tableNames, array $objectToTableFields): array
     {
         // List of table selection, needs to be imploded with a comma for SQL query
         $tablesProcessed = [];
@@ -916,12 +887,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Prepare the WHERE clauses for SQL component
-     *
-     * @param array $whereOptions
-     * @param array $objectToTableFields
-     * @return array
      */
-    protected function preprocessWhere(array $whereOptions, array $objectToTableFields)
+    protected function preprocessWhere(array $whereOptions, array $objectToTableFields): array
     {
         // List of finished WHERE expressions, to be imploded with ANDs
         $whereProcessed = [];
@@ -1001,12 +968,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Build GROUP BY clause and add query values
-     *
-     * @param array $groupByOptions
-     * @param array $objectToTableFields
-     * @return array
      */
-    private function preprocessGroup(array $groupByOptions, array $objectToTableFields)
+    private function preprocessGroup(array $groupByOptions, array $objectToTableFields): array
     {
         // List of finished WHERE expressions, to be imploded with ANDs
         $groupByProcessed = [];
@@ -1061,12 +1024,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * Prepare the ORDER BY clauses for SQL component
-     *
-     * @param array $orderOptions
-     * @param array $objectToTableFields
-     * @return array
      */
-    protected function preprocessOrder(array $orderOptions, array $objectToTableFields)
+    protected function preprocessOrder(array $orderOptions, array $objectToTableFields): array
     {
         // List of finished WHERE expressions, to be imploded with ANDs
         $orderProcessed = [];
@@ -1138,8 +1097,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     /**
      * @param mixed $shouldBeBoolean
-     * @param string $settingName
-     * @return bool
      */
     private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
     {

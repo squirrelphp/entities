@@ -140,6 +140,8 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 
     public function testNoDataGetOneEntry()
     {
+        $expected = new \stdClass();
+
         $this->repository
             ->shouldReceive('fetchOne')
             ->once()
@@ -150,15 +152,17 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 0,
                 'lock' => false,
             ])
-            ->andReturn([]);
+            ->andReturn($expected);
 
         $results = $this->selectBuilder->getOneEntry();
 
-        $this->assertEquals([], $results);
+        $this->assertEquals($expected, $results);
     }
 
     public function testGetOneEntry()
     {
+        $expected = new \stdClass();
+
         $this->selectBuilder
             ->where([
                 'responseId' => 5,
@@ -192,11 +196,11 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([]);
+            ->andReturn($expected);
 
         $results = $this->selectBuilder->getOneEntry();
 
-        $this->assertEquals([], $results);
+        $this->assertEquals($expected, $results);
     }
 
     public function testNoDataGetFlattenedFields()

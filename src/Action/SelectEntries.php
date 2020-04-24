@@ -11,40 +11,37 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
  */
 class SelectEntries implements ActionInterface, \IteratorAggregate
 {
-    /**
-     * @var RepositoryReadOnlyInterface Repository we call to execute the built query
-     */
-    private $repository;
+    private RepositoryReadOnlyInterface $repository;
 
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private $where = [];
+    private array $where = [];
 
     /**
      * @var array<int|string,string> ORDER BY sorting in query
      */
-    private $orderBy = [];
+    private array $orderBy = [];
 
     /**
      * @var int How many results should be returned
      */
-    private $limitTo = 0;
+    private int $limitTo = 0;
 
     /**
      * @var int Where in the result set to start (so many entries are skipped)
      */
-    private $startAt = 0;
+    private int $startAt = 0;
 
     /**
      * @var bool Whether the SELECT query should block the scanned entries
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     /**
      * @var string[] Only retrieve some of the fields of the objects, default is to return all
      */
-    private $fields = [];
+    private array $fields = [];
 
     public function __construct(RepositoryReadOnlyInterface $repository)
     {
@@ -77,7 +74,6 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
 
     /**
      * @param array<int|string,string>|string $orderByClauses
-     * @return SelectEntries
      */
     public function orderBy($orderByClauses): self
     {
@@ -129,11 +125,9 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
      *
-     * Returns object (from the entity class) or null if no entry was found, we avoid
-     * the return type hint here to code analyzers don't get confused by
-     * generated repositories and their different type hint
+     * Returns object (from the entity class) or null if no entry was found
      */
-    public function getOneEntry()
+    public function getOneEntry(): ?object
     {
         return $this->repository->fetchOne([
             'where' => $this->where,
@@ -162,10 +156,7 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
         ]);
     }
 
-    /**
-     * @return SelectIterator
-     */
-    public function getIterator()
+    public function getIterator(): SelectIterator
     {
         return new SelectIterator($this->repository, [
             'where' => $this->where,

@@ -13,67 +13,49 @@ class User
     use EntityConstructorTrait;
 
     /**
-     * @SQL\Field("user_id", type="int", autoincrement=true)
-     *
-     * @var int
+     * @SQL\Field("user_id", autoincrement=true)
      */
-    private $userId = 0;
+    private int $userId = 0;
 
     /**
-     * @SQL\Field("active", type="bool")
-     *
-     * @var bool
+     * @SQL\Field("active")
      */
-    private $active = false;
+    private bool $active = false;
 
     /**
      * @SQL\Field("user_name")
-     *
-     * @var string
      */
-    private $userName = '';
+    private string $userName = '';
 
     /**
      * @SQL\Field("login_name_md5")
-     *
-     * @var string
      */
-    private $loginNameMD5 = '';
+    private string $loginNameMD5 = '';
 
     /**
      * @SQL\Field("login_password")
-     *
-     * @var string
      */
-    private $loginPassword = '';
+    private string $loginPassword = '';
 
     /**
      * @SQL\Field("email_address")
-     *
-     * @var string
      */
-    private $emailAddress = '';
+    private string $emailAddress = '';
 
     /**
-     * @SQL\Field("balance", type="float")
-     *
-     * @var float
+     * @SQL\Field("balance")
      */
-    private $balance = 0;
+    private float $balance = 0;
 
     /**
-     * @SQL\Field("location_id", type="int", nullable=true)
-     *
-     * @var int|null
+     * @SQL\Field("location_id")
      */
-    private $locationId;
+    private ?int $locationId;
 
     /**
-     * @SQL\Field("create_date", type="int")
-     *
-     * @var int
+     * @SQL\Field("create_date")
      */
-    private $createDate = 0;
+    private int $createDate = 0;
 
     public function getUserId(): int
     {

@@ -13,30 +13,27 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiUpdateEntriesFreeform implements ActionInterface
 {
-    /**
-     * @var MultiRepositoryWriteableInterface
-     */
-    private $queryHandler;
+    private MultiRepositoryWriteableInterface $queryHandler;
 
     /**
      * @var array<string,RepositoryBuilderWriteableInterface|RepositoryWriteableInterface> Repositories used in the multi query
      */
-    private $repositories = [];
+    private array $repositories = [];
 
     /**
      * @var string Freeform query after FROM in a SELECT query
      */
-    private $query = '';
+    private string $query = '';
 
     /**
      * @var array<int,mixed> All query parameters within the SELECT query
      */
-    private $parameters = [];
+    private array $parameters = [];
 
     /**
      * @var bool Confirmation that the programmer understands that freeform queries are seen as bad practice
      */
-    private $confirmBadPractice = false;
+    private bool $confirmBadPractice = false;
 
     public function __construct(MultiRepositoryWriteableInterface $queryHandler)
     {

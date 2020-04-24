@@ -9,25 +9,22 @@ use Squirrel\Entities\RepositoryWriteableInterface;
  */
 class InsertOrUpdateEntry implements ActionInterface
 {
-    /**
-     * @var RepositoryWriteableInterface Repository we call to execute the built query
-     */
-    private $repository;
+    private RepositoryWriteableInterface $repository;
 
     /**
      * @var array<string,mixed> VALUES clauses for the query
      */
-    private $values = [];
+    private array $values = [];
 
     /**
      * @var string[] Unique index fields to determine when to update and when to insert
      */
-    private $index = [];
+    private array $index = [];
 
     /**
      * @var array<int|string,mixed>|null SET clauses for the update part of the query
      */
-    private $valuesOnUpdate = null;
+    private ?array $valuesOnUpdate = null;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {

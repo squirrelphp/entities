@@ -10,30 +10,27 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
  */
 class MultiCountEntries implements ActionInterface
 {
-    /**
-     * @var MultiRepositoryReadOnlyInterface
-     */
-    private $queryHandler;
+    private MultiRepositoryReadOnlyInterface $queryHandler;
 
     /**
      * @var RepositoryReadOnlyInterface[] Repositories used in the multi query
      */
-    private $repositories = [];
+    private array $repositories = [];
 
     /**
      * @var array<int|string,mixed> Explicit connections between the repositories
      */
-    private $connections = [];
+    private array $connections = [];
 
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private $where = [];
+    private array $where = [];
 
     /**
      * @var bool Whether the SELECT query should block the scanned entries
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     public function __construct(MultiRepositoryReadOnlyInterface $queryHandler)
     {

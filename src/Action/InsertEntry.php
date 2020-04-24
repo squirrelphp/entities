@@ -9,15 +9,12 @@ use Squirrel\Entities\RepositoryWriteableInterface;
  */
 class InsertEntry implements ActionInterface
 {
-    /**
-     * @var RepositoryWriteableInterface Repository we call to execute the built query
-     */
-    private $repository;
+    private RepositoryWriteableInterface $repository;
 
     /**
      * @var array<string,mixed> VALUES clauses for the query
      */
-    private $values = [];
+    private array $values = [];
 
     public function __construct(RepositoryWriteableInterface $repository)
     {

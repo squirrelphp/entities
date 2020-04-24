@@ -9,20 +9,17 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
  */
 class CountEntries implements ActionInterface
 {
-    /**
-     * @var RepositoryReadOnlyInterface Repository we call to execute the built query
-     */
-    private $repository;
+    private RepositoryReadOnlyInterface $repository;
 
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private $where = [];
+    private array $where = [];
 
     /**
      * @var bool Whether the SELECT query should block the scanned entries
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     public function __construct(RepositoryReadOnlyInterface $repository)
     {

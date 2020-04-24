@@ -15,35 +15,32 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
 {
-    /**
-     * @var MultiRepositoryReadOnlyInterface
-     */
-    private $queryHandler;
+    private MultiRepositoryReadOnlyInterface $queryHandler;
 
     /**
      * @var array<int|string,string> Only retrieve these fields of the repositories
      */
-    private $fields = [];
+    private array $fields = [];
 
     /**
      * @var array<string,RepositoryBuilderReadOnlyInterface|RepositoryReadOnlyInterface> Repositories used in the multi query
      */
-    private $repositories = [];
+    private array $repositories = [];
 
     /**
      * @var string Freeform query after FROM in a SELECT query
      */
-    private $query = '';
+    private string $query = '';
 
     /**
      * @var array<int,mixed> All query parameters within the SELECT query
      */
-    private $parameters = [];
+    private array $parameters = [];
 
     /**
      * @var bool Confirmation that the programmer understands that freeform queries are seen as bad practice
      */
-    private $confirmBadPractice = false;
+    private bool $confirmBadPractice = false;
 
     public function __construct(MultiRepositoryReadOnlyInterface $queryHandler)
     {

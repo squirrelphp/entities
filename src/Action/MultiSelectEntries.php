@@ -13,55 +13,52 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
  */
 class MultiSelectEntries implements ActionInterface, \IteratorAggregate
 {
-    /**
-     * @var MultiRepositoryReadOnlyInterface
-     */
-    private $queryHandler;
+    private MultiRepositoryReadOnlyInterface $queryHandler;
 
     /**
      * @var array<int|string,string> Only retrieve these fields of the repositories
      */
-    private $fields = [];
+    private array $fields = [];
 
     /**
      * @var array<string,RepositoryBuilderReadOnlyInterface|RepositoryReadOnlyInterface> Repositories used in the multi query
      */
-    private $repositories = [];
+    private array $repositories = [];
 
     /**
      * @var array<int|string,mixed> Explicit connections between the repositories
      */
-    private $connections = [];
+    private array $connections = [];
 
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private $where = [];
+    private array $where = [];
 
     /**
      * @var array<int|string,string> ORDER BY sorting in query
      */
-    private $orderBy = [];
+    private array $orderBy = [];
 
     /**
      * @var array<int|string,string> GROUP BY aggregating in query
      */
-    private $groupBy = [];
+    private array $groupBy = [];
 
     /**
      * @var int How many results should be returned
      */
-    private $limitTo = 0;
+    private int $limitTo = 0;
 
     /**
      * @var int Where in the result set to start (so many entries are skipped)
      */
-    private $startAt = 0;
+    private int $startAt = 0;
 
     /**
      * @var bool Whether the SELECT query should block the scanned entries
      */
-    private $blocking = false;
+    private bool $blocking = false;
 
     public function __construct(MultiRepositoryReadOnlyInterface $queryHandler)
     {

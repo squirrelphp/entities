@@ -15,15 +15,10 @@ class MultiSelectIterator implements \Iterator, ActionInterface
 {
     use SelectIteratorTrait;
 
-    /**
-     * @var MultiRepositoryReadOnlyInterface
-     */
+    /** @var MultiRepositoryReadOnlyInterface */
     private $source;
-
-    /**
-     * @var MultiRepositorySelectQueryInterface|null
-     */
-    private $selectReference;
+    /** @var MultiRepositorySelectQueryInterface|null */
+    private $selectReference = null;
 
     public function __construct(MultiRepositoryReadOnlyInterface $repository, array $query)
     {

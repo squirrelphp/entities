@@ -10,48 +10,16 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\LargeObject;
 
 /**
- * Repository functionality: Get data from one table and change data in that one table
- * through narrowly defined functions, leading to simple, secure and fast queries
+ * Repository functionality: Get data from one table
  */
 class RepositoryReadOnly implements RepositoryReadOnlyInterface
 {
-    /**
-     * @var DBInterface
-     */
-    protected $db;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $config;
-
-    /**
-     * Conversion from table results to object
-     *
-     * @var array
-     */
-    protected $tableToObjectFields = [];
-
-    /**
-     * Conversion from object to table fields
-     *
-     * @var array
-     */
-    protected $objectToTableFields = [];
-
-    /**
-     * Types of the variables in the object for type casting
-     *
-     * @var array
-     */
-    protected $objectTypes = [];
-
-    /**
-     * Whether NULL is a valid type for a field
-     *
-     * @var array
-     */
-    protected $objectTypesNullable = [];
+    protected DBInterface $db;
+    protected RepositoryConfigInterface $config;
+    protected array $tableToObjectFields = [];
+    protected array $objectToTableFields = [];
+    protected array $objectTypes = [];
+    protected array $objectTypesNullable = [];
 
     /**
      * Reflection on our object class, so we can set private/protected class properties and
@@ -59,17 +27,13 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      *
      * @var \ReflectionClass<object>|null
      */
-    protected $reflectionClass;
+    protected ?\ReflectionClass $reflectionClass;
 
     /**
      * @var \ReflectionProperty[]
      */
-    protected $reflectionProperties = [];
+    protected array $reflectionProperties = [];
 
-    /**
-     * @param DBInterface $db
-     * @param RepositoryConfig $config
-     */
     public function __construct(DBInterface $db, RepositoryConfig $config)
     {
         $this->db = $db;
@@ -80,9 +44,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         $this->objectTypesNullable = $config->getObjectTypesNullable();
     }
 
-    /**
-     * @inheritDoc
-     */
     public function count(array $query): int
     {
         // Basic query counting the rows
@@ -118,9 +79,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return \intval($count['num'] ?? 0);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function select(array $query): RepositorySelectQueryInterface
     {
         // Process options and make sure all values are valid
@@ -145,9 +103,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function fetch(RepositorySelectQueryInterface $selectQuery)
     {
         // Make sure the same repository configuration is used
@@ -166,9 +121,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function clear(RepositorySelectQueryInterface $selectQuery): void
     {
         // Make sure the same repository configuration is used
@@ -186,9 +138,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function fetchOne(array $query)
     {
         if (isset($query['limit']) && $query['limit'] !== 1) {
@@ -210,9 +159,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $result;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function fetchAll(array $query)
     {
         $flattenFields = false;

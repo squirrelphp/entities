@@ -1,9 +1,9 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Action\\\\SelectEntries\\:\\:getOneEntry\\(\\) has no return typehint specified\\.$#"
+			message: "#^Call to an undefined method ReflectionType\\:\\:getName\\(\\)\\.$#"
 			count: 1
-			path: src/Action/SelectEntries.php
+			path: src/Annotation/EntityProcessor.php
 
 		-
 			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchOne\\(\\) expects array\\<string, array\\<int\\|string, mixed\\>\\|bool\\|int\\|string\\>\\|string, array\\<string, array\\<int\\|string, mixed\\>\\|string\\|true\\> given\\.$#"

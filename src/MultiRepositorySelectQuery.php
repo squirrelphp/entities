@@ -6,20 +6,9 @@ use Squirrel\Queries\DBSelectQueryInterface;
 
 class MultiRepositorySelectQuery implements MultiRepositorySelectQueryInterface
 {
-    /**
-     * @var DBSelectQueryInterface
-     */
-    private $selectQuery;
-
-    /**
-     * @var array
-     */
-    private $types;
-
-    /**
-     * @var array
-     */
-    private $typesNullable;
+    private DBSelectQueryInterface $selectQuery;
+    private array $types;
+    private array $typesNullable;
 
     public function __construct(DBSelectQueryInterface $selectQuery, array $types, array $typesNullable)
     {

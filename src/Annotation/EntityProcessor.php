@@ -12,14 +12,9 @@ class EntityProcessor
 {
     /**
      * Annotation reader
-     *
-     * @var Reader
      */
-    private $annotationReader;
+    private Reader $annotationReader;
 
-    /**
-     * @param Reader $annotationReader
-     */
     public function __construct(Reader $annotationReader)
     {
         $this->annotationReader = $annotationReader;
@@ -62,10 +57,25 @@ class EntityProcessor
 
                 // A Field annotation was found
                 if ($field instanceof Field) {
+                    $fieldType = $annotationProperty->getType();
+
+                    // We need property types to know what to cast fields to
+                    if (!isset($fieldType)) {
+                        throw new \InvalidArgumentException('No property type for property field ' . $property->getName() . ' in ' . $annotationClass->getName());
+                    }
+
+                    $fieldTypeName = $fieldType->getName();
+
+                    if ($field->blob === true && $fieldTypeName === 'string') {
+                        $fieldTypeName = 'blob';
+                    } elseif ($field->blob === true) {
+                        throw new \InvalidArgumentException('Blob property type set for a non-string property field: ' . $property->getName() . ' in ' . $annotationClass->getName());
+                    }
+
                     $tableToObjectFields[$field->name] = $property->getName();
                     $objectToTableFields[$property->getName()] = $field->name;
-                    $objectTypes[$property->getName()] = $field->type;
-                    $objectTypesNullable[$property->getName()] = $field->nullable;
+                    $objectTypes[$property->getName()] = $fieldTypeName;
+                    $objectTypesNullable[$property->getName()] = $fieldType->allowsNull();
 
                     if ($field->autoincrement === true) {
                         $autoincrement = $field->name;

@@ -7,10 +7,7 @@ use Squirrel\Entities\Action\MultiUpdateEntriesFreeform;
 class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly implements
     MultiRepositoryBuilderWriteableInterface
 {
-    /**
-     * @var MultiRepositoryWriteableInterface
-     */
-    private $multiRepositoryWriteable;
+    private MultiRepositoryWriteableInterface $multiRepositoryWriteable;
 
     public function __construct(?MultiRepositoryWriteableInterface $multiRepositoryWriteable = null)
     {
@@ -22,9 +19,6 @@ class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly imp
         parent::__construct($multiRepositoryWriteable);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function updateFreeform(): MultiUpdateEntriesFreeform
     {
         return new MultiUpdateEntriesFreeform($this->multiRepositoryWriteable);

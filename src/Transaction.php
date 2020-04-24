@@ -12,10 +12,7 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class Transaction implements TransactionInterface
 {
-    /**
-     * @var DBInterface
-     */
-    private $db;
+    private DBInterface $db;
 
     public function __construct(DBInterface $db)
     {
@@ -25,8 +22,8 @@ class Transaction implements TransactionInterface
     /**
      * Create transaction with given repositories, making sure they all use the same database connection
      *
-     * @param RepositoryReadOnlyInterface[]|RepositoryBuilderReadOnlyInterface[] $repositories
-     * @return Transaction
+     * @param array<RepositoryReadOnlyInterface|RepositoryBuilderReadOnlyInterface> $repositories
+     * @return self
      *
      * @throws DBException Common minimal exception thrown if anything goes wrong
      */
@@ -105,9 +102,6 @@ class Transaction implements TransactionInterface
         return new self($connection);
     }
 
-    /**
-     * @inheritDoc
-     */
     public function run(callable $func, ...$arguments)
     {
         return $this->db->transaction($func, ...$arguments);

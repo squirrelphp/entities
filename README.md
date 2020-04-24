@@ -43,70 +43,48 @@ use Squirrel\Entities\Annotation\Field;
 class User
 {
     /**
-     * @Field("user_id", type="int", autoincrement=true)
-     *
-     * @var integer
+     * @Field("user_id", autoincrement=true)
      */
-    private $userId = 0;
+    private int $userId;
 
     /**
-     * @Field("active", type="bool")
-     *
-     * @var bool
+     * @Field("active")
      */
-    private $active = false;
+    private bool $active;
 
     /**
-     * @Field("street_name", nullable=true)
-     *
-     * @var string|null
+     * @Field("street_name")
      */
-    private $streetName;
+    private ?string $streetName;
 
     /**
-     * @Field("street_number", nullable=true)
-     *
-     * @var string|null
+     * @Field("street_number")
      */
-    private $streetNumber;
+    private ?string $streetNumber;
 
     /**
      * @Field("city")
-     *
-     * @var string
      */
-    private $city = '';
+    private string $city;
 
     /**
-     * @Field("balance", type="float")
-     *
-     * @var float
+     * @Field("balance")
      */
-    private $balance = 0;
+    private float $balance;
 
     /**
-     * @Field("picture_file", type="blob", nullable=true)
-     *
-     * @var string|null
+     * @Field("picture_file", blob=true)
      */
-    private $picture;
+    private ?string $picture;
 
     /**
-     * @Field("visits", type="int")
-     *
-     * @var integer
+     * @Field("visits")
      */
-    private $visitsNumber = 0;
+    private int $visitsNumber;
 }
 ```
 
-The class is defined as an entity with the table name, and each class property is defined as a table field with the column name in the database, a type, if it is nullable and if it is an autoincrement column (called SERIAL in Postgres). The possible types are:
-
-- `string`, which is the default if none is specified
-- `int` for integer
-- `bool` for boolean
-- `float` for floating point number
-- `blob` for a binary large object, called "blob" in most databases or "bytea" in Postgres, for example to store an image or file
+The class is defined as an entity with the table name, and each class property is defined as a table field with the column name in the database, where the type is taken from the PHP property type (string, int, float, bool). If the property type is nullable, the column type is assumed to be nullable too. You can also define if it is an autoincrement column (called SERIAL in Postgres) and if it is a blob column (binary large object, called "blob" in most databases or "bytea" in Postgres).
 
 Whether the class properties are private, protected or public does not matter, you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes read-only, by having private properties and only defining getters - see [Read-only entity objects](#read-only-entity-objects) for more details on why you would want to do that.
 
@@ -492,25 +470,19 @@ use Squirrel\Entities\Annotation\Field;
 class Visit
 {
     /**
-     * @Field("visit_id", type="int", autoincrement=true)
-     *
-     * @var integer
+     * @Field("visit_id", autoincrement=true)
      */
-    private $visitId = 0;
+    private int $visitId = 0;
 
     /**
-     * @Field("user_id", type="int")
-     *
-     * @var integer
+     * @Field("user_id")
      */
-    private $userId = 0;
+    private int $userId = 0;
 
     /**
-     * @Field("created_timestamp", type="int")
-     *
-     * @var integer
+     * @Field("created_timestamp")
      */
-    private $timestamp = 0;
+    private int $timestamp = 0;
 }
 ```
 
@@ -784,32 +756,28 @@ use Squirrel\Entities\Annotation\Field;
 class User
 {
     /**
-     * @Field("user_id", type="int", autoincrement=true)
-     *
-     * @var integer
+     * @Field("user_id", autoincrement=true)
      */
-    private $userId = 0;
+    private int $userId = 0;
 
     /**
-     * @Field("active", type="bool")
-     *
-     * @var bool
+     * @Field("active")
      */
-    private $active = false;
+    private bool $active = false;
 
     /**
      * @Field("note_data")
      *
      * @var string JSON data in the database
      */
-    private $notes = '';
+    private string $notes = '';
 
     /**
      * @Field("created")
      *
      * @var string datetime in the database
      */
-    private $createDate = '';
+    private string $createDate = '';
 
     public function getUserId(): int
     {
@@ -842,15 +810,8 @@ namespace Application\Value;
 
 class GeoPoint
 {
-    /**
-     * @var float
-     */
-    private $lat = 0;
-
-    /**
-     * @var float
-     */
-    private $lng = 0;
+    private float $lat = 0;
+    private float $lng = 0;
 
     public function __construct(float $lat, float $lng)
     {
@@ -883,18 +844,16 @@ use Squirrel\Entities\Annotation\Field;
 class UserLocation
 {
     /**
-     * @Field("user_id", type="int")
-     *
-     * @var integer
+     * @Field("user_id")
      */
-    private $userId = 0;
+    private int $userId = 0;
 
     /**
      * @Field("location")
      *
      * @var string "point" in Postgres
      */
-    private $locationPoint = '';
+    private string $locationPoint = '';
 
     public function getUserId(): int
     {

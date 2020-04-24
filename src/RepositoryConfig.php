@@ -7,55 +7,20 @@ namespace Squirrel\Entities;
  */
 class RepositoryConfig implements RepositoryConfigInterface
 {
-    /**
-     * @var string
-     */
-    private $connectionName;
-
-    /**
-     * @var string Name of the table
-     */
-    private $tableName = '';
-
-    /**
-     * @var string Autoincrement / SERIAL column
-     */
-    private $autoincrementField = '';
-
-    /**
-     * Conversion from table to object fields
-     *
-     * @var array
-     */
-    private $tableToObjectFields = [];
-
-    /**
-     * Conversion from object to table fields
-     *
-     * @var array
-     */
-    private $objectToTableFields = [];
-
-    /**
-     * Object class for conversion of table data to object
-     *
-     * @var string
-     */
-    private $objectClass = '';
-
-    /**
-     * Types of the variables in the object for type casting
-     *
-     * @var array
-     */
-    private $objectTypes = [];
-
-    /**
-     * Whether NULL is a valid type for a field
-     *
-     * @var array
-     */
-    private $objectTypesNullable;
+    private string $connectionName;
+    private string $tableName = '';
+    /** @var string Autoincrement / SERIAL column */
+    private string $autoincrementField = '';
+    /** Conversion from table to object fields */
+    private array $tableToObjectFields = [];
+    /** Conversion from object to table fields */
+    private array $objectToTableFields = [];
+    /** Object class for conversion of table data to object */
+    private string $objectClass = '';
+    /** Types of the variables in the object for type casting */
+    private array $objectTypes = [];
+    /** Whether NULL is a valid type for a field */
+    private array $objectTypesNullable;
 
     public function __construct(
         string $connectionName,
@@ -77,65 +42,41 @@ class RepositoryConfig implements RepositoryConfigInterface
         $this->autoincrementField = $autoincrementField;
     }
 
-    /**
-     * @return string
-     */
     public function getConnectionName(): string
     {
         return $this->connectionName;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTableName(): string
     {
         return $this->tableName;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getTableToObjectFields(): array
     {
         return $this->tableToObjectFields;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getObjectToTableFields(): array
     {
         return $this->objectToTableFields;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getObjectClass(): string
     {
         return $this->objectClass;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getObjectTypes(): array
     {
         return $this->objectTypes;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getObjectTypesNullable(): array
     {
         return $this->objectTypesNullable;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function getAutoincrementField(): string
     {
         return $this->autoincrementField;

@@ -15,15 +15,10 @@ class SelectIterator implements \Iterator, ActionInterface
 {
     use SelectIteratorTrait;
 
-    /**
-     * @var RepositoryReadOnlyInterface
-     */
+    /** @var RepositoryReadOnlyInterface */
     private $source;
-
-    /**
-     * @var RepositorySelectQueryInterface|null
-     */
-    private $selectReference;
+    /** @var RepositorySelectQueryInterface|null */
+    private $selectReference = null;
 
     public function __construct(RepositoryReadOnlyInterface $repository, array $query)
     {

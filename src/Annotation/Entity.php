@@ -13,10 +13,10 @@ class Entity
     /**
      * @var string Name of the SQL table
      */
-    public $name = '';
+    public string $name = '';
 
     /**
      * @var string Database connection - if empty the default connection is used
      */
-    public $connection = '';
+    public string $connection = '';
 }

@@ -10,20 +10,10 @@ use Squirrel\Entities\Annotation\EntityProcessor;
  */
 class RepositoriesGenerateCommand
 {
-    /**
-     * @var FindClassesWithAnnotation
-     */
-    private $findClassesWithAnnotation;
-
-    /**
-     * @var string[]
-     */
-    private $sourceCodeDirectories;
-
-    /**
-     * @var array
-     */
-    private $repositoryPhpFileBlueprint = [
+    private FindClassesWithAnnotation $findClassesWithAnnotation;
+    /** @var string[] */
+    private array $sourceCodeDirectories;
+    private array $repositoryPhpFileBlueprint = [
         'ReadOnly' => <<<'EOD'
 <?php
 // phpcs:ignoreFile -- created by SquirrelPHP library, do not alter
@@ -45,10 +35,7 @@ namespace {namespaceOfEntity} {
 
     class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
     {
-        /**
-         * @var RepositoryReadOnlyInterface
-         */
-        private $repository;
+        private RepositoryReadOnlyInterface $repository;
 
         public function __construct(RepositoryReadOnlyInterface $repository)
         {
@@ -80,10 +67,7 @@ namespace {namespaceOfBuilders} {
      */
     class SelectEntries implements \Squirrel\Entities\Action\ActionInterface, \IteratorAggregate
     {
-        /**
-         * @var \Squirrel\Entities\Action\SelectEntries
-         */
-        private $selectImplementation;
+        private \Squirrel\Entities\Action\SelectEntries $selectImplementation;
 
         public function __construct(\Squirrel\Entities\RepositoryReadOnlyInterface $repository)
         {
@@ -151,7 +135,13 @@ namespace {namespaceOfBuilders} {
 
         public function getOneEntry(): ?\{namespaceOfEntity}\{classOfEntity}
         {
-            return $this->selectImplementation->getOneEntry();
+            $entry = $this->selectImplementation->getOneEntry();
+
+            if ($entry instanceof \{namespaceOfEntity}\{classOfEntity} || $entry === null) {
+                return $entry;
+            }
+
+            throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
         }
 
         /**
@@ -173,10 +163,7 @@ namespace {namespaceOfBuilders} {
      */
     class SelectIterator implements \Squirrel\Entities\Action\ActionInterface, \Iterator
     {
-        /**
-         * @var \Squirrel\Entities\Action\SelectIterator
-         */
-        private $iteratorInstance;
+        private \Squirrel\Entities\Action\SelectIterator $iteratorInstance;
 
         public function __construct(\Squirrel\Entities\Action\SelectIterator $iterator)
         {
@@ -240,10 +227,7 @@ namespace {namespaceOfEntity} {
     class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements
         RepositoryBuilderWriteableInterface
     {
-        /**
-         * @var RepositoryWriteableInterface
-         */
-        private $repository;
+        private RepositoryWriteableInterface $repository;
 
         public function __construct(RepositoryWriteableInterface $repository)
         {
@@ -278,14 +262,10 @@ EOD
         ,
     ];
 
-    /**
-     * @var PHPFilesInDirectoryGetContents
-     */
-    private $PHPFilesInDirectoryGetContents;
+    private PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents;
 
     /**
      * @param string[] $sourceCodeDirectories
-     * @param PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents
      */
     public function __construct(
         array $sourceCodeDirectories,

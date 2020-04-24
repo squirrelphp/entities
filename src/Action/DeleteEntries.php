@@ -11,20 +11,17 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class DeleteEntries implements ActionInterface
 {
-    /**
-     * @var RepositoryWriteableInterface Repository we call to execute the built query
-     */
-    private $repository;
+    private RepositoryWriteableInterface $repository;
 
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private $where = [];
+    private array $where = [];
 
     /**
      * @var bool We need to confirmation before we execute a query without WHERE restriction
      */
-    private $confirmNoWhere = false;
+    private bool $confirmNoWhere = false;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {

@@ -13,9 +13,6 @@ use Squirrel\Queries\DBException;
  */
 class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiRepositoryWriteableInterface
 {
-    /**
-     * @inheritdoc
-     */
     public function update(array $repositories, string $query, array $parameters = []): int
     {
         // Process options and make sure all values are valid

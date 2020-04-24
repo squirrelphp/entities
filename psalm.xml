@@ -12,12 +12,4 @@
             <directory name="vendor" />
         </ignoreFiles>
     </projectFiles>
-
-    <issueHandlers>
-        <MissingConstructor>
-            <errorLevel type="suppress">
-                <file name="src/MultiRepositoryReadOnly.php" />
-            </errorLevel>
-        </MissingConstructor>
-    </issueHandlers>
 </psalm>

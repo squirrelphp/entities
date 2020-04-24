@@ -14,46 +14,34 @@ class UserAddress
     use EntityConstructorTrait;
 
     /**
-     * @Field("user_id", type="int")
-     *
-     * @var int
+     * @Field("user_id")
      */
-    private $userId = 0;
+    private int $userId = 0;
 
     /**
-     * @Field("at_home", type="bool")
-     *
-     * @var bool
+     * @Field("at_home")
      */
-    private $atHome = false;
+    private bool $atHome = false;
 
     /**
      * @Field("street_name")
-     *
-     * @var string
      */
-    private $streetName = '';
+    private string $streetName = '';
 
     /**
      * @Field("street_number")
-     *
-     * @var string
      */
-    private $streetNumber = '';
+    private string $streetNumber = '';
 
     /**
      * @Field("city")
-     *
-     * @var string
      */
-    private $city = '';
+    private string $city = '';
 
     /**
-     * @Field("picture", type="blob")
-     *
-     * @var string
+     * @Field("picture", blob=true)
      */
-    private $picture = '';
+    private string $picture = '';
 
     public function getUserId(): int
     {

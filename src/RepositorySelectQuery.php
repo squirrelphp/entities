@@ -6,15 +6,8 @@ use Squirrel\Queries\DBSelectQueryInterface;
 
 class RepositorySelectQuery implements RepositorySelectQueryInterface
 {
-    /**
-     * @var DBSelectQueryInterface
-     */
-    private $selectQuery;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    private $repositoryConfig;
+    private DBSelectQueryInterface $selectQuery;
+    private RepositoryConfigInterface $repositoryConfig;
 
     public function __construct(DBSelectQueryInterface $selectQuery, RepositoryConfigInterface $repositoryConfig)
     {

@@ -29,14 +29,21 @@ AnnotationRegistry::registerLoader(array($loader, 'loadClass'));
 // Define the necessary command line options and defaults
 $inputDefinition = new InputDefinition();
 $inputDefinition->addOption(new InputOption(
+    'verbose',
+    'v',
+    InputOption::VALUE_NONE,
+    'Verbose mode, showing all generated repositories' // Description
+));
+$inputDefinition->addOption(new InputOption(
     'source-dir',
     null,
     InputOption::VALUE_IS_ARRAY | InputOption::VALUE_REQUIRED,
-    'Source directories (relative to current directory) where entities will be searched recursively'
+    'Source directories (relative to current directory) where entities will be searched recursively' // Description
 ));
 
 $input = new ArgvInput(null, $inputDefinition);
 $srcDirectories = $input->getOption('source-dir');
+$isVerbose = $input->getOption('verbose');
 
 // Execute command to generate repositories
 $cmd = new \Squirrel\Entities\Generate\RepositoriesGenerateCommand(
@@ -45,8 +52,10 @@ $cmd = new \Squirrel\Entities\Generate\RepositoriesGenerateCommand(
 );
 $log = $cmd();
 
-// Add summary of processed entities
-$log[] = "\n" . count($log) . ' entities found for which repositories were generated.' . "\n";
+// Show detailed log
+if ($isVerbose === true) {
+    echo implode("\n", $log);
+}
 
-// Show log
-echo implode("\n", $log);
+// Show summary
+echo "\n" . count($log) . ' entities found for which repositories were generated.' . "\n";

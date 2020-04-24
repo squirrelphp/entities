@@ -161,4 +161,62 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryReadOnly.php');
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryWriteable.php');
     }
+
+    public function testGenerationForInvalidBlobRepositories()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $validFiles = [
+            'UserAddressInvalid.php',
+        ];
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntitiesInvalidBlob')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $repositoriesGenerator = new RepositoriesGenerateCommand(
+            [__DIR__ . '/' . 'TestEntitiesInvalidBlob'],
+            new PHPFilesInDirectoryGetContents()
+        );
+
+        // Execute the generator
+        $repositoriesGenerator();
+    }
+
+    public function testGenerationForNoTypeRepositories()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $validFiles = [
+            'UserAddressInvalid.php',
+        ];
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntitiesNoType')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $repositoriesGenerator = new RepositoriesGenerateCommand(
+            [__DIR__ . '/' . 'TestEntitiesNoType'],
+            new PHPFilesInDirectoryGetContents()
+        );
+
+        // Execute the generator
+        $repositoriesGenerator();
+    }
 }
