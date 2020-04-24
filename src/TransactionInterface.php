@@ -14,10 +14,6 @@ interface TransactionInterface
      * @param callable $func
      * @param mixed ...$arguments
      * @return mixed
-     *
-     * @template TReturn
-     * @psalm-param callable: TReturn $func
-     * @psalm-return TReturn
      */
     public function run(callable $func, ...$arguments);
 }
