@@ -45,7 +45,7 @@ interface RepositoryReadOnlyInterface
      * @param RepositorySelectQueryInterface $selectQuery
      * @return object|null One entity object, or an array of flattened fields
      */
-    public function fetch(RepositorySelectQueryInterface $selectQuery);
+    public function fetch(RepositorySelectQueryInterface $selectQuery): ?object;
 
     /**
      * Clear existing result set
@@ -64,15 +64,20 @@ interface RepositoryReadOnlyInterface
      * @psalm-param array{fields?:array<string>,field?:string,where?:array<int|string,mixed>,order?:array<int|string,string>,offset?:int,lock?:bool} $query
      * @return object|null An entity object or null if no entry was found
      */
-    public function fetchOne(array $query);
+    public function fetchOne(array $query): ?object;
 
     /**
      * Find all entries and return them as objects
      *
-     * $query can have the same values as with select function, with the addition of:
+     * $query can have the same values as with the select function.
      *
-     * 'flattenFields' (set to true or false, default is false):
-     *
+     * @param array<string,mixed> $query Query parts as an array
+     * @psalm-param array{fields?:array<string>,field?:string,where?:array<int|string,mixed>,order?:array<int|string,string>,limit?:int,offset?:int,lock?:bool} $query
+     * @return array<int,object> A list of entity objects
+     */
+    public function fetchAll(array $query): array;
+
+    /**
      * Return results as flattened fields (no field names, no entries, just an array with
      * the values), examples where this might be useful:
      *
@@ -81,11 +86,11 @@ interface RepositoryReadOnlyInterface
      *   orders, or all email addresses associated with a user
      *
      * The flattened results can be run through array_unique to remove duplicates, if
-     * necessary - fetchAll does not that do that for you
+     * necessary - fetchAll does not do that for you
      *
      * @param array<string,mixed> $query Query parts as an array
-     * @psalm-param array{fields?:array<string>,field?:string,where?:array<int|string,mixed>,order?:array<int|string,string>,limit?:int,offset?:int,lock?:bool,flattenFields?:bool} $query
-     * @return array<int,mixed> A list of entity objects, or a list of flattened values
+     * @psalm-param array{fields?:array<string>,field?:string,where?:array<int|string,mixed>,order?:array<int|string,string>,limit?:int,offset?:int,lock?:bool} $query
+     * @return array<bool|int|float|string|null> A list of flattened values
      */
-    public function fetchAll(array $query);
+    public function fetchAllAndFlatten(array $query): array;
 }

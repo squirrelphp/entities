@@ -145,14 +145,13 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      */
     public function getFlattenedFields(): array
     {
-        return $this->repository->fetchAll([
+        return $this->repository->fetchAllAndFlatten([
             'where' => $this->where,
             'order' => $this->orderBy,
             'fields' => $this->fields,
             'limit' => $this->limitTo,
             'offset' => $this->startAt,
             'lock' => $this->blocking,
-            'flattenFields' => true,
         ]);
     }
 

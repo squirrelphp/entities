@@ -130,14 +130,13 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
         $this->multiRepository
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('fetchAllAndFlatten')
             ->once()
             ->with([
                 'fields' => [],
                 'repositories' => [],
                 'query' => '',
                 'parameters' => [],
-                'flattenFields' => true,
             ])
             ->andReturn([]);
 

@@ -7,48 +7,35 @@ use Squirrel\Entities\RepositorySelectQueryInterface;
 
 class TicketMessageRepositoryReadOnlyDifferentRepositoryVariableWithin implements RepositoryReadOnlyInterface
 {
-    /**
-     * @inheritDoc
-     */
     public function select(array $query): RepositorySelectQueryInterface
     {
         return \Mockery::mock(RepositorySelectQueryInterface::class);
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function fetch(RepositorySelectQueryInterface $selectQuery)
+    public function fetch(RepositorySelectQueryInterface $selectQuery): ?object
     {
-        return [];
+        return new \stdClass();
     }
 
-    /**
-     * @inheritDoc
-     */
     public function clear(RepositorySelectQueryInterface $selectQuery): void
     {
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function fetchOne(array $query)
+    public function fetchOne(array $query): ?object
     {
-        return [];
+        return new \stdClass();
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function fetchAll(array $query)
+    public function fetchAll(array $query): array
     {
-        return [];
+        return [new \stdClass()];
     }
 
-    /**
-     * @inheritDoc
-     */
+    public function fetchAllAndFlatten(array $query): array
+    {
+        return [5, 10, 13];
+    }
+
     public function count(array $query): int
     {
         return 6;

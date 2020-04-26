@@ -15,14 +15,27 @@ class MultiSelectIterator implements \Iterator, ActionInterface
 {
     use SelectIteratorTrait;
 
-    /** @var MultiRepositoryReadOnlyInterface */
-    private $source;
-    /** @var MultiRepositorySelectQueryInterface|null */
-    private $selectReference = null;
+    private MultiRepositoryReadOnlyInterface $source;
+    private ?MultiRepositorySelectQueryInterface $selectReference = null;
+    private ?array $lastResult = null;
 
     public function __construct(MultiRepositoryReadOnlyInterface $repository, array $query)
     {
         $this->source = $repository;
         $this->query = $query;
+    }
+
+    /**
+     * @return array<string,mixed>
+     */
+    public function current(): array
+    {
+        // @codeCoverageIgnoreStart
+        if ($this->lastResult === null) {
+            throw new \LogicException('Cannot get current value if no result has been retrieved');
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $this->lastResult;
     }
 }

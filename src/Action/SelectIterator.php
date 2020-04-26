@@ -15,14 +15,24 @@ class SelectIterator implements \Iterator, ActionInterface
 {
     use SelectIteratorTrait;
 
-    /** @var RepositoryReadOnlyInterface */
-    private $source;
-    /** @var RepositorySelectQueryInterface|null */
-    private $selectReference = null;
+    private RepositoryReadOnlyInterface $source;
+    private ?RepositorySelectQueryInterface $selectReference = null;
+    private ?object $lastResult = null;
 
     public function __construct(RepositoryReadOnlyInterface $repository, array $query)
     {
         $this->source = $repository;
         $this->query = $query;
+    }
+
+    public function current(): object
+    {
+        // @codeCoverageIgnoreStart
+        if ($this->lastResult === null) {
+            throw new \LogicException('Cannot get current value if no result has been retrieved');
+        }
+        // @codeCoverageIgnoreEnd
+
+        return $this->lastResult;
     }
 }

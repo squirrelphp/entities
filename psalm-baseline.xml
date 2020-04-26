@@ -9,7 +9,8 @@
     </PossiblyInvalidArgument>
   </file>
   <file src="src/RepositoryReadOnly.php">
-    <ArgumentTypeCoercion occurrences="2">
+    <ArgumentTypeCoercion occurrences="3">
+      <code>$sanitizedQuery</code>
       <code>$sanitizedQuery</code>
       <code>$sanitizedQuery</code>
     </ArgumentTypeCoercion>

@@ -103,7 +103,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    public function fetch(RepositorySelectQueryInterface $selectQuery)
+    public function fetch(RepositorySelectQueryInterface $selectQuery): ?object
     {
         // Make sure the same repository configuration is used
         $this->compareRepositoryConfigMustBeEqual($selectQuery->getConfig());
@@ -138,7 +138,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
     }
 
-    public function fetchOne(array $query)
+    public function fetchOne(array $query): ?object
     {
         if (isset($query['limit']) && $query['limit'] !== 1) {
             throw Debug::createException(
@@ -159,16 +159,8 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $result;
     }
 
-    public function fetchAll(array $query)
+    public function fetchAll(array $query): array
     {
-        $flattenFields = false;
-
-        // Whether to flatten fields and just return an array of values instead of objects
-        if (isset($query['flattenFields'])) {
-            $flattenFields = $this->booleanSettingValidation($query['flattenFields'], 'flattenFields');
-            unset($query['flattenFields']);
-        }
-
         // Process options and make sure all values are valid
         $sanitizedQuery = $this->prepareSelectQueryForLowerLayer($this->validateQueryOptions([
             'where' => [],
@@ -191,12 +183,34 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             );
         }
 
-        // Special case: Flatten all field values and return an array
-        if ($flattenFields === true) {
-            return $this->convertResultsToFlattenedResults($tableResults);
+        return \array_map([$this, 'convertResultToObject'], $tableResults);
+    }
+
+    public function fetchAllAndFlatten(array $query): array
+    {
+        // Process options and make sure all values are valid
+        $sanitizedQuery = $this->prepareSelectQueryForLowerLayer($this->validateQueryOptions([
+            'where' => [],
+            'order' => [],
+            'limit' => 0,
+            'offset' => 0,
+            'fields' => [],
+            'lock' => false,
+        ], $query));
+
+        try {
+            // Get all the data from the database
+            $tableResults = $this->db->fetchAll($sanitizedQuery);
+        } catch (DBException $e) {
+            throw Debug::createException(
+                \get_class($e),
+                [RepositoryReadOnlyInterface::class, ActionInterface::class],
+                $e->getMessage(),
+                $e->getPrevious()
+            );
         }
 
-        return \array_map([$this, 'convertResultToObject'], $tableResults);
+        return $this->convertResultsToFlattenedResults($tableResults);
     }
 
     /**

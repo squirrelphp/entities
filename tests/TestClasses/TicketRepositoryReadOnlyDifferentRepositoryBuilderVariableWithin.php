@@ -9,10 +9,7 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class TicketRepositoryReadOnlyDifferentRepositoryBuilderVariableWithin implements RepositoryBuilderReadOnlyInterface
 {
-    /**
-     * @var RepositoryReadOnlyInterface
-     */
-    private $repositoryDifferentName;
+    private RepositoryReadOnlyInterface $repositoryDifferentName;
 
     public function __construct(RepositoryReadOnlyInterface $repository)
     {

@@ -49,6 +49,14 @@ class SelectIteratorTest extends \PHPUnit\Framework\TestCase
     {
         $selectQuery = \Mockery::mock(RepositorySelectQueryInterface::class);
 
+        $firstObject = new \stdClass();
+        $firstObject->dada = 55;
+        $firstObject->other = 'Jane';
+
+        $secondObject = new \stdClass();
+        $secondObject->dada = 5888;
+        $secondObject->other = 'Henry';
+
         $this->repository
             ->shouldReceive('select')
             ->once()
@@ -59,13 +67,13 @@ class SelectIteratorTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('fetch')
             ->once()
             ->with($selectQuery)
-            ->andReturn(['dada' => 55, 'other' => 'Jane']);
+            ->andReturn($firstObject);
 
         $this->repository
             ->shouldReceive('fetch')
             ->once()
             ->with($selectQuery)
-            ->andReturn(['dada' => 5888, 'other' => 'Henry']);
+            ->andReturn($secondObject);
 
         $this->repository
             ->shouldReceive('fetch')
@@ -84,10 +92,10 @@ class SelectIteratorTest extends \PHPUnit\Framework\TestCase
 
         foreach ($iterator as $key => $entry) {
             if ($key === 0) {
-                $this->assertEquals(['dada' => 55, 'other' => 'Jane'], $entry);
+                $this->assertEquals($firstObject, $entry);
                 $assertionsCount++;
             } elseif ($key === 1) {
-                $this->assertEquals(['dada' => 5888, 'other' => 'Henry'], $entry);
+                $this->assertEquals($secondObject, $entry);
                 $assertionsCount++;
             } else {
                 $this->assertTrue(false);

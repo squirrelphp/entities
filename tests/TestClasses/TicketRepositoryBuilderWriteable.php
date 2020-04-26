@@ -12,10 +12,7 @@ use Squirrel\Entities\RepositoryWriteableInterface;
 class TicketRepositoryBuilderWriteable extends TicketRepositoryBuilderReadOnly implements
     RepositoryBuilderWriteableInterface
 {
-    /**
-     * @var RepositoryWriteableInterface
-     */
-    private $repository;
+    private RepositoryWriteableInterface $repository;
 
     public function __construct(RepositoryWriteableInterface $repository)
     {

@@ -602,7 +602,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->fetchAll([
+        $results = $this->queryHandler->fetchAllAndFlatten([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -617,7 +617,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'limit' => 3,
             'lock' => true,
-            'flattenFields' => true,
         ]);
 
         // Make sure we received the correct sanitized results
@@ -679,7 +678,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->fetchAll([
+        $results = $this->queryHandler->fetchAllAndFlatten([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -695,7 +694,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'limit' => 3,
             'lock' => true,
-            'flattenFields' => true,
         ]);
 
         // Make sure we received the correct sanitized results
@@ -757,7 +755,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->fetchAll([
+        $results = $this->queryHandler->fetchAllAndFlatten([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -772,7 +770,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.open' => false,
             ],
             'limit' => 3,
-            'flattenFields' => true,
             'lock' => true,
         ]);
 
@@ -817,7 +814,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->fetchAll([
+        $results = $this->queryHandler->fetchAllAndFlatten([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
             ],
@@ -828,7 +825,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.ticketId' => '77',
                 'ticket.open' => false,
             ],
-            'flattenFields' => true,
             'lock' => true,
         ]);
 
@@ -1189,10 +1185,8 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
             ->andReturn($dbResults);
 
-        $this->queryFreeform['flattenFields'] = true;
-
         // Attempt select
-        $results = $this->queryHandler->fetchAll($this->queryFreeform);
+        $results = $this->queryHandler->fetchAllAndFlatten($this->queryFreeform);
 
         // Make sure we received the correct sanitized results
         $this->assertSame($dbResultsSanitized, $results);
@@ -1485,17 +1479,6 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 
         // Attempt select
         $this->queryHandler->select($this->complicatedQuery);
-    }
-
-    public function testInvalidFlattenFieldsValue()
-    {
-        $this->expectException(DBInvalidOptionException::class);
-
-        // Try to test with some invalid ORDER value
-        $this->complicatedQuery['flattenFields'] = 5;
-
-        // Attempt select
-        $this->queryHandler->fetchAll($this->complicatedQuery);
     }
 
     public function testFetchOneInvalidLimit()

@@ -24,7 +24,7 @@
         "symfony/console": "^5.0",
         "symfony/finder": "^5.0",
         "doctrine/annotations": "^1.4",
-        "squirrelphp/queries": "^0.9"
+        "squirrelphp/queries": "^0.10"
     },
     "require-dev": {
         "bamarni/composer-bin-plugin": "^1.3",

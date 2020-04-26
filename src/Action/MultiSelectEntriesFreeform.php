@@ -137,12 +137,11 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
     {
         $this->makeSureBadPracticeWasConfirmed();
 
-        return $this->queryHandler->fetchAll([
+        return $this->queryHandler->fetchAllAndFlatten([
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'query' => $this->query,
             'parameters' => $this->parameters,
-            'flattenFields' => true,
         ]);
     }
 

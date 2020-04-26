@@ -126,12 +126,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
     public function fetchAll(array $query): array
     {
-        // Whether to flatten fields and just return an array of values instead of objects
-        if (isset($query['flattenFields'])) {
-            $flattenFields = $this->booleanSettingValidation($query['flattenFields'], 'flattenFields');
-            unset($query['flattenFields']);
-        }
-
         // Freeform query was detected
         if (isset($query['query']) || isset($query['parameters'])) {
             [$sqlQuery, $parameters, $selectTypes, $selectTypesNullable] = $this->buildSelectQueryFreeform($query);
@@ -152,24 +146,24 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         }
 
         // Process the select results
-        $processedResults = $this->processSelectResults($tableResults, $selectTypes, $selectTypesNullable);
+        return $this->processSelectResults($tableResults, $selectTypes, $selectTypesNullable);
+    }
 
-        // Flatten all values into a one-dimensional array if requested
-        if (($flattenFields ?? false) === true) {
-            $list = [];
+    public function fetchAllAndFlatten(array $query): array
+    {
+        $processedResults = $this->fetchAll($query);
 
-            // Go through table results
-            foreach ($processedResults as $objIndex => $objEntry) {
-                // Go through all table fields
-                foreach ($objEntry as $fieldName => $fieldValue) {
-                    $list[] = $fieldValue;
-                }
+        $list = [];
+
+        // Go through table results
+        foreach ($processedResults as $objIndex => $objEntry) {
+            // Go through all table fields
+            foreach ($objEntry as $fieldName => $fieldValue) {
+                $list[] = $fieldValue;
             }
-
-            return $list;
         }
 
-        return $processedResults;
+        return $list;
     }
 
     /**
@@ -1093,26 +1087,5 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         }
 
         return $orderProcessed;
-    }
-
-    /**
-     * @param mixed $shouldBeBoolean
-     */
-    private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
-    {
-        // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
-        if (
-            !\is_bool($shouldBeBoolean)
-            && $shouldBeBoolean !== 1
-            && $shouldBeBoolean !== 0
-        ) {
-            throw Debug::createException(
-                DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
-                $settingName . ' set to a non-boolean value: ' . Debug::sanitizeData($shouldBeBoolean)
-            );
-        }
-
-        return \boolval($shouldBeBoolean);
     }
 }

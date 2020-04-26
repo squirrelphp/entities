@@ -206,7 +206,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
     public function testNoDataGetFlattenedFields()
     {
         $this->repository
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('fetchAllAndFlatten')
             ->once()
             ->with([
                 'where' => [],
@@ -215,7 +215,6 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'limit' => 0,
                 'offset' => 0,
                 'lock' => false,
-                'flattenFields' => true,
             ])
             ->andReturn([]);
 
@@ -282,7 +281,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
             ]);
 
         $this->repository
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('fetchAllAndFlatten')
             ->once()
             ->with([
                 'where' => [
@@ -299,7 +298,6 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'limit' => 45,
                 'offset' => 13,
                 'lock' => true,
-                'flattenFields' => true,
             ])
             ->andReturn([]);
 

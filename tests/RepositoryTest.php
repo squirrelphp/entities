@@ -345,26 +345,24 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->fetchAll([
+        $results = $this->repository->fetchAllAndFlatten([
             'where' => [
                 'lastName' => 'Baumann',
             ],
             'fields' => [
                 'id',
             ],
-            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
         $this->assertEquals([63, 87], $results);
 
         // Make call to repository
-        $results = $this->repository->fetchAll([
+        $results = $this->repository->fetchAllAndFlatten([
             'where' => [
                 'lastName' => 'Baumann',
             ],
             'field' => 'id',
-            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
@@ -392,7 +390,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->dbSetupFetchAll($query, $results);
 
         // Make call to repository
-        $results = $this->repository->fetchAll([
+        $results = $this->repository->fetchAllAndFlatten([
             'where' => [
                 'lastName' => 'Baumann',
             ],
@@ -400,7 +398,6 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'id',
                 'firstName',
             ],
-            'flattenFields' => true,
         ]);
 
         // Make sure the correct objects were returned
@@ -1234,17 +1231,17 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectNonBooleanFlattenFields()
+    public function testSelectNonBooleanLock()
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
 
         // Make call to repository
-        $this->repository->fetchAll([
+        $this->repository->count([
             'where' => [
                 'firstName' => 'dada',
             ],
-            'flattenFields' => 2,
+            'lock' => 2,
         ]);
     }
 
@@ -1802,6 +1799,34 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         // Make call to repository
         $this->repository->fetchAll([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+        ]);
+    }
+
+    public function testFetchAllAndFlattenExceptionFromDbClass()
+    {
+        // Expect an invalid option exception
+        $this->expectException(DBInvalidOptionException::class);
+
+        // Define the structured query we expect to generate
+        $query = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+        ];
+
+        // Set up DB class mock
+        $this->db
+            ->shouldReceive('fetchAll')
+            ->once()
+            ->with($query)
+            ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
+
+        // Make call to repository
+        $this->repository->fetchAllAndFlatten([
             'where' => [
                 'lastName' => 'Baumann',
             ],

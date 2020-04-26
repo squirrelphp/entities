@@ -172,7 +172,13 @@ namespace {namespaceOfBuilders} {
 
         public function current(): \{namespaceOfEntity}\{classOfEntity}
         {
-            return $this->iteratorInstance->current();
+            $entry = $this->iteratorInstance->current();
+
+            if ($entry instanceof \{namespaceOfEntity}\{classOfEntity}) {
+                return $entry;
+            }
+
+            throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
         }
 
         public function next(): void

@@ -77,14 +77,20 @@ interface MultiRepositoryReadOnlyInterface
     public function fetchOne(array $query): ?array;
 
     /**
-     * Select query and return all entries.  The query options are the same as with the select function,
-     * except for flattenFields:
-     *
-     * 'flattenFields': Whether to return a one dimensional array of just values instead of arrays (optional)
+     * Select query and return all entries. The query options are the same as with the select function.
      *
      * @param array $query
-     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array,flattenFields?:bool} $query
-     * @return array
+     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array} $query
+     * @return array<int, array<string, mixed>>
      */
     public function fetchAll(array $query): array;
+
+    /**
+     * Select query and return all entries as flattened values (no field names)
+     *
+     * @param array $query
+     * @psalm-param array{repositories:array,tables?:array,fields:array,where?:array,group?:array,order?:array,limit?:int,offset?:int,lock?:bool,query?:string,parameters?:array} $query
+     * @return array<bool|int|float|string|null>
+     */
+    public function fetchAllAndFlatten(array $query): array;
 }

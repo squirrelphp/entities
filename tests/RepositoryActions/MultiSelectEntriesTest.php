@@ -244,7 +244,7 @@ class MultiSelectEntriesTest extends \PHPUnit\Framework\TestCase
         $selectBuilder = new MultiSelectEntries($this->multiRepository);
 
         $this->multiRepository
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('fetchAllAndFlatten')
             ->once()
             ->with([
                 'fields' => [],
@@ -256,7 +256,6 @@ class MultiSelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'limit' => 0,
                 'offset' => 0,
                 'lock' => false,
-                'flattenFields' => true,
             ])
             ->andReturn([]);
 
@@ -348,7 +347,7 @@ class MultiSelectEntriesTest extends \PHPUnit\Framework\TestCase
             ]);
 
         $this->multiRepository
-            ->shouldReceive('fetchAll')
+            ->shouldReceive('fetchAllAndFlatten')
             ->once()
             ->with([
                 'repositories' => [
@@ -371,7 +370,6 @@ class MultiSelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'limit' => 45,
                 'offset' => 13,
                 'lock' => true,
-                'flattenFields' => true,
             ])
             ->andReturn([]);
 

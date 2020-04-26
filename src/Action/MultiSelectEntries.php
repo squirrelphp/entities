@@ -109,7 +109,6 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
 
     /**
      * @param array<int|string,string>|string $orderByClauses
-     * @return MultiSelectEntries
      */
     public function orderBy($orderByClauses): self
     {
@@ -123,7 +122,6 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
 
     /**
      * @param array<int|string,string>|string $groupByClauses
-     * @return MultiSelectEntries
      */
     public function groupBy($groupByClauses): self
     {
@@ -197,7 +195,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
      */
     public function getFlattenedFields(): array
     {
-        return $this->queryHandler->fetchAll([
+        return $this->queryHandler->fetchAllAndFlatten([
             'fields' => $this->fields,
             'repositories' => $this->repositories,
             'tables' => $this->connections,
@@ -207,7 +205,6 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
             'limit' => $this->limitTo,
             'offset' => $this->startAt,
             'lock' => $this->blocking,
-            'flattenFields' => true,
         ]);
     }
 
