@@ -152,6 +152,38 @@ namespace {namespaceOfBuilders} {
             return $this->selectImplementation->getFlattenedFields();
         }
 
+        /**
+         * @return int[]
+         */
+        public function getFlattenedIntegerFields(): array
+        {
+            return $this->selectImplementation->getFlattenedIntegerFields();
+        }
+
+        /**
+         * @return float[]
+         */
+        public function getFlattenedFloatFields(): array
+        {
+            return $this->selectImplementation->getFlattenedFloatFields();
+        }
+
+        /**
+         * @return string[]
+         */
+        public function getFlattenedStringFields(): array
+        {
+            return $this->selectImplementation->getFlattenedStringFields();
+        }
+
+        /**
+         * @return bool[]
+         */
+        public function getFlattenedBooleanFields(): array
+        {
+            return $this->selectImplementation->getFlattenedBooleanFields();
+        }
+
         public function getIterator(): SelectIterator
         {
             return new SelectIterator($this->selectImplementation->getIterator());
