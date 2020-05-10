@@ -5,6 +5,7 @@ namespace Squirrel\Entities\Tests\RepositoryActions;
 use Squirrel\Entities\Action\SelectEntries;
 use Squirrel\Entities\Action\SelectIterator;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class SelectEntriesTest extends \PHPUnit\Framework\TestCase
 {
@@ -304,5 +305,357 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
         $results = $this->selectBuilder->getFlattenedFields();
 
         $this->assertEquals([], $results);
+    }
+
+    public function testGetFlattenedIntegerFields()
+    {
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([5, 6, 8]);
+
+        $results = $this->selectBuilder->getFlattenedIntegerFields();
+
+        $this->assertEquals([5, 6, 8], $results);
+    }
+
+    public function testGetFlattenedFloatFields()
+    {
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([5, 6, 8, 3.7]);
+
+        $results = $this->selectBuilder->getFlattenedFloatFields();
+
+        $this->assertEquals([5.0, 6.0, 8.0, 3.7], $results);
+    }
+
+    public function testGetFlattenedBooleanFields()
+    {
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([true, false, true, true, false]);
+
+        $results = $this->selectBuilder->getFlattenedBooleanFields();
+
+        $this->assertEquals([true, false, true, true, false], $results);
+    }
+
+    public function testGetFlattenedStringFields()
+    {
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn(['dada', '5', 'rtew', '', '7777.3']);
+
+        $results = $this->selectBuilder->getFlattenedStringFields();
+
+        $this->assertEquals(['dada', '5', 'rtew', '', '7777.3'], $results);
+    }
+
+    public function testGetFlattenedIntegerFieldsWrongType()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([5, '7', 6, 8]);
+
+        $this->selectBuilder->getFlattenedIntegerFields();
+    }
+
+    public function testGetFlattenedFloatFieldsWrongType()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([5, 6, 8, '3.7']);
+
+        $this->selectBuilder->getFlattenedFloatFields();
+    }
+
+    public function testGetFlattenedBooleanFieldsWrongType()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn([true, false, true, 'dada', false]);
+
+        $this->selectBuilder->getFlattenedBooleanFields();
+    }
+
+    public function testGetFlattenedStringFieldsWrongType()
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $this->selectBuilder
+            ->where([
+                'responseId' => 5,
+                'otherField' => '333',
+            ])
+            ->orderBy([
+                'responseId' => 'DESC',
+            ])
+            ->startAt(13)
+            ->limitTo(45)
+            ->blocking()
+            ->fields([
+                'responseId',
+                'otherField',
+            ]);
+
+        $this->repository
+            ->shouldReceive('fetchAllAndFlatten')
+            ->once()
+            ->with([
+                'where' => [
+                    'responseId' => 5,
+                    'otherField' => '333',
+                ],
+                'order' => [
+                    'responseId' => 'DESC',
+                ],
+                'fields' => [
+                    'responseId',
+                    'otherField',
+                ],
+                'limit' => 45,
+                'offset' => 13,
+                'lock' => true,
+            ])
+            ->andReturn(['dada', '5', 'rtew', 5, '7777.3']);
+
+        $this->selectBuilder->getFlattenedStringFields();
     }
 }
