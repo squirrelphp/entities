@@ -13,6 +13,8 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
  */
 class MultiSelectEntries implements ActionInterface, \IteratorAggregate
 {
+    use FlattenedFieldsWithTypeTrait;
+
     private MultiRepositoryReadOnlyInterface $queryHandler;
 
     /**
@@ -191,7 +193,7 @@ class MultiSelectEntries implements ActionInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return the fields as a list of values
      *
-     * @return array<int,mixed>
+     * @return array<bool|int|float|string|null>
      */
     public function getFlattenedFields(): array
     {

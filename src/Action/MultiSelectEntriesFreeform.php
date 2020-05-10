@@ -15,6 +15,8 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
 {
+    use FlattenedFieldsWithTypeTrait;
+
     private MultiRepositoryReadOnlyInterface $queryHandler;
 
     /**

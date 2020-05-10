@@ -2,9 +2,7 @@
 
 namespace Squirrel\Entities\Action;
 
-use Squirrel\Debug\Debug;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
-use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
@@ -13,6 +11,8 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class SelectEntries implements ActionInterface, \IteratorAggregate
 {
+    use FlattenedFieldsWithTypeTrait;
+
     private RepositoryReadOnlyInterface $repository;
 
     /**
@@ -155,91 +155,6 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
             'offset' => $this->startAt,
             'lock' => $this->blocking,
         ]);
-    }
-
-    /**
-     * @return int[]
-     */
-    public function getFlattenedIntegerFields(): array
-    {
-        $values = $this->getFlattenedFields();
-
-        foreach ($values as $value) {
-            if (!\is_int($value)) {
-                throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    [ActionInterface::class],
-                    'Flattened integers requested, but not all values were integers'
-                );
-            }
-        }
-
-        return $values;
-    }
-
-    /**
-     * @return float[]
-     */
-    public function getFlattenedFloatFields(): array
-    {
-        $values = $this->getFlattenedFields();
-
-        foreach ($values as $key => $value) {
-            if (\is_int($value)) {
-                $values[$key] = \floatval($value);
-                continue;
-            }
-
-            if (!\is_float($value)) {
-                throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    [ActionInterface::class],
-                    'Flattened floats requested, but not all values were floats'
-                );
-            }
-        }
-
-        return $values;
-    }
-
-    /**
-     * @return string[]
-     */
-    public function getFlattenedStringFields(): array
-    {
-        $values = $this->getFlattenedFields();
-
-        foreach ($values as $value) {
-            if (!\is_string($value)) {
-                throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    [ActionInterface::class],
-                    'Flattened strings requested, but not all values were strings'
-                );
-            }
-        }
-
-        return $values;
-    }
-
-    /**
-     * @return bool[]
-     */
-    public function getFlattenedBooleanFields(): array
-    {
-        $values = $this->getFlattenedFields();
-
-        foreach ($values as $value) {
-            if (!\is_bool($value)) {
-                throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    [ActionInterface::class],
-                    'Flattened booleans requested, but not all values were booleans'
-                );
-            }
-        }
-
-        return $values;
     }
 
     public function getIterator(): SelectIterator

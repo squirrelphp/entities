@@ -344,11 +344,11 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([5, 6, 8]);
+            ->andReturn([5, 6, 8, '33', '64']);
 
         $results = $this->selectBuilder->getFlattenedIntegerFields();
 
-        $this->assertEquals([5, 6, 8], $results);
+        $this->assertEquals([5, 6, 8, 33, 64], $results);
     }
 
     public function testGetFlattenedFloatFields()
@@ -388,11 +388,11 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([5, 6, 8, 3.7]);
+            ->andReturn([5, '6', 8, 3.7, '4.6']);
 
         $results = $this->selectBuilder->getFlattenedFloatFields();
 
-        $this->assertEquals([5.0, 6.0, 8.0, 3.7], $results);
+        $this->assertEquals([5.0, 6.0, 8.0, 3.7, 4.6], $results);
     }
 
     public function testGetFlattenedBooleanFields()
@@ -432,11 +432,11 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([true, false, true, true, false]);
+            ->andReturn([true, false, true, true, false, 0, 1, '0', '1']);
 
         $results = $this->selectBuilder->getFlattenedBooleanFields();
 
-        $this->assertEquals([true, false, true, true, false], $results);
+        $this->assertEquals([true, false, true, true, false, false, true, false, true], $results);
     }
 
     public function testGetFlattenedStringFields()
@@ -476,7 +476,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn(['dada', '5', 'rtew', '', '7777.3']);
+            ->andReturn(['dada', 5, 'rtew', '', 7777.3]);
 
         $results = $this->selectBuilder->getFlattenedStringFields();
 
@@ -522,7 +522,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([5, '7', 6, 8]);
+            ->andReturn([5, '5lada', 6, 8]);
 
         $this->selectBuilder->getFlattenedIntegerFields();
     }
@@ -566,7 +566,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn([5, 6, 8, '3.7']);
+            ->andReturn([5, 6, 8, '3.7nonnumber']);
 
         $this->selectBuilder->getFlattenedFloatFields();
     }
@@ -654,7 +654,7 @@ class SelectEntriesTest extends \PHPUnit\Framework\TestCase
                 'offset' => 13,
                 'lock' => true,
             ])
-            ->andReturn(['dada', '5', 'rtew', 5, '7777.3']);
+            ->andReturn(['dada', '5', 'rtew', false, '7777.3']);
 
         $this->selectBuilder->getFlattenedStringFields();
     }
