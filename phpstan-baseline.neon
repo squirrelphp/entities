@@ -1,21 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Entities\\\\RepositoryReadOnlyInterface\\:\\:fetchAll\\(\\) expects array\\(\\)\\|array\\('fields' \\=\\> array\\<string\\>, 'field' \\=\\> string, 'where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'limit' \\=\\> int, 'offset' \\=\\> int, 'lock' \\=\\> bool\\), array\\('where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'fields' \\=\\> array\\<string\\>, 'limit' \\=\\> int, 'offset' \\=\\> int, 'lock' \\=\\> bool\\) given\\.$#"
-			count: 1
-			path: src/Action/SelectEntries.php
-
-		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Entities\\\\RepositoryReadOnlyInterface\\:\\:fetchOne\\(\\) expects array\\(\\)\\|array\\('fields' \\=\\> array\\<string\\>, 'field' \\=\\> string, 'where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'offset' \\=\\> int, 'lock' \\=\\> bool\\), array\\('where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'fields' \\=\\> array\\<string\\>, 'offset' \\=\\> int, 'lock' \\=\\> bool\\) given\\.$#"
-			count: 1
-			path: src/Action/SelectEntries.php
-
-		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Entities\\\\RepositoryReadOnlyInterface\\:\\:fetchAllAndFlatten\\(\\) expects array\\(\\)\\|array\\('fields' \\=\\> array\\<string\\>, 'field' \\=\\> string, 'where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'limit' \\=\\> int, 'offset' \\=\\> int, 'lock' \\=\\> bool\\), array\\('where' \\=\\> array\\<int\\|string, mixed\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'fields' \\=\\> array\\<string\\>, 'limit' \\=\\> int, 'offset' \\=\\> int, 'lock' \\=\\> bool\\) given\\.$#"
-			count: 1
-			path: src/Action/SelectEntries.php
-
-		-
 			message: "#^Method Squirrel\\\\Entities\\\\Action\\\\SelectEntries\\:\\:getFlattenedIntegerFields\\(\\) should return array\\<int\\> but returns array\\<bool\\|float\\|int\\|string\\|null\\>\\.$#"
 			count: 1
 			path: src/Action/SelectEntries.php
@@ -41,17 +26,7 @@ parameters:
 			path: src/Annotation/EntityProcessor.php
 
 		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Queries\\\\DBInterface\\:\\:fetchOne\\(\\) expects array\\(\\)\\|array\\('fields' \\=\\> array\\<int\\|string, string\\>, 'field' \\=\\> string, 'tables' \\=\\> array\\<int\\|string, mixed\\>, 'table' \\=\\> string, 'where' \\=\\> array\\<int\\|string, mixed\\>, 'group' \\=\\> array\\<int\\|string, string\\>, 'order' \\=\\> array\\<int\\|string, string\\>, 'limit' \\=\\> int, \\.\\.\\.\\)\\|string, array\\('table' \\=\\> string, 'fields' \\=\\> array\\('num' \\=\\> 'COUNT\\(\\*\\)'\\), \\?'where' \\=\\> array\\<int\\|string, mixed\\>, \\?'lock' \\=\\> true\\) given\\.$#"
-			count: 1
-			path: src/RepositoryReadOnly.php
-
-		-
 			message: "#^Result of && is always false\\.$#"
-			count: 1
-			path: src/RepositoryReadOnly.php
-
-		-
-			message: "#^Parameter \\#1 \\$query of method Squirrel\\\\Entities\\\\RepositoryReadOnly\\:\\:select\\(\\) expects array\\(\\)\\|array\\('fields' \\=\\> array, 'field' \\=\\> string, 'where' \\=\\> array, 'order' \\=\\> array, 'limit' \\=\\> int, 'offset' \\=\\> int, 'lock' \\=\\> bool\\), array\\(\\?'fields' \\=\\> array\\<string\\>, \\?'field' \\=\\> string, \\?'where' \\=\\> array\\<int\\|string, mixed\\>, \\?'order' \\=\\> array\\<int\\|string, string\\>, \\?'offset' \\=\\> int, \\?'lock' \\=\\> bool, 'limit' \\=\\> 1\\) given\\.$#"
 			count: 1
 			path: src/RepositoryReadOnly.php
 
