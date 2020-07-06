@@ -55,7 +55,7 @@ class InsertOrUpdateEntry implements ActionInterface
     }
 
     /**
-     * @param array<int|string,mixed>|string $values
+     * @param array<int|string,mixed>|string|null $values
      * @return InsertOrUpdateEntry
      */
     public function setOnUpdate($values): self

@@ -386,20 +386,27 @@ EOD
             if (\count($files) > 0) {
                 // Ignore the .gitignore file in entity directories, that way both the gitignore
                 // and the repositories will be ignored by VCS
-                $gitignoreContents = [
+                $gitignoreLines = [
                     '.gitignore',
                 ];
 
                 // Add each repository file to .gitignore
                 foreach ($files as $filename) {
-                    $gitignoreContents[] = $filename;
+                    $gitignoreLines[] = $filename;
                 }
 
-                // Save .gitignore file in the appropriate path
-                \file_put_contents(
-                    $path . '/.gitignore',
-                    \implode("\n", $gitignoreContents)
-                );
+                $gitignoreFileContents = \implode("\n", $gitignoreLines);
+
+                // Save .gitignore file in the appropriate path if there was a change
+                if (
+                    !\file_exists($path . '/.gitignore')
+                    || \file_get_contents($path . '/.gitignore') !== $gitignoreFileContents
+                ) {
+                    \file_put_contents(
+                        $path . '/.gitignore',
+                        $gitignoreFileContents
+                    );
+                }
             }
         }
     }
