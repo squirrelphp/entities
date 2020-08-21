@@ -15,6 +15,14 @@ trait FlattenedFieldsWithTypeTrait
         $values = $this->getFlattenedFields();
 
         foreach ($values as $key => $value) {
+            if (!\is_integer($value) && !\is_string($value)) {
+                throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    [ActionInterface::class],
+                    'Flattened integers requested, but not all values were int or string'
+                );
+            }
+
             // Convert non-int values which do not change when type casted
             if (
                 !\is_integer($value)
@@ -47,6 +55,14 @@ trait FlattenedFieldsWithTypeTrait
             if (\is_int($value)) {
                 $values[$key] = \floatval($value);
                 continue;
+            }
+
+            if (!\is_float($value) && !\is_string($value)) {
+                throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    [ActionInterface::class],
+                    'Flattened floats requested, but not all values were float or string'
+                );
             }
 
             // Convert non-float values which do not change when type casted

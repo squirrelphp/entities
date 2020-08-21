@@ -4,11 +4,16 @@ namespace Squirrel\Entities;
 
 use Squirrel\Debug\Debug;
 
+/**
+ * @psalm-immutable
+ */
 trait EntityConstructorTrait
 {
     /**
      * Initialize the object with an array - not used by repository, as the repository uses reflection to
      * set entity values, but a constructor can be helpful for testing or other special/explicit usages
+     *
+     * @psalm-pure
      */
     public function __construct(iterable $data = [])
     {
