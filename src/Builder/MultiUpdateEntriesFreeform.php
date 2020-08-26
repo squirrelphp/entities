@@ -1,17 +1,18 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Debug\Debug;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
 use Squirrel\Entities\RepositoryBuilderWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Update query builder as a fluent object - build freeform query and execute it
  */
-class MultiUpdateEntriesFreeform implements ActionInterface
+class MultiUpdateEntriesFreeform implements BuilderInterface
 {
     private MultiRepositoryWriteableInterface $queryHandler;
 
@@ -92,7 +93,7 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         return $this->queryHandler->update(
             $this->repositories,
             $this->query,
-            $this->parameters
+            $this->parameters,
         );
     }
 
@@ -101,9 +102,9 @@ class MultiUpdateEntriesFreeform implements ActionInterface
         if ($this->confirmBadPractice !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [ActionInterface::class],
+                [BuilderInterface::class],
                 'No confirmation that freeform queries are bad practice - ' .
-                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query'
+                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query',
             );
         }
     }

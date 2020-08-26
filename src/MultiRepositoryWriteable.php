@@ -3,7 +3,7 @@
 namespace Squirrel\Entities;
 
 use Squirrel\Debug\Debug;
-use Squirrel\Entities\Action\ActionInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\DBException;
 
 /**
@@ -35,9 +35,9 @@ class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiR
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, ActionInterface::class],
+                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious()
+                $e->getPrevious(),
             );
         }
     }

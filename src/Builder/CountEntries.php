@@ -1,13 +1,14 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 
 /**
  * Count query builder as a fluent object - build query and return number
  */
-class CountEntries implements ActionInterface
+class CountEntries implements BuilderInterface
 {
     private RepositoryReadOnlyInterface $repository;
 

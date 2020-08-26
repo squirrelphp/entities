@@ -52,7 +52,7 @@ class EntityProcessor
                 // Find Field annotation on the property
                 $field = $this->annotationReader->getPropertyAnnotation(
                     $annotationProperty,
-                    Field::class
+                    Field::class,
                 );
 
                 // A Field annotation was found
@@ -92,7 +92,7 @@ class EntityProcessor
                 $annotationClass->getName(),
                 $objectTypes,
                 $objectTypesNullable,
-                $autoincrement
+                $autoincrement,
             );
         }
 

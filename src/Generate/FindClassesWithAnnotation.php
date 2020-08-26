@@ -32,7 +32,7 @@ class FindClassesWithAnnotation
             // "use" name started, so collect all parts until we reach the end of the name
             if ($useImportStarted === true) {
                 // String and namespace separator are all part of the class name
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR])) {
+                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
                     $importClassName .= $token[1];
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
                 } else { // Every other token indicates that we have reached the end of the name
@@ -52,7 +52,7 @@ class FindClassesWithAnnotation
             // "namespace" name started, so collect all parts until we reach the end of the name
             if ($namespaceStarted === true) {
                 // String and namespace separator are all part of the namespace
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR])) {
+                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
                     $namespace .= $token[1];
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the namespace
                 } else { // Every other token indicates that we have reached the end of the name
@@ -63,7 +63,7 @@ class FindClassesWithAnnotation
             // "class" name started, so collect all parts until we reach the end of the name
             if ($classNameStarted === true) {
                 // String and namespace separator are all part of the class name
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR])) {
+                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
                     $className .= $token[1];
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
                 } else { // Every other token indicates that we have reached the end of the name

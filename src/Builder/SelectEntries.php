@@ -1,15 +1,17 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
+use Squirrel\Queries\Builder\FlattenedFieldsWithTypeTrait;
 
 /**
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
  *
  * @implements \IteratorAggregate<int,object>
  */
-class SelectEntries implements ActionInterface, \IteratorAggregate
+class SelectEntries implements BuilderInterface, \IteratorAggregate
 {
     use FlattenedFieldsWithTypeTrait;
 
@@ -109,7 +111,7 @@ class SelectEntries implements ActionInterface, \IteratorAggregate
      * Execute SELECT query and return a list of objects that matched it
      *
      * Returns object[] (from the entity class), we avoid the return type hint
-     * here to code analyzers don't get confused by generated repositories
+     * here so code analyzers don't get confused by generated repositories
      * and their different type hint
      */
     public function getAllEntries(): array

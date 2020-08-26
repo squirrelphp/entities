@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\InsertEntry;
+use Squirrel\Entities\Builder\InsertEntry;
 use Squirrel\Entities\RepositoryWriteableInterface;
 
 class InsertEntryTest extends \PHPUnit\Framework\TestCase

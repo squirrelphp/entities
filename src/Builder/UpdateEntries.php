@@ -1,15 +1,16 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Debug\Debug;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Update query builder as a fluent object - build query and execute it
  */
-class UpdateEntries implements ActionInterface
+class UpdateEntries implements BuilderInterface
 {
     private RepositoryWriteableInterface $repository;
 
@@ -76,9 +77,9 @@ class UpdateEntries implements ActionInterface
         if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [ActionInterface::class],
+                [BuilderInterface::class],
                 'No restricting "where" arguments defined for UPDATE ' .
-                'and no override confirmation with "confirmNoWhereRestrictions" call'
+                'and no override confirmation with "confirmNoWhereRestrictions" call',
             );
         }
 

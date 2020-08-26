@@ -2,11 +2,11 @@
 
 namespace Squirrel\Entities\Tests;
 
-use Squirrel\Entities\Action\CountEntries;
-use Squirrel\Entities\Action\DeleteEntries;
-use Squirrel\Entities\Action\InsertEntry;
-use Squirrel\Entities\Action\InsertOrUpdateEntry;
-use Squirrel\Entities\Action\UpdateEntries;
+use Squirrel\Entities\Builder\CountEntries;
+use Squirrel\Entities\Builder\DeleteEntries;
+use Squirrel\Entities\Builder\InsertEntry;
+use Squirrel\Entities\Builder\InsertOrUpdateEntry;
+use Squirrel\Entities\Builder\UpdateEntries;
 use Squirrel\Entities\Generate\PHPFilesInDirectoryGetContents;
 use Squirrel\Entities\Generate\RepositoriesGenerateCommand;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
@@ -95,43 +95,43 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserAddressRepositoryWriteable', false)) {
             $this->assertEquals('', 'Squirrel\Entities\Tests\TestEntities\UserAddressRepositoryWriteable');
         }
-        if (!\class_exists('Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries', false)) {
+        if (!\class_exists('Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries', false)) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries'
             );
         }
         if (
             !\class_exists(
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
                 false
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator'
             );
         }
         if (
             !\class_exists(
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
                 false
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries'
             );
         }
         if (
             !\class_exists(
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
                 false
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator'
             );
         }
 
@@ -141,7 +141,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(new CountEntries($repositoryReadOnly), $customRepository->count());
         $this->assertEquals(
-            new \Squirrel\Entities\Action\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries($repositoryReadOnly),
+            new \Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries($repositoryReadOnly),
             $customRepository->select()
         );
 

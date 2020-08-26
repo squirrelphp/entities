@@ -21,7 +21,7 @@ trait EntityConstructorTrait
             if (!\property_exists($this, $key)) {
                 throw new \InvalidArgumentException(
                     'Property "' . $key . '" does not exist in entity class when attempting to construct with: ' .
-                    Debug::sanitizeData($data)
+                    Debug::sanitizeData($data),
                 );
             }
 

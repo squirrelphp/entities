@@ -1,17 +1,19 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
+use Squirrel\Queries\Builder\FlattenedFieldsWithTypeTrait;
 
 /**
  * Select query builder as a fluent object - build query and return entries or flattened fields
  *
  * @implements \IteratorAggregate<int,array<string,mixed>>
  */
-class MultiSelectEntries implements ActionInterface, \IteratorAggregate
+class MultiSelectEntries implements BuilderInterface, \IteratorAggregate
 {
     use FlattenedFieldsWithTypeTrait;
 

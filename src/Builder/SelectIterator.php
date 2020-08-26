@@ -1,9 +1,10 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositorySelectQueryInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\Builder\SelectIteratorTrait;
 
 /**
@@ -11,7 +12,7 @@ use Squirrel\Queries\Builder\SelectIteratorTrait;
  *
  * @implements \Iterator<int,object>
  */
-class SelectIterator implements \Iterator, ActionInterface
+class SelectIterator implements \Iterator, BuilderInterface
 {
     use SelectIteratorTrait;
 

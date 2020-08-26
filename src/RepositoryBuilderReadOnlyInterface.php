@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities;
 
-use Squirrel\Entities\Action\CountEntries;
+use Squirrel\Entities\Builder\CountEntries;
 
 interface RepositoryBuilderReadOnlyInterface
 {

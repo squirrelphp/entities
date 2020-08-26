@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\MultiSelectEntries;
-use Squirrel\Entities\Action\MultiSelectIterator;
+use Squirrel\Entities\Builder\MultiSelectEntries;
+use Squirrel\Entities\Builder\MultiSelectIterator;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 

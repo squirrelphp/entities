@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\MultiUpdateEntriesFreeform;
+use Squirrel\Entities\Builder\MultiUpdateEntriesFreeform;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;

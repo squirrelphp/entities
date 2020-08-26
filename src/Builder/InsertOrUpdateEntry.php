@@ -1,13 +1,14 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 
 /**
  * Upsert query builder as a fluent object - build query and execute it
  */
-class InsertOrUpdateEntry implements ActionInterface
+class InsertOrUpdateEntry implements BuilderInterface
 {
     private RepositoryWriteableInterface $repository;
 

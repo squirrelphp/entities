@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities\Tests\TestClasses;
 
-use Squirrel\Entities\Action\CountEntries;
-use Squirrel\Entities\Action\SelectEntries;
+use Squirrel\Entities\Builder\CountEntries;
+use Squirrel\Entities\Builder\SelectEntries;
 use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 

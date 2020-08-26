@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\MultiCountEntries;
+use Squirrel\Entities\Builder\MultiCountEntries;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 

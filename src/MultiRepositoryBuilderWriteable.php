@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities;
 
-use Squirrel\Entities\Action\MultiUpdateEntriesFreeform;
+use Squirrel\Entities\Builder\MultiUpdateEntriesFreeform;
 
 class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly implements
     MultiRepositoryBuilderWriteableInterface

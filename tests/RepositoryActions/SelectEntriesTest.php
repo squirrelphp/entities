@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\SelectEntries;
-use Squirrel\Entities\Action\SelectIterator;
+use Squirrel\Entities\Builder\SelectEntries;
+use Squirrel\Entities\Builder\SelectIterator;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 

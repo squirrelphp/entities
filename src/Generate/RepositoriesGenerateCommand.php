@@ -42,9 +42,9 @@ namespace {namespaceOfEntity} {
             $this->repository = $repository;
         }
 
-        public function count(): \Squirrel\Entities\Action\CountEntries
+        public function count(): \Squirrel\Entities\Builder\CountEntries
         {
-            return new \Squirrel\Entities\Action\CountEntries($this->repository);
+            return new \Squirrel\Entities\Builder\CountEntries($this->repository);
         }
 
         public function select(): \{namespaceOfBuilders}\SelectEntries
@@ -65,13 +65,13 @@ namespace {namespaceOfBuilders} {
      *
      * @implements \IteratorAggregate<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectEntries implements \Squirrel\Entities\Action\ActionInterface, \IteratorAggregate
+    class SelectEntries implements \Squirrel\Queries\Builder\BuilderInterface, \IteratorAggregate
     {
-        private \Squirrel\Entities\Action\SelectEntries $selectImplementation;
+        private \Squirrel\Entities\Builder\SelectEntries $selectImplementation;
 
         public function __construct(\Squirrel\Entities\RepositoryReadOnlyInterface $repository)
         {
-            $this->selectImplementation = new \Squirrel\Entities\Action\SelectEntries($repository);
+            $this->selectImplementation = new \Squirrel\Entities\Builder\SelectEntries($repository);
         }
 
         public function field(string $onlyGetThisField): self
@@ -193,11 +193,11 @@ namespace {namespaceOfBuilders} {
     /**
      * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectIterator implements \Squirrel\Entities\Action\ActionInterface, \Iterator
+    class SelectIterator implements \Squirrel\Queries\Builder\BuilderInterface, \Iterator
     {
-        private \Squirrel\Entities\Action\SelectIterator $iteratorInstance;
+        private \Squirrel\Entities\Builder\SelectIterator $iteratorInstance;
 
-        public function __construct(\Squirrel\Entities\Action\SelectIterator $iterator)
+        public function __construct(\Squirrel\Entities\Builder\SelectIterator $iterator)
         {
             $this->iteratorInstance = $iterator;
         }
@@ -273,24 +273,24 @@ namespace {namespaceOfEntity} {
             parent::__construct($repository);
         }
 
-        public function insert(): \Squirrel\Entities\Action\InsertEntry
+        public function insert(): \Squirrel\Entities\Builder\InsertEntry
         {
-            return new \Squirrel\Entities\Action\InsertEntry($this->repository);
+            return new \Squirrel\Entities\Builder\InsertEntry($this->repository);
         }
 
-        public function insertOrUpdate(): \Squirrel\Entities\Action\InsertOrUpdateEntry
+        public function insertOrUpdate(): \Squirrel\Entities\Builder\InsertOrUpdateEntry
         {
-            return new \Squirrel\Entities\Action\InsertOrUpdateEntry($this->repository);
+            return new \Squirrel\Entities\Builder\InsertOrUpdateEntry($this->repository);
         }
 
-        public function update(): \Squirrel\Entities\Action\UpdateEntries
+        public function update(): \Squirrel\Entities\Builder\UpdateEntries
         {
-            return new \Squirrel\Entities\Action\UpdateEntries($this->repository);
+            return new \Squirrel\Entities\Builder\UpdateEntries($this->repository);
         }
 
-        public function delete(): \Squirrel\Entities\Action\DeleteEntries
+        public function delete(): \Squirrel\Entities\Builder\DeleteEntries
         {
-            return new \Squirrel\Entities\Action\DeleteEntries($this->repository);
+            return new \Squirrel\Entities\Builder\DeleteEntries($this->repository);
         }
     }
 }
@@ -356,14 +356,14 @@ EOD
                             $namespace,
                             $className,
                             $fileData,
-                            'ReadOnly'
+                            'ReadOnly',
                         );
 
                         $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
                             $namespace,
                             $className,
                             $fileData,
-                            'Writeable'
+                            'Writeable',
                         );
                     }
                 }
@@ -404,7 +404,7 @@ EOD
                 ) {
                     \file_put_contents(
                         $path . '/.gitignore',
-                        $gitignoreFileContents
+                        $gitignoreFileContents,
                     );
                 }
             }
@@ -420,7 +420,7 @@ EOD
         $fileContents = $this->repositoryFileContentsFillInBlueprint(
             $this->repositoryPhpFileBlueprint[$type],
             $namespace,
-            $className
+            $className,
         );
 
         // Save repository PHP file - only if it changed or doesn't exist yet
@@ -440,22 +440,22 @@ EOD
         $fullClassnameWithoutSeparator = \str_replace(
             '\\',
             '',
-            $namespace . $className
+            $namespace . $className,
         );
         $repositoryPhpFile = \str_replace(
             '{namespaceOfEntity}',
             $namespace,
-            $repositoryPhpFile
+            $repositoryPhpFile,
         );
         $repositoryPhpFile = \str_replace(
             '{namespaceOfBuilders}',
-            'Squirrel\\Entities\\Action\\' . $fullClassnameWithoutSeparator,
-            $repositoryPhpFile
+            'Squirrel\\Entities\\Builder\\' . $fullClassnameWithoutSeparator,
+            $repositoryPhpFile,
         );
         $repositoryPhpFile = \str_replace(
             '{classOfEntity}',
             $className,
-            $repositoryPhpFile
+            $repositoryPhpFile,
         );
         return $repositoryPhpFile;
     }

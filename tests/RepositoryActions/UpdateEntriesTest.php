@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\UpdateEntries;
+use Squirrel\Entities\Builder\UpdateEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 

@@ -50,7 +50,7 @@ class Transaction implements TransactionInterface
                         DBInvalidOptionException::class,
                         [Transaction::class],
                         'Base repository not found in builder repository via reflection. ' .
-                        'Make sure you use officially supported classes'
+                        'Make sure you use officially supported classes',
                     );
                 }
             }
@@ -67,7 +67,7 @@ class Transaction implements TransactionInterface
                         DBInvalidOptionException::class,
                         [Transaction::class],
                         'Connection not found in base repository via reflection. ' .
-                        'Make sure you use officially supported classes'
+                        'Make sure you use officially supported classes',
                     );
                 }
 
@@ -76,7 +76,7 @@ class Transaction implements TransactionInterface
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         [TransactionInterface::class],
-                        'Repositories have different database connections, transaction is not possible'
+                        'Repositories have different database connections, transaction is not possible',
                     );
                 }
 
@@ -85,7 +85,7 @@ class Transaction implements TransactionInterface
                 throw Debug::createException(
                     DBInvalidOptionException::class,
                     [TransactionInterface::class],
-                    'Invalid class specified to create transaction (not a repository)'
+                    'Invalid class specified to create transaction (not a repository)',
                 );
             }
         }
@@ -95,7 +95,7 @@ class Transaction implements TransactionInterface
             throw Debug::createException(
                 DBInvalidOptionException::class,
                 [TransactionInterface::class],
-                'No repositories for transaction defined'
+                'No repositories for transaction defined',
             );
         }
 

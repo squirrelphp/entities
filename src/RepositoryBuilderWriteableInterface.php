@@ -2,10 +2,10 @@
 
 namespace Squirrel\Entities;
 
-use Squirrel\Entities\Action\DeleteEntries;
-use Squirrel\Entities\Action\InsertEntry;
-use Squirrel\Entities\Action\InsertOrUpdateEntry;
-use Squirrel\Entities\Action\UpdateEntries;
+use Squirrel\Entities\Builder\DeleteEntries;
+use Squirrel\Entities\Builder\InsertEntry;
+use Squirrel\Entities\Builder\InsertOrUpdateEntry;
+use Squirrel\Entities\Builder\UpdateEntries;
 
 interface RepositoryBuilderWriteableInterface extends RepositoryBuilderReadOnlyInterface
 {

@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\CountEntries;
+use Squirrel\Entities\Builder\CountEntries;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class CountEntriesTest extends \PHPUnit\Framework\TestCase

@@ -2,8 +2,8 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\MultiSelectEntriesFreeform;
-use Squirrel\Entities\Action\MultiSelectIterator;
+use Squirrel\Entities\Builder\MultiSelectEntriesFreeform;
+use Squirrel\Entities\Builder\MultiSelectIterator;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;

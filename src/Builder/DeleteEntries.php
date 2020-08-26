@@ -1,15 +1,16 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Debug\Debug;
 use Squirrel\Entities\RepositoryWriteableInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
  * Delete query builder as a fluent object - build query and execute it
  */
-class DeleteEntries implements ActionInterface
+class DeleteEntries implements BuilderInterface
 {
     private RepositoryWriteableInterface $repository;
 
@@ -72,9 +73,9 @@ class DeleteEntries implements ActionInterface
         if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [ActionInterface::class],
+                [BuilderInterface::class],
                 'No restricting "where" arguments defined for DELETE ' .
-                'and no override confirmation with "confirmNoWhereRestrictions" call'
+                'and no override confirmation with "confirmNoWhereRestrictions" call',
             );
         }
     }

@@ -1,15 +1,16 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
 
 /**
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
  */
-class MultiCountEntries implements ActionInterface
+class MultiCountEntries implements BuilderInterface
 {
     private MultiRepositoryReadOnlyInterface $queryHandler;
 

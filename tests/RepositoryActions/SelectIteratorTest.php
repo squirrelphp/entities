@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\SelectIterator;
+use Squirrel\Entities\Builder\SelectIterator;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositorySelectQueryInterface;
 

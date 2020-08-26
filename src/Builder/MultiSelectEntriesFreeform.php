@@ -1,11 +1,13 @@
 <?php
 
-namespace Squirrel\Entities\Action;
+namespace Squirrel\Entities\Builder;
 
 use Squirrel\Debug\Debug;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
+use Squirrel\Queries\Builder\BuilderInterface;
+use Squirrel\Queries\Builder\FlattenedFieldsWithTypeTrait;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 /**
@@ -13,7 +15,7 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  *
  * @implements \IteratorAggregate<int,array<string,mixed>>
  */
-class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
+class MultiSelectEntriesFreeform implements BuilderInterface, \IteratorAggregate
 {
     use FlattenedFieldsWithTypeTrait;
 
@@ -164,9 +166,9 @@ class MultiSelectEntriesFreeform implements ActionInterface, \IteratorAggregate
         if ($this->confirmBadPractice !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [ActionInterface::class],
+                [BuilderInterface::class],
                 'No confirmation that freeform queries are bad practice - ' .
-                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query'
+                'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query',
             );
         }
     }

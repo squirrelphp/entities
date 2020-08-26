@@ -2,7 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
-use Squirrel\Entities\Action\DeleteEntries;
+use Squirrel\Entities\Builder\DeleteEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 

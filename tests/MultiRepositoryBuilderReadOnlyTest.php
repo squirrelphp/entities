@@ -2,9 +2,9 @@
 
 namespace Squirrel\Entities\Tests;
 
-use Squirrel\Entities\Action\MultiCountEntries;
-use Squirrel\Entities\Action\MultiSelectEntries;
-use Squirrel\Entities\Action\MultiSelectEntriesFreeform;
+use Squirrel\Entities\Builder\MultiCountEntries;
+use Squirrel\Entities\Builder\MultiSelectEntries;
+use Squirrel\Entities\Builder\MultiSelectEntriesFreeform;
 use Squirrel\Entities\MultiRepositoryBuilderReadOnly;
 use Squirrel\Entities\MultiRepositoryReadOnly;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
