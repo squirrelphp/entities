@@ -231,8 +231,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             $sanitizedOptions['tables'] = \array_keys($sanitizedOptions['repositories']);
         }
 
-        // WHERE needs some restrictions to glue the tables together
-        if (isset($validOptions['where']) && \count($sanitizedOptions['where']) === 0) {
+        // WHERE needs some restrictions to glue the tables together - except if there is only one repository
+        if (
+            isset($validOptions['where'])
+            && \count($sanitizedOptions['where']) === 0
+            && \count($sanitizedOptions['repositories']) > 1
+        ) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
                 [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],

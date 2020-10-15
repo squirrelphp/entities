@@ -3,14 +3,14 @@
 namespace Squirrel\Entities\Tests\TestEntities;
 
 use Squirrel\Entities\Annotation as SQL;
-use Squirrel\Entities\EntityConstructorTrait;
+use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 /**
  * @SQL\Entity("users")
  */
 class User
 {
-    use EntityConstructorTrait;
+    use PopulatePropertiesWithIterableTrait;
 
     /**
      * @SQL\Field("user_id", autoincrement=true)

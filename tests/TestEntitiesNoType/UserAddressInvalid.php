@@ -4,14 +4,14 @@ namespace Squirrel\Entities\Tests\TestEntitiesNoType;
 
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
-use Squirrel\Entities\EntityConstructorTrait;
+use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 /**
  * @Entity("users_address")
  */
 class UserAddressInvalid
 {
-    use EntityConstructorTrait;
+    use PopulatePropertiesWithIterableTrait;
 
     /**
      * No property type defined - we need this

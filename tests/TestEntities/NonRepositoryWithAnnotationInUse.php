@@ -3,11 +3,11 @@
 namespace Squirrel\Entities\Tests\TestEntities;
 
 use Squirrel\Entities\Annotation as SQL;
-use Squirrel\Entities\EntityConstructorTrait;
+use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 class NonRepositoryWithAnnotationInUse
 {
-    use EntityConstructorTrait;
+    use PopulatePropertiesWithIterableTrait;
 
     /**
      * @var int

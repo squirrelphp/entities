@@ -2,11 +2,11 @@
 
 namespace Squirrel\Entities\Tests\TestEntities;
 
-use Squirrel\Entities\EntityConstructorTrait;
+use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 class NonRepository
 {
-    use EntityConstructorTrait;
+    use PopulatePropertiesWithIterableTrait;
 
     /**
      * @var int
