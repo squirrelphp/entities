@@ -15,7 +15,6 @@ class FindClassesWithAnnotation
 
         // Stores the most recent namespace, import class name and classname in loop
         $namespace = '';
-        $className = '';
         $importClassName = '';
 
         // Get all PHP tokens from a file
@@ -31,14 +30,17 @@ class FindClassesWithAnnotation
         foreach ($tokens as $key => $token) {
             // "use" name started, so collect all parts until we reach the end of the name
             if ($useImportStarted === true) {
-                // String and namespace separator are all part of the class name
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
+                // In PHP8 the whole class namespace is its own token
+                if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
+                    $importClassName = $token[1];
+                } elseif (PHP_VERSION_ID < 80000 && \in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
+                    // In PHP 7.4 the namespace is made of string and namespace separators
                     $importClassName .= $token[1];
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
                 } else { // Every other token indicates that we have reached the end of the name
                     $namespaceStarted = false;
 
-                    // We have found the SQLMapper annotation - so there can be entities in this file
+                    // We have found the annotation namespace - so there can be entities in this file
                     if (
                         $importClassName === 'Squirrel\\Entities\\Annotation'
                         || $importClassName === 'Squirrel\\Entities\\Annotation\\Entity'
@@ -51,8 +53,13 @@ class FindClassesWithAnnotation
 
             // "namespace" name started, so collect all parts until we reach the end of the name
             if ($namespaceStarted === true) {
-                // String and namespace separator are all part of the namespace
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
+                // In PHP8 the whole class namespace can be its own token
+                if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
+                    $namespace = $token[1];
+                    $namespaceStarted = false;
+                } elseif (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
+                    // In PHP 7.4 the namespace is made of string and namespace separators
+                    // In PHP8 the namespace can be one string
                     $namespace .= $token[1];
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the namespace
                 } else { // Every other token indicates that we have reached the end of the name
@@ -62,20 +69,14 @@ class FindClassesWithAnnotation
 
             // "class" name started, so collect all parts until we reach the end of the name
             if ($classNameStarted === true) {
-                // String and namespace separator are all part of the class name
-                if (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
-                    $className .= $token[1];
+                // Only a string is expected for the class name
+                if ($token[0] === T_STRING) {
+                    if (\strlen($token[1]) > 0 && $annotationUseFound === true) {
+                        $classes[] = [$namespace, $token[1]];
+                    }
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
                 } else { // Every other token indicates that we have reached the end of the name
                     $classNameStarted = false;
-
-                    // SQLMapper annotation found beforehand and we have a classname - add it to list
-                    if (\strlen($className) > 0 && $annotationUseFound === true) {
-                        $classes[] = [$namespace, $className];
-                    }
-
-                    // Reset class name to maybe find another one
-                    $className = '';
                 }
             }
 
@@ -95,7 +96,6 @@ class FindClassesWithAnnotation
             // "class" token - start collecting the class name which is being defined
             if ($token[0] === T_CLASS) {
                 $classNameStarted = true;
-                $className = '';
             }
         }
 
