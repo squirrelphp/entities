@@ -30,6 +30,7 @@ class FindClassesWithAnnotation
         foreach ($tokens as $key => $token) {
             // "use" name started, so collect all parts until we reach the end of the name
             if ($useImportStarted === true) {
+                // @codeCoverageIgnoreStart
                 // In PHP8 the whole class namespace is its own token
                 if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
                     $importClassName = $token[1];
@@ -49,10 +50,12 @@ class FindClassesWithAnnotation
                         $annotationUseFound = true;
                     }
                 }
+                // @codeCoverageIgnoreEnd
             }
 
             // "namespace" name started, so collect all parts until we reach the end of the name
             if ($namespaceStarted === true) {
+                // @codeCoverageIgnoreStart
                 // In PHP8 the whole class namespace can be its own token
                 if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
                     $namespace = $token[1];
@@ -65,6 +68,7 @@ class FindClassesWithAnnotation
                 } else { // Every other token indicates that we have reached the end of the name
                     $namespaceStarted = false;
                 }
+                // @codeCoverageIgnoreEnd
             }
 
             // "class" name started, so collect all parts until we reach the end of the name
