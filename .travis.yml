@@ -18,10 +18,10 @@ before_script:
 
 script:
     - composer phpunit_clover
-    - composer phpstan
-    - composer psalm
+    - if [ "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then composer phpstan; fi
+    - if [ "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then composer psalm; fi
     - composer phpcs
-    - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build  -t clover --exit-code $TRAVIS_TEST_RESULT; fi
+    - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then ./cc-test-reporter after-build  -t clover --exit-code $TRAVIS_TEST_RESULT; fi
 
 notifications:
     email: false

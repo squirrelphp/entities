@@ -84,6 +84,43 @@ class User
 }
 ```
 
+Or if you are using PHP8+, use the new attributes:
+
+```php
+namespace Application\Entity;
+
+use Squirrel\Entities\Annotation\Entity;
+use Squirrel\Entities\Annotation\Field;
+
+#[Entity("users")]
+class User
+{
+    #[Field("user_id", autoincrement: true)]
+    private int $userId;
+
+    #[Field("active")]
+    private bool $active;
+
+    #[Field("street_name")]
+    private ?string $streetName;
+
+    #[Field("street_number")]
+    private ?string $streetNumber;
+
+    #[Field("city")]
+    private string $city;
+
+    #[Field("balance")]
+    private float $balance;
+
+    #[Field("picture_file", blob: true)]
+    private ?string $picture;
+
+    #[Field("visits")]
+    private int $visitsNumber;
+}
+```
+
 The class is defined as an entity with the table name, and each class property is defined as a table field with the column name in the database, where the type is taken from the PHP property type (string, int, float, bool). If the property type is nullable, the column type is assumed to be nullable too. You can also define if it is an autoincrement column (called SERIAL in Postgres) and if it is a blob column (binary large object, called "blob" in most databases or "bytea" in Postgres).
 
 Whether the class properties are private, protected or public does not matter, you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes read-only, by having private properties and only defining getters - see [Read-only entity objects](#read-only-entity-objects) for more details on why you would want to do that.
@@ -464,24 +501,16 @@ namespace Application\Entity;
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
 
-/**
- * @Entity("users_visits")
- */
+#[Entity("users_visits")]
 class Visit
 {
-    /**
-     * @Field("visit_id", autoincrement=true)
-     */
+    #[Field("visit_id", autoincrement: true)]
     private int $visitId = 0;
 
-    /**
-     * @Field("user_id")
-     */
+    #[Field("user_id")]
     private int $userId = 0;
 
-    /**
-     * @Field("created_timestamp")
-     */
+    #[Field("created_timestamp")]
     private int $timestamp = 0;
 }
 ```
@@ -750,33 +779,25 @@ namespace Application\Entity;
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
 
-/**
- * @Entity("users")
- */
+#[Entity("users")]
 class User
 {
-    /**
-     * @Field("user_id", autoincrement=true)
-     */
+    #[Field("user_id", autoincrement=true)]
     private int $userId = 0;
 
-    /**
-     * @Field("active")
-     */
+    #[Field("active")]
     private bool $active = false;
 
     /**
-     * @Field("note_data")
-     *
      * @var string JSON data in the database
      */
+    #[Field("note_data")]
     private string $notes = '';
 
     /**
-     * @Field("created")
-     *
      * @var string datetime in the database
      */
+    #[Field("created")]
     private string $createDate = '';
 
     public function getUserId(): int
@@ -815,8 +836,8 @@ class GeoPoint
 
     public function __construct(float $lat, float $lng)
     {
-      $this->lat = lat;
-      $this->lng = lng;
+      $this->lat = $lat;
+      $this->lng = $lng;
     }
 
     public function getLatitude(): float
@@ -838,21 +859,16 @@ use Application\Value\GeoPoint;
 use Squirrel\Entities\Annotation\Entity;
 use Squirrel\Entities\Annotation\Field;
 
-/**
- * @Entity("users_locations")
- */
+#[Entity("users_locations")]
 class UserLocation
 {
-    /**
-     * @Field("user_id")
-     */
+    #[Field("user_id")]
     private int $userId = 0;
 
     /**
-     * @Field("location")
-     *
      * @var string "point" in Postgres
      */
+    #[Field("location")]
     private string $locationPoint = '';
 
     public function getUserId(): int

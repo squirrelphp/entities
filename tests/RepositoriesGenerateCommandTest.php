@@ -22,6 +22,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
             'NonRepositoryWithAnnotationInUse.php',
             'User.php',
             'UserAddress.php',
+            'UserWithAttributes.php',
         ];
 
         $sourceFinder = new Finder();
@@ -54,7 +55,42 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
             'UserAddress.php',
             'UserAddressRepositoryReadOnly.php',
             'UserAddressRepositoryWriteable.php',
+            'UserWithAttributes.php',
         ];
+
+        if (PHP_VERSION_ID >= 80000) {
+            $validFiles[] = 'UserWithAttributesRepositoryReadOnly.php';
+            $validFiles[] = 'UserWithAttributesRepositoryWriteable.php';
+        }
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntities')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $gitignoreContents = '.gitignore' . "\n" .
+            'UserRepositoryReadOnly.php' . "\n" . 'UserRepositoryWriteable.php' . "\n" .
+            'UserAddressRepositoryReadOnly.php' . "\n" . 'UserAddressRepositoryWriteable.php';
+
+        if (PHP_VERSION_ID >= 80000) {
+            $gitignoreContents .= "\n" . 'UserWithAttributesRepositoryReadOnly.php' . "\n" . 'UserWithAttributesRepositoryWriteable.php';
+        }
+
+        // Check the .gitignore file contents, that we exclude the right files in the right order
+        $this->assertEquals(
+            $gitignoreContents,
+            \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore')
+        );
+
+        // Run repositories generator again to check that the output is identical
+        $repositoriesGenerator();
 
         $sourceFinder = new Finder();
         $sourceFinder->in(__DIR__ . '/' . 'TestEntities')->files()->sortByName()->ignoreDotFiles(false);
@@ -70,9 +106,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         // Check the .gitignore file contents, that we exclude the right files in the right order
         $this->assertEquals(
-            '.gitignore' . "\n" .
-            'UserRepositoryReadOnly.php' . "\n" . 'UserRepositoryWriteable.php' . "\n" .
-            'UserAddressRepositoryReadOnly.php' . "\n" . 'UserAddressRepositoryWriteable.php',
+            $gitignoreContents,
             \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore')
         );
 
@@ -81,6 +115,18 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         require(__DIR__ . '/' . 'TestEntities/' . 'UserRepositoryWriteable.php');
         require(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryReadOnly.php');
         require(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryWriteable.php');
+
+        if (PHP_VERSION_ID >= 80000) {
+            require(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryReadOnly.php');
+            require(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryWriteable.php');
+
+            if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryReadOnly', false)) {
+                $this->assertEquals('', 'Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryReadOnly');
+            }
+            if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryWriteable', false)) {
+                $this->assertEquals('', 'Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryWriteable');
+            }
+        }
 
         // Make sure all repository classes exist
         if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserRepositoryReadOnly', false)) {
@@ -160,6 +206,11 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserRepositoryWriteable.php');
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryReadOnly.php');
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryWriteable.php');
+
+        if (PHP_VERSION_ID >= 80000) {
+            @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryReadOnly.php');
+            @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryWriteable.php');
+        }
     }
 
     public function testGenerationForInvalidBlobRepositories()
@@ -213,6 +264,98 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesNoType'],
+            new PHPFilesInDirectoryGetContents()
+        );
+
+        // Execute the generator
+        $repositoriesGenerator();
+    }
+
+    public function testGenerationForInvalidNoEntityNameRepositories()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $validFiles = [
+            'UserAddressInvalid.php',
+        ];
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntitiesInvalidNoEntityName')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $repositoriesGenerator = new RepositoriesGenerateCommand(
+            [__DIR__ . '/' . 'TestEntitiesInvalidNoEntityName'],
+            new PHPFilesInDirectoryGetContents()
+        );
+
+        // Execute the generator
+        $repositoriesGenerator();
+    }
+
+    public function testGenerationForInvalidNoFieldNameRepositories()
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $validFiles = [
+            'UserAddressInvalid.php',
+        ];
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntitiesInvalidNoFieldName')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $repositoriesGenerator = new RepositoriesGenerateCommand(
+            [__DIR__ . '/' . 'TestEntitiesInvalidNoFieldName'],
+            new PHPFilesInDirectoryGetContents()
+        );
+
+        // Execute the generator
+        $repositoriesGenerator();
+    }
+
+    public function testGenerationForInvalidFieldUnionTypeRepositories()
+    {
+        if (PHP_VERSION_ID < 80000) {
+            $this->assertTrue(true);
+            return;
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+
+        $validFiles = [
+            'UserAddressInvalid.php',
+        ];
+
+        $sourceFinder = new Finder();
+        $sourceFinder->in(__DIR__ . '/' . 'TestEntitiesInvalidFieldUnionType')->files()->sortByName()->ignoreDotFiles(false);
+
+        $foundFiles = [];
+
+        foreach ($sourceFinder as $file) {
+            $foundFiles[] = $file->getFilename();
+        }
+
+        // Make sure we have the same array contents / the same files
+        $this->assertEqualsCanonicalizing($validFiles, $foundFiles);
+
+        $repositoriesGenerator = new RepositoriesGenerateCommand(
+            [__DIR__ . '/' . 'TestEntitiesInvalidFieldUnionType'],
             new PHPFilesInDirectoryGetContents()
         );
 

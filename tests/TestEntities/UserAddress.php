@@ -7,7 +7,7 @@ use Squirrel\Entities\Annotation\Field;
 use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 /**
- * @Entity("users_address")
+ * @Entity(name="users_address")
  */
 class UserAddress
 {

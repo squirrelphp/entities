@@ -25,15 +25,19 @@ class EntityProcessor
      *
      * @param object|string $class
      * @psalm-param object|class-string $class
-     * @return null|RepositoryConfig
      */
-    public function process($class)
+    public function process($class): ?RepositoryConfig
     {
         // Get class reflection data
         $annotationClass = new \ReflectionClass($class);
 
-        // Get entity annotation for class
-        $entity = $this->annotationReader->getClassAnnotation($annotationClass, Entity::class);
+        // @codeCoverageIgnoreStart
+        if (PHP_VERSION_ID >= 80000) {
+            $entity = $this->getEntityFromAttribute($annotationClass);
+        } else {
+            $entity = $this->getEntityFromAnnotation($annotationClass);
+        }
+        // @codeCoverageIgnoreEnd
 
         // This class was annotated as Entity
         if ($entity instanceof Entity) {
@@ -46,47 +50,50 @@ class EntityProcessor
 
             // Go through all public values of the class
             foreach ($annotationClass->getProperties() as $property) {
-                // Get annotations for a propery
-                $annotationProperty = new \ReflectionProperty($class, $property->getName());
-
-                // Find Field annotation on the property
-                $field = $this->annotationReader->getPropertyAnnotation(
-                    $annotationProperty,
-                    Field::class,
-                );
+                // @codeCoverageIgnoreStart
+                if (PHP_VERSION_ID >= 80000) {
+                    $field = $this->getFieldFromAttribute($property);
+                } else {
+                    $field = $this->getFieldFromAnnotation($property);
+                }
+                // @codeCoverageIgnoreEnd
 
                 // A Field annotation was found
                 if ($field instanceof Field) {
-                    $fieldType = $annotationProperty->getType();
+                    $fieldType = $property->getType();
 
                     // We need property types to know what to cast fields to
-                    if (!isset($fieldType)) {
+                    if ($fieldType === null) {
                         throw new \InvalidArgumentException('No property type for property field ' . $property->getName() . ' in ' . $annotationClass->getName());
+                    }
+
+                    if ($fieldType instanceof \ReflectionUnionType) {
+                        throw new \InvalidArgumentException('Union property types are not supported, encountered with property field ' . $property->getName() . ' in ' . $annotationClass->getName());
                     }
 
                     $fieldTypeName = $fieldType->getName();
 
-                    if ($field->blob === true && $fieldTypeName === 'string') {
+                    if ($field->isBlob() === true && $fieldTypeName === 'string') {
                         $fieldTypeName = 'blob';
-                    } elseif ($field->blob === true) {
+                    } elseif ($field->isBlob() === true) {
                         throw new \InvalidArgumentException('Blob property type set for a non-string property field: ' . $property->getName() . ' in ' . $annotationClass->getName());
                     }
 
-                    $tableToObjectFields[$field->name] = $property->getName();
-                    $objectToTableFields[$property->getName()] = $field->name;
+                    $tableToObjectFields[$field->getName()] = $property->getName();
+                    $objectToTableFields[$property->getName()] = $field->getName();
                     $objectTypes[$property->getName()] = $fieldTypeName;
                     $objectTypesNullable[$property->getName()] = $fieldType->allowsNull();
 
-                    if ($field->autoincrement === true) {
-                        $autoincrement = $field->name;
+                    if ($field->isAutoincrement() === true) {
+                        $autoincrement = $field->getName();
                     }
                 }
             }
 
             // Create new config for a repository
             return new RepositoryConfig(
-                $entity->connection,
-                $entity->name,
+                $entity->getConnection(),
+                $entity->getName(),
                 $tableToObjectFields,
                 $objectToTableFields,
                 $annotationClass->getName(),
@@ -98,5 +105,55 @@ class EntityProcessor
 
         // No entity found, so no configuration could be generated
         return null;
+    }
+
+    private function getEntityFromAttribute(\ReflectionClass $class): ?Entity
+    {
+        $attributes = $class->getAttributes(Entity::class);
+
+        if (\count($attributes) === 0) {
+            return $this->getEntityFromAnnotation($class);
+        }
+
+        return $attributes[0]->newInstance();
+    }
+
+    private function getEntityFromAnnotation(\ReflectionClass $class): ?Entity
+    {
+        $entity = $this->annotationReader->getClassAnnotation($class, Entity::class);
+
+        // A StringFilters annotation was not found
+        if (!($entity instanceof Entity)) {
+            return null;
+        }
+
+        return $entity;
+    }
+
+    private function getFieldFromAttribute(\ReflectionProperty $property): ?Field
+    {
+        $attributes = $property->getAttributes(Field::class);
+
+        if (\count($attributes) === 0) {
+            return $this->getFieldFromAnnotation($property);
+        }
+
+        return $attributes[0]->newInstance();
+    }
+
+    private function getFieldFromAnnotation(\ReflectionProperty $property): ?Field
+    {
+        // Find StringFilter annotation on the property
+        $stringFilters = $this->annotationReader->getPropertyAnnotation(
+            $property,
+            Field::class,
+        );
+
+        // A StringFilters annotation was not found
+        if (!($stringFilters instanceof Field)) {
+            return null;
+        }
+
+        return $stringFilters;
     }
 }

@@ -6,7 +6,7 @@ use Squirrel\Entities\Annotation as SQL;
 use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 /**
- * @SQL\Entity("users")
+ * @SQL\Entity("users", connection="dada")
  */
 class User
 {
@@ -33,7 +33,7 @@ class User
     private string $loginNameMD5 = '';
 
     /**
-     * @SQL\Field("login_password")
+     * @SQL\Field(name="login_password")
      */
     private string $loginPassword = '';
 
@@ -56,6 +56,8 @@ class User
      * @SQL\Field("create_date")
      */
     private int $createDate = 0;
+
+    private string $fieldWithoutAnnotation = '';
 
     public function getUserId(): int
     {
@@ -100,5 +102,10 @@ class User
     public function getCreateDate(): int
     {
         return $this->createDate;
+    }
+
+    public function getFieldWithoutAnnotation(): string
+    {
+        return $this->fieldWithoutAnnotation;
     }
 }
