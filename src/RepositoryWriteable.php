@@ -184,24 +184,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         }
 
         if (isset($updateFields)) {
-            // Processed update array
-            $actualUpdateFields = [];
-
-            // Process the update part of the query
-            foreach ($updateFields as $fieldName => $fieldValue) {
-                // Freestyle update clause - make the object-to-table notation conversion
-                if (\is_int($fieldName)) {
-                    $actualUpdateFields[] = $this->convertNamesToTableInString($fieldValue);
-                    continue;
-                }
-
-                // Structured update clause - convert table name and cast the value
-                $actualUpdateFields[$this->convertNameToTable($fieldName)] = $this->castOneTableVariable(
-                    $fieldValue,
-                    $fieldName,
-                    true,
-                );
-            }
+            $updateFields = $this->preprocessChanges($updateFields);
         }
 
         try {
@@ -210,7 +193,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 $this->config->getTableName(),
                 $actualFields,
                 $actualIndexFields,
-                $actualUpdateFields ?? null,
+                $updateFields,
             );
         } catch (DBException $e) {
             throw Debug::createException(

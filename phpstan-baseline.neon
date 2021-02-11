@@ -1,11 +1,6 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Call to an undefined method ReflectionType\\:\\:getName\\(\\)\\.$#"
-			count: 1
-			path: src/Annotation/EntityProcessor.php
-
-		-
 			message: "#^Method Squirrel\\\\Entities\\\\Annotation\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) has parameter \\$class with generic class ReflectionClass but does not specify its types\\: T$#"
 			count: 1
 			path: src/Annotation/EntityProcessor.php
