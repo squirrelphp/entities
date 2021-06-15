@@ -7,7 +7,7 @@ use Squirrel\Entities\Tests\TestEntities\User;
 
 class EntityConstructorTraitTest extends \PHPUnit\Framework\TestCase
 {
-    public function testExistingFields()
+    public function testExistingFields(): void
     {
         $user = new User([
             'userId' => 5,
@@ -32,7 +32,7 @@ class EntityConstructorTraitTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(87, $user->getCreateDate());
     }
 
-    public function testNonExistingField()
+    public function testNonExistingField(): void
     {
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Property "userId5" does not exist in entity class when attempting to construct with: ' . Debug::sanitizeData(['userId5' => 5]));

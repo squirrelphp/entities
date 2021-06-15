@@ -29,68 +29,13 @@ Creating entities
 
 ### Defining an entity with annotations
 
-If you have used an ORM like Doctrine this will feel similar at first, although the functionality is different. Below is an example how an entity can be defined via annotations:
+If you have used an ORM like Doctrine this will feel similar at first, although the functionality is different. Below is an example how an entity can be defined via attributes:
 
 ```php
 namespace Application\Entity;
 
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
-
-/**
- * @Entity("users")
- */
-class User
-{
-    /**
-     * @Field("user_id", autoincrement=true)
-     */
-    private int $userId;
-
-    /**
-     * @Field("active")
-     */
-    private bool $active;
-
-    /**
-     * @Field("street_name")
-     */
-    private ?string $streetName;
-
-    /**
-     * @Field("street_number")
-     */
-    private ?string $streetNumber;
-
-    /**
-     * @Field("city")
-     */
-    private string $city;
-
-    /**
-     * @Field("balance")
-     */
-    private float $balance;
-
-    /**
-     * @Field("picture_file", blob=true)
-     */
-    private ?string $picture;
-
-    /**
-     * @Field("visits")
-     */
-    private int $visitsNumber;
-}
-```
-
-Or if you are using PHP8+, use the new attributes:
-
-```php
-namespace Application\Entity;
-
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 
 #[Entity("users")]
 class User
@@ -215,7 +160,7 @@ You can define multiple source-dirs:
 
     vendor/bin/squirrel_repositories_generate --source-dir=src/Entity --source-dir=src/Domain/Entity
 
-Whenever an annotated entity is found, the following files are created in the same directory of the annotated entity:
+Whenever an entity with the library attributes is found, the following files are created in the same directory of the annotated entity:
 
 - RepositoryReadOnly builder class, by adding `RepositoryReadOnly` to the entity class name
 - RepositoryWriteable builder class, by adding `RepositoryWriteable` to the entity class name
@@ -498,8 +443,8 @@ All the examples are for the builder repositories, as they are easier to explain
 ```php
 namespace Application\Entity;
 
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 
 #[Entity("users_visits")]
 class Visit
@@ -776,13 +721,13 @@ Below is a modification of our existing example to show how you could handle non
 ```php
 namespace Application\Entity;
 
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 
 #[Entity("users")]
 class User
 {
-    #[Field("user_id", autoincrement=true)]
+    #[Field("user_id", autoincrement: true)]
     private int $userId = 0;
 
     #[Field("active")]
@@ -856,8 +801,8 @@ class GeoPoint
 namespace Application\Entity;
 
 use Application\Value\GeoPoint;
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 
 #[Entity("users_locations")]
 class UserLocation

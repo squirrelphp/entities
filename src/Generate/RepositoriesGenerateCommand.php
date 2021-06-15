@@ -2,15 +2,14 @@
 
 namespace Squirrel\Entities\Generate;
 
-use Doctrine\Common\Annotations\AnnotationReader;
-use Squirrel\Entities\Annotation\EntityProcessor;
+use Squirrel\Entities\Attribute\EntityProcessor;
 
 /**
  * Generate repositories and service definitions for SQLMapper entities
  */
 class RepositoriesGenerateCommand
 {
-    private FindClassesWithAnnotation $findClassesWithAnnotation;
+    private FindClassesWithAttribute $findClassesWithAttribute;
     /** @var string[] */
     private array $sourceCodeDirectories;
     private array $repositoryPhpFileBlueprint = [
@@ -35,11 +34,8 @@ namespace {namespaceOfEntity} {
 
     class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
     {
-        private RepositoryReadOnlyInterface $repository;
-
-        public function __construct(RepositoryReadOnlyInterface $repository)
+        public function __construct(private RepositoryReadOnlyInterface $repository)
         {
-            $this->repository = $repository;
         }
 
         public function count(): \Squirrel\Entities\Builder\CountEntries
@@ -101,7 +97,7 @@ namespace {namespaceOfBuilders} {
         /**
          * @param array<int|string,string>|string $orderByClauses
          */
-        public function orderBy($orderByClauses): self
+        public function orderBy(array|string $orderByClauses): self
         {
             $this->selectImplementation->orderBy($orderByClauses);
             return $this;
@@ -265,11 +261,8 @@ namespace {namespaceOfEntity} {
     class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements
         RepositoryBuilderWriteableInterface
     {
-        private RepositoryWriteableInterface $repository;
-
-        public function __construct(RepositoryWriteableInterface $repository)
+        public function __construct(private RepositoryWriteableInterface $repository)
         {
-            $this->repository = $repository;
             parent::__construct($repository);
         }
 
@@ -307,9 +300,9 @@ EOD
      */
     public function __construct(
         array $sourceCodeDirectories,
-        PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents
+        PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents,
     ) {
-        $this->findClassesWithAnnotation = new FindClassesWithAnnotation();
+        $this->findClassesWithAttribute = new FindClassesWithAttribute();
         $this->sourceCodeDirectories = $sourceCodeDirectories;
         $this->PHPFilesInDirectoryGetContents = $PHPFilesInDirectoryGetContents;
     }
@@ -322,7 +315,7 @@ EOD
         $log = [];
 
         // Initialize entity processor to find repository config
-        $entityProcessor = new EntityProcessor(new AnnotationReader());
+        $entityProcessor = new EntityProcessor();
 
         // Saves the files per path for which to create a .gitignore file
         $gitignoreFilesForPaths = [];
@@ -331,8 +324,8 @@ EOD
         foreach ($this->sourceCodeDirectories as $directory) {
             // Go through files which were found
             foreach (($this->PHPFilesInDirectoryGetContents)($directory) as $fileData) {
-                // Get all possible entity classes with our annotation
-                $classes = $this->findClassesWithAnnotation->__invoke($fileData['contents']);
+                // Get all possible entity classes with our attribute
+                $classes = $this->findClassesWithAttribute->__invoke($fileData['contents']);
 
                 // Go through the possible entity classes
                 foreach ($classes as $class) {
@@ -345,7 +338,7 @@ EOD
                      */
                     $fullClassName = $namespace . '\\' . $className;
 
-                    // Get repository config as object from annotations
+                    // Get repository config as object from attributes
                     $repositoryConfig = $entityProcessor->process($fullClassName);
 
                     // Repository config found - this is definitely an entity
@@ -435,7 +428,7 @@ EOD
     private function repositoryFileContentsFillInBlueprint(
         string $repositoryPhpFile,
         string $namespace,
-        string $className
+        string $className,
     ): string {
         $fullClassnameWithoutSeparator = \str_replace(
             '\\',

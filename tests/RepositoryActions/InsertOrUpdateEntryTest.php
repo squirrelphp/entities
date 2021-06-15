@@ -2,19 +2,21 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\InsertOrUpdateEntry;
 use Squirrel\Entities\RepositoryWriteableInterface;
 
 class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    /** @var RepositoryWriteableInterface&MockInterface  */
+    private RepositoryWriteableInterface $repository;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryWriteableInterface::class);
     }
 
-    public function testNoDataWrite()
+    public function testNoDataWrite(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 
@@ -28,7 +30,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testNoDataWriteAndReturnWhatHappened()
+    public function testNoDataWriteAndReturnWhatHappened(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 
@@ -43,7 +45,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 
@@ -71,7 +73,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWriteIndexIsString()
+    public function testWriteIndexIsString(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 
@@ -97,7 +99,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWriteSetUpdates()
+    public function testWriteSetUpdates(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 
@@ -132,7 +134,7 @@ class InsertOrUpdateEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWriteSetUpdatesAsString()
+    public function testWriteSetUpdatesAsString(): void
     {
         $insertBuilder = new InsertOrUpdateEntry($this->repository);
 

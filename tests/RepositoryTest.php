@@ -2,6 +2,8 @@
 
 namespace Squirrel\Entities\Tests;
 
+use Hamcrest\Core\IsEqual;
+use Mockery\MockInterface;
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\RepositorySelectQuery;
@@ -11,31 +13,19 @@ use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\LargeObject;
-use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
 class RepositoryTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * DB data and objects used
-     *
-     * @var array
      */
-    private $basicData;
+    private array $basicData = [];
 
-    /**
-     * @var DBInterface
-     */
-    private $db;
+    /** @var DBInterface&MockInterface */
+    private DBInterface $db;
 
-    /**
-     * @var RepositoryWriteable
-     */
-    private $repository;
-
-    /**
-     * @var RepositoryConfig
-     */
-    private $repositoryConfig;
+    private RepositoryWriteable $repository;
+    private RepositoryConfig $repositoryConfig;
 
     /**
      * Initialize for every test in this class
@@ -110,7 +100,21 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ];
 
         // Initialize DB mock
-        $this->db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        $this->db = \Mockery::mock(DBInterface::class)->makePartial();
+        $this->db->shouldReceive('quoteIdentifier')->andReturnUsing(function (string $identifier): string {
+            if (\str_contains($identifier, ".")) {
+                $parts = \array_map(
+                    function ($p) {
+                        return '"' . \str_replace('"', '""', $p) . '"';
+                    },
+                    \explode(".", $identifier),
+                );
+
+                return \implode(".", $parts);
+            }
+
+            return '"' . \str_replace('"', '""', $identifier) . '"';
+        });
 
         // Repository configuration
         $this->repositoryConfig = new RepositoryConfig(
@@ -157,25 +161,22 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'isGreat' => false,
                 'picture' => true,
             ],
-            'id'
+            'id',
         );
 
         // Initialize repository
         $this->repository = new RepositoryWriteable($this->db, $this->repositoryConfig);
     }
 
-    public function testConnectionNameInConfig()
+    public function testConnectionNameInConfig(): void
     {
         $this->assertSame('defaultConnection', $this->repositoryConfig->getConnectionName());
     }
 
     /**
      * Set up mock DB for fetchAll
-     *
-     * @param array $query
-     * @param array $results
      */
-    protected function dbSetupFetchAll(array $query, array $results)
+    protected function dbSetupFetchAll(array $query, array $results): void
     {
         $this->db
             ->shouldReceive('fetchAll')
@@ -184,7 +185,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->andReturn($results);
     }
 
-    public function testFetchAll()
+    public function testFetchAll(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -211,7 +212,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testFetchAllWithLock()
+    public function testFetchAllWithLock(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -242,7 +243,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testFetchAllNoRestrictions()
+    public function testFetchAllNoRestrictions(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -262,7 +263,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testFetchAllNoRestrictionsLimitOffset()
+    public function testFetchAllNoRestrictionsLimitOffset(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -284,7 +285,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testFetchAllLimitOffsetOrderByNameOnlySomeFields()
+    public function testFetchAllLimitOffsetOrderByNameOnlySomeFields(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -325,7 +326,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $this->basicData['obj2']], $results);
     }
 
-    public function testFetchAllFlattenedField()
+    public function testFetchAllFlattenedField(): void
     {
         // What values we want to see and return in our DB class
         $results = [['id' => '63'], ['id' => '87']];
@@ -369,7 +370,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([63, 87], $results);
     }
 
-    public function testFetchAllFlattenedFields()
+    public function testFetchAllFlattenedFields(): void
     {
         // What values we want to see and return in our DB class
         $results = [['id' => '63', 'first_name' => 'ladida'], ['id' => '87', 'first_name' => 'nice']];
@@ -404,7 +405,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([63, 'ladida', 87, 'nice'], $results);
     }
 
-    public function testFetchAllWithNULL()
+    public function testFetchAllWithNULL(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -435,7 +436,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([$this->basicData['obj1'], $obj2], $results);
     }
 
-    public function testFetchAllComplexWhereAndOrder()
+    public function testFetchAllComplexWhereAndOrder(): void
     {
         // What values we want to see and return in our DB class
         $results = $this->basicData['dbResults2'];
@@ -486,11 +487,8 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Set up mock DB for select cyclus
-     *
-     * @param array $query
-     * @param array $results
      */
-    protected function dbSetupSelect(array $query, array $results)
+    protected function dbSetupSelect(array $query, array $results): void
     {
         $dbSelectQuery = \Mockery::mock(DBSelectQueryInterface::class);
 
@@ -512,7 +510,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->with($dbSelectQuery);
     }
 
-    public function testFetchOne()
+    public function testFetchOne(): void
     {
         // What values returned by the findBy method
         $selectResults = $this->basicData['dbResults1'];
@@ -544,7 +542,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($this->basicData['obj1'], $results);
     }
 
-    public function testFetchOneValidLimit()
+    public function testFetchOneValidLimit(): void
     {
         // What values returned by the findBy method
         $selectResults = $this->basicData['dbResults1'];
@@ -577,7 +575,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($this->basicData['obj1'], $results);
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         // What values we want to see and return in our DB class
         $dbResult = ['num' => '13'];
@@ -648,7 +646,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($dbResult['num'], $result);
     }
 
-    public function testUpdate()
+    public function testUpdate(): void
     {
         // What values we want to see and return in our DB class
         $expectedResults = 17;
@@ -698,7 +696,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResults, $results);
     }
 
-    public function testUpdateWithNULL()
+    public function testUpdateWithNULL(): void
     {
         // What values we want to see and return in our DB class
         $expectedResults = 17;
@@ -736,7 +734,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResults, $results);
     }
 
-    public function testInsert()
+    public function testInsert(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = (array)$this->basicData['obj1'];
@@ -758,9 +756,9 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('insert')
             ->once()
             ->with(
-                \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                equalTo($processedAddArray),
-                \Mockery::mustBe('id')
+                IsEqual::equalTo($this->repositoryConfig->getTableName()),
+                IsEqual::equalTo($processedAddArray),
+                IsEqual::equalTo('id'),
             )
             ->andReturn($lastInsertId);
 
@@ -771,7 +769,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(77, $results);
     }
 
-    public function testInsertNULL()
+    public function testInsertNULL(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = (array)$this->basicData['obj1'];
@@ -795,9 +793,9 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('insert')
             ->once()
             ->with(
-                \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                equalTo($processedAddArray),
-                \Mockery::mustBe('id')
+                IsEqual::equalTo($this->repositoryConfig->getTableName()),
+                IsEqual::equalTo($processedAddArray),
+                IsEqual::equalTo('id'),
             )
             ->andReturn($lastInsertId);
 
@@ -808,7 +806,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(77, $results);
     }
 
-    public function testInsertWithoutInsertId()
+    public function testInsertWithoutInsertId(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = (array)$this->basicData['obj1'];
@@ -826,7 +824,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('insert')
             ->once()
-            ->with(\Mockery::mustBe($this->repositoryConfig->getTableName()), equalTo($processedAddArray));
+            ->with(IsEqual::equalTo($this->repositoryConfig->getTableName()), IsEqual::equalTo($processedAddArray));
 
         // Make call to repository
         $results = $this->repository->insert($objectAsArray, false);
@@ -835,7 +833,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(null, $results);
     }
 
-    public function testInsertOrUpdate()
+    public function testInsertOrUpdate(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = [
@@ -871,31 +869,26 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
     /**
      * Set up mock DB for insert ON DUPLICATE KEY UPDATE tests
-     *
-     * @param string $tableName
-     * @param array $fields
-     * @param array $indexFields
-     * @param array $updateFields
      */
     protected function dbSetupInsertOrUpdate(
         string $tableName,
         array $fields,
         array $indexFields,
-        ?array $updateFields
-    ) {
+        ?array $updateFields,
+    ): void {
         // DB calls
         $this->db
             ->shouldReceive('insertOrUpdate')
             ->once()
             ->with(
-                \Mockery::mustBe($tableName),
-                \Mockery::mustBe($fields),
-                \Mockery::mustBe($indexFields),
-                \Mockery::mustBe($updateFields)
+                IsEqual::equalTo($tableName),
+                IsEqual::equalTo($fields),
+                IsEqual::equalTo($indexFields),
+                IsEqual::equalTo($updateFields),
             );
     }
 
-    public function testInsertOrUpdateNoChange()
+    public function testInsertOrUpdateNoChange(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = [
@@ -929,7 +922,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testInsertOrUpdateCustomUpdate()
+    public function testInsertOrUpdateCustomUpdate(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = [
@@ -974,7 +967,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testInsertOrUpdateCustomUpdate2()
+    public function testInsertOrUpdateCustomUpdate2(): void
     {
         // Convert object to array so we can use it as calling argument
         $objectAsArray = [
@@ -1019,7 +1012,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testDelete()
+    public function testDelete(): void
     {
         // What values we want to see and return in our DB class
         $expectedResults = 17;
@@ -1055,7 +1048,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResults, $results);
     }
 
-    public function testDeleteNoWhere()
+    public function testDeleteNoWhere(): void
     {
         // What values we want to see and return in our DB class
         $expectedResults = 17;
@@ -1077,7 +1070,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResults, $results);
     }
 
-    public function testSelectUnknownOption()
+    public function testSelectUnknownOption(): void
     {
         // Expect an exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1091,7 +1084,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectNotAnArrayOption()
+    public function testSelectNotAnArrayOption(): void
     {
         // Expect an exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1102,7 +1095,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectUnknownWhereVariable()
+    public function testSelectUnknownWhereVariable(): void
     {
         // Expect an exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1115,7 +1108,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectInvalidWhereExpression()
+    public function testSelectInvalidWhereExpression(): void
     {
         // Expect an exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1128,7 +1121,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectUnresolvedVariableInWhereExpression()
+    public function testSelectUnresolvedVariableInWhereExpression(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1141,7 +1134,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectUnknownFieldsName()
+    public function testSelectUnknownFieldsName(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1157,7 +1150,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectIllegalFieldsName()
+    public function testSelectIllegalFieldsName(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1173,7 +1166,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectInvalidOrderExpression()
+    public function testSelectInvalidOrderExpression(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1189,7 +1182,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectUnresolvedOrderExpression()
+    public function testSelectUnresolvedOrderExpression(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1205,7 +1198,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectInvalidValueArrayInArray()
+    public function testSelectInvalidValueArrayInArray(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1218,7 +1211,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectWithNULLNotNullable()
+    public function testSelectWithNULLNotNullable(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1231,7 +1224,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectNonBooleanLock()
+    public function testSelectNonBooleanLock(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1245,7 +1238,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectMissingObjectType()
+    public function testSelectMissingObjectType(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1304,7 +1297,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
         );
 
         // Initialize repository
@@ -1318,7 +1311,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectInvalidObjectType()
+    public function testSelectInvalidObjectType(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1377,7 +1370,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
         );
 
         // Initialize repository
@@ -1391,7 +1384,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectOneWithInvalidLimit()
+    public function testSelectOneWithInvalidLimit(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1411,7 +1404,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->fetchOne($options);
     }
 
-    public function testUpdateNoChanges()
+    public function testUpdateNoChanges(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1422,7 +1415,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testUpdateNoChangeExpression()
+    public function testUpdateNoChangeExpression(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1435,7 +1428,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testUpdateInvalidChangeVariable()
+    public function testUpdateInvalidChangeVariable(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1449,7 +1442,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testUpdateInvalidChangeExpression()
+    public function testUpdateInvalidChangeExpression(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1463,7 +1456,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testUpdateWithNULLNotNullable()
+    public function testUpdateWithNULLNotNullable(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1477,7 +1470,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testInsertUnknownFieldName()
+    public function testInsertUnknownFieldName(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1491,7 +1484,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insert($objectAsArray, false);
     }
 
-    public function testInsertNullNotNullable()
+    public function testInsertNullNotNullable(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1505,7 +1498,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insert($objectAsArray, false);
     }
 
-    public function testInsertOrUpdateUnknownFieldName()
+    public function testInsertOrUpdateUnknownFieldName(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1520,7 +1513,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
     }
 
-    public function testInsertOrUpdateIndexNotOccuringInDataArray()
+    public function testInsertOrUpdateIndexNotOccuringInDataArray(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1534,7 +1527,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
     }
 
-    public function testInsertOrUpdateNullForNotNullable()
+    public function testInsertOrUpdateNullForNotNullable(): void
     {
         // Expect an InvalidArgument exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1549,7 +1542,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
     }
 
-    public function testBadObjValueCasting()
+    public function testBadObjValueCasting(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1594,7 +1587,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
         );
 
         // Initialize repository
@@ -1622,7 +1615,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testRepositoryConfigEqualFetchExceptionFromDbClass()
+    public function testRepositoryConfigEqualFetchExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1650,7 +1643,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testSelectExceptionFromDbClass()
+    public function testSelectExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1696,7 +1689,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
         );
 
         $wrongConfigQuery = new RepositorySelectQuery($dbSelectQuery, $repositoryConfig);
@@ -1704,7 +1697,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->fetch($wrongConfigQuery);
     }
 
-    public function testFetchExceptionFromDbClass()
+    public function testFetchExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1741,7 +1734,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->fetch($selectResult);
     }
 
-    public function testClearExceptionFromDbClass()
+    public function testClearExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1777,7 +1770,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->clear($queryResult);
     }
 
-    public function testFetchAllExceptionFromDbClass()
+    public function testFetchAllExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1805,7 +1798,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testFetchAllAndFlattenExceptionFromDbClass()
+    public function testFetchAllAndFlattenExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1833,7 +1826,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testCountExceptionFromDbClass()
+    public function testCountExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1864,7 +1857,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testUpdateExceptionFromDbClass()
+    public function testUpdateExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1895,7 +1888,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testInsertExceptionFromDbClass()
+    public function testInsertExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1917,9 +1910,9 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('insert')
             ->once()
             ->with(
-                \Mockery::mustBe($this->repositoryConfig->getTableName()),
-                equalTo($processedAddArray),
-                \Mockery::mustBe('id')
+                IsEqual::equalTo($this->repositoryConfig->getTableName()),
+                IsEqual::equalTo($processedAddArray),
+                IsEqual::equalTo('id'),
             )
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
@@ -1927,7 +1920,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insert($objectAsArray, true);
     }
 
-    public function testInsertOrUpdateExceptionFromDbClass()
+    public function testInsertOrUpdateExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1959,10 +1952,10 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
             ->shouldReceive('insertOrUpdate')
             ->once()
             ->with(
-                \Mockery::mustBe('example'),
-                \Mockery::mustBe($insertAsArray),
-                \Mockery::mustBe(['id']),
-                \Mockery::mustBe(null)
+                IsEqual::equalTo('example'),
+                IsEqual::equalTo($insertAsArray),
+                IsEqual::equalTo(['id']),
+                IsEqual::equalTo(null),
             )
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
@@ -1970,7 +1963,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository->insertOrUpdate($objectAsArray, ['id']);
     }
 
-    public function testDeleteExceptionFromDbClass()
+    public function testDeleteExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -1993,7 +1986,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testNoAutoincrementAttemptInsertId()
+    public function testNoAutoincrementAttemptInsertId(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -2039,7 +2032,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
                 'floatVal' => false,
                 'isGreat' => false,
             ],
-            ''
+            '',
         );
 
         // Initialize repository

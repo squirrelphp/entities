@@ -8,8 +8,36 @@
 >
     <projectFiles>
         <directory name="src" />
+        <directory name="bin" />
+        <directory name="tests" />
         <ignoreFiles>
             <directory name="vendor" />
+            <directory name="tests/TestClasses" />
+            <directory name="tests/TestEntitiesInvalidBlob" />
+            <directory name="tests/TestEntitiesInvalidFieldUnionType" />
+            <directory name="tests/TestEntitiesInvalidNoEntityName" />
+            <directory name="tests/TestEntitiesInvalidNoFieldName" />
+            <directory name="tests/TestEntitiesNoType" />
         </ignoreFiles>
     </projectFiles>
+
+    <issueHandlers>
+        <!-- Conflicts with tests where invalid arguments are tested -->
+        <InvalidArgument>
+            <errorLevel type="suppress">
+                <directory name="tests"/>
+            </errorLevel>
+        </InvalidArgument>
+        <!-- Files are created by generator, but psalm does not understand that -->
+        <MissingFile>
+            <errorLevel type="suppress">
+                <file name="tests/RepositoriesGenerateCommandTest.php"/>
+            </errorLevel>
+        </MissingFile>
+    </issueHandlers>
+
+    <plugins>
+        <pluginClass class="Psalm\PhpUnitPlugin\Plugin"/>
+        <pluginClass class="Psalm\MockeryPlugin\Plugin"/>
+    </plugins>
 </psalm>

@@ -2,6 +2,8 @@
 
 namespace Squirrel\Entities\Tests;
 
+use Hamcrest\Core\IsEqual;
+use Mockery\MockInterface;
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\RepositoryWriteable;
@@ -10,12 +12,12 @@ use Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderReadOnly;
 use Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderWriteable;
 use Squirrel\Entities\Tests\TestClasses\TicketRepositoryReadOnlyDifferentRepositoryBuilderVariableWithin;
 use Squirrel\Entities\Transaction;
+use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
-use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
 class TransactionTest extends \PHPUnit\Framework\TestCase
 {
-    private $repositoryConfig;
+    private RepositoryConfig $repositoryConfig;
 
     protected function setUp(): void
     {
@@ -58,29 +60,25 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
                 'number' => false,
                 'floatVal' => false,
                 'isGreat' => false,
-            ]
+            ],
         );
     }
 
-    public function testRun()
+    public function testRun(): void
     {
         // Transaction function to execute
-        $function = function () {
+        $function = function (): int {
             return 5;
         };
 
-        /**
-         * Initialize DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db */
+        $db = \Mockery::mock(DBInterface::class)->makePartial();
 
         // DB call - basically just passing through the call to DBInterface::transaction
         $db
             ->shouldReceive('transaction')
             ->once()
-            ->with(\Mockery::mustBe($function))
+            ->with(IsEqual::equalTo($function))
             ->andReturnUsing($function);
 
         // Transaction handler instance
@@ -93,7 +91,7 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $result);
     }
 
-    public function testRunWithArguments()
+    public function testRunWithArguments(): void
     {
         // The three arguments used
         $a = 2;
@@ -101,23 +99,19 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $c = 37;
 
         // Transaction function to execute
-        $function = function ($a, $b, $c) {
+        $function = function (int $a, int $b, int $c): int {
             return $a + $b + $c;
         };
 
-        /**
-         * Initialize DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db */
+        $db = \Mockery::mock(DBInterface::class)->makePartial();
 
         // DB call - basically just passing through the call to DBInterface::transaction
         $db
             ->shouldReceive('transaction')
             ->once()
-            ->with(\Mockery::mustBe($function), \Mockery::mustBe($a), \Mockery::mustBe($b), \Mockery::mustBe($c))
-            ->andReturnUsing(function ($function, $a, $b, $c) {
+            ->with(IsEqual::equalTo($function), IsEqual::equalTo($a), IsEqual::equalTo($b), IsEqual::equalTo($c))
+            ->andReturnUsing(function (callable $function, int $a, int $b, int $c): int {
                 return $function($a, $b, $c);
             });
 
@@ -131,7 +125,7 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(42, $result);
     }
 
-    public function testRunFromRepositoriesWithArguments()
+    public function testRunFromRepositoriesWithArguments(): void
     {
         // The three arguments used
         $a = 2;
@@ -139,23 +133,19 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $c = 37;
 
         // Transaction function to execute
-        $function = function ($a, $b, $c) {
+        $function = function (int $a, int $b, int $c): int {
             return $a + $b + $c;
         };
 
-        /**
-         * Initialize DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db */
+        $db = \Mockery::mock(DBInterface::class)->makePartial();
 
         // DB call - basically just passing through the call to DBInterface::transaction
         $db
             ->shouldReceive('transaction')
             ->once()
-            ->with(\Mockery::mustBe($function), \Mockery::mustBe($a), \Mockery::mustBe($b), \Mockery::mustBe($c))
-            ->andReturnUsing(function ($function, $a, $b, $c) {
+            ->with(IsEqual::equalTo($function), IsEqual::equalTo($a), IsEqual::equalTo($b), IsEqual::equalTo($c))
+            ->andReturnUsing(function (callable $function, int $a, int $b, int $c): int {
                 return $function($a, $b, $c);
             });
 
@@ -175,7 +165,7 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(42, $result);
     }
 
-    public function testFromRepositoriesNoClasses()
+    public function testFromRepositoriesNoClasses(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -184,7 +174,7 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         Transaction::withRepositories($repositories);
     }
 
-    public function testFromRepositoriesNoRepository()
+    public function testFromRepositoriesNoRepository(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -195,27 +185,23 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         Transaction::withRepositories($repositories);
     }
 
-    public function testFromRepositoriesBuilderRepositoryWithDifferentReflection()
+    public function testFromRepositoriesBuilderRepositoryWithDifferentReflection(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        /**
-         * Initialize DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db */
+        $db = \Mockery::mock(DBInterface::class)->makePartial();
 
         $repositories = [
             new TicketRepositoryReadOnlyDifferentRepositoryBuilderVariableWithin(
-                new RepositoryReadOnly($db, $this->repositoryConfig)
+                new RepositoryReadOnly($db, $this->repositoryConfig),
             )
         ];
 
         Transaction::withRepositories($repositories);
     }
 
-    public function testFromRepositoriesBaseRepositoryWithDifferentReflection()
+    public function testFromRepositoriesBaseRepositoryWithDifferentReflection(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -226,23 +212,15 @@ class TransactionTest extends \PHPUnit\Framework\TestCase
         Transaction::withRepositories($repositories);
     }
 
-    public function testFromRepositoriesDifferentConnections()
+    public function testFromRepositoriesDifferentConnections(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        /**
-         * Initialize DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db */
+        $db = \Mockery::mock(DBInterface::class)->makePartial();
 
-        /**
-         * Initialize second DB mock
-         *
-         * @var DBInterfaceForTests|\Mockery\MockInterface $db
-         */
-        $db2 = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        /** @var DBInterface&MockInterface $db2 */
+        $db2 = \Mockery::mock(DBInterface::class)->makePartial();
 
         $repositories = [
             new RepositoryReadOnly($db, $this->repositoryConfig),

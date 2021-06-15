@@ -11,7 +11,7 @@ use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 
 class MultiRepositoryBuilderReadOnlyTest extends \PHPUnit\Framework\TestCase
 {
-    public function testSelect()
+    public function testSelect(): void
     {
         $multiRepository = \Mockery::mock(MultiRepositoryReadOnlyInterface::class);
 
@@ -20,7 +20,7 @@ class MultiRepositoryBuilderReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(new MultiSelectEntries($multiRepository), $multiRepositoryBuilder->select());
     }
 
-    public function testSelectFreeform()
+    public function testSelectFreeform(): void
     {
         $multiRepository = \Mockery::mock(MultiRepositoryReadOnlyInterface::class);
 
@@ -28,11 +28,11 @@ class MultiRepositoryBuilderReadOnlyTest extends \PHPUnit\Framework\TestCase
 
         $this->assertEquals(
             new MultiSelectEntriesFreeform($multiRepository),
-            $multiRepositoryBuilder->selectFreeform()
+            $multiRepositoryBuilder->selectFreeform(),
         );
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         $multiRepository = \Mockery::mock(MultiRepositoryReadOnlyInterface::class);
 
@@ -41,7 +41,7 @@ class MultiRepositoryBuilderReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(new MultiCountEntries($multiRepository), $multiRepositoryBuilder->count());
     }
 
-    public function testSelectNoConstructorArguments()
+    public function testSelectNoConstructorArguments(): void
     {
         $multiRepositoryBuilder = new MultiRepositoryBuilderReadOnly();
 

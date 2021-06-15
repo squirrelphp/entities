@@ -8,14 +8,8 @@ class NonRepository
 {
     use PopulatePropertiesWithIterableTrait;
 
-    /**
-     * @var int
-     */
-    private $userId = 0;
+    private int $userId = 0;
 
-    /**
-     * @return int
-     */
     public function getUserId(): int
     {
         return $this->userId;

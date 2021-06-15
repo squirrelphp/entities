@@ -15,14 +15,13 @@ use Symfony\Component\Finder\Finder;
 
 class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 {
-    public function testGenerationAndValidRepositories()
+    public function testGenerationAndValidRepositories(): void
     {
         $validFiles = [
             'NonRepository.php',
-            'NonRepositoryWithAnnotationInUse.php',
+            'NonRepositoryWithAttributeInUse.php',
             'User.php',
             'UserAddress.php',
-            'UserWithAttributes.php',
         ];
 
         $sourceFinder = new Finder();
@@ -39,7 +38,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntities'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator
@@ -48,20 +47,14 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         $validFiles = [
             '.gitignore',
             'NonRepository.php',
-            'NonRepositoryWithAnnotationInUse.php',
+            'NonRepositoryWithAttributeInUse.php',
             'User.php',
             'UserRepositoryReadOnly.php',
             'UserRepositoryWriteable.php',
             'UserAddress.php',
             'UserAddressRepositoryReadOnly.php',
             'UserAddressRepositoryWriteable.php',
-            'UserWithAttributes.php',
         ];
-
-        if (PHP_VERSION_ID >= 80000) {
-            $validFiles[] = 'UserWithAttributesRepositoryReadOnly.php';
-            $validFiles[] = 'UserWithAttributesRepositoryWriteable.php';
-        }
 
         $sourceFinder = new Finder();
         $sourceFinder->in(__DIR__ . '/' . 'TestEntities')->files()->sortByName()->ignoreDotFiles(false);
@@ -79,14 +72,10 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
             'UserRepositoryReadOnly.php' . "\n" . 'UserRepositoryWriteable.php' . "\n" .
             'UserAddressRepositoryReadOnly.php' . "\n" . 'UserAddressRepositoryWriteable.php';
 
-        if (PHP_VERSION_ID >= 80000) {
-            $gitignoreContents .= "\n" . 'UserWithAttributesRepositoryReadOnly.php' . "\n" . 'UserWithAttributesRepositoryWriteable.php';
-        }
-
         // Check the .gitignore file contents, that we exclude the right files in the right order
         $this->assertEquals(
             $gitignoreContents,
-            \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore')
+            \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore'),
         );
 
         // Run repositories generator again to check that the output is identical
@@ -107,7 +96,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         // Check the .gitignore file contents, that we exclude the right files in the right order
         $this->assertEquals(
             $gitignoreContents,
-            \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore')
+            \file_get_contents(__DIR__ . '/' . 'TestEntities/' . '.gitignore'),
         );
 
         // Include our generated classes, making sure that they are valid
@@ -115,18 +104,6 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         require(__DIR__ . '/' . 'TestEntities/' . 'UserRepositoryWriteable.php');
         require(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryReadOnly.php');
         require(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryWriteable.php');
-
-        if (PHP_VERSION_ID >= 80000) {
-            require(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryReadOnly.php');
-            require(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryWriteable.php');
-
-            if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryReadOnly', false)) {
-                $this->assertEquals('', 'Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryReadOnly');
-            }
-            if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryWriteable', false)) {
-                $this->assertEquals('', 'Squirrel\Entities\Tests\TestEntities\UserWithAttributesRepositoryWriteable');
-            }
-        }
 
         // Make sure all repository classes exist
         if (!\class_exists('Squirrel\Entities\Tests\TestEntities\UserRepositoryReadOnly', false)) {
@@ -144,40 +121,40 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         if (!\class_exists('Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries', false)) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries',
             );
         }
         if (
             !\class_exists(
                 'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
-                false
+                false,
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectIterator',
             );
         }
         if (
             !\class_exists(
                 'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
-                false
+                false,
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectEntries',
             );
         }
         if (
             !\class_exists(
                 'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
-                false
+                false,
             )
         ) {
             $this->assertEquals(
                 '',
-                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator'
+                'Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUserAddress\SelectIterator',
             );
         }
 
@@ -188,7 +165,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(new CountEntries($repositoryReadOnly), $customRepository->count());
         $this->assertEquals(
             new \Squirrel\Entities\Builder\SquirrelEntitiesTestsTestEntitiesUser\SelectEntries($repositoryReadOnly),
-            $customRepository->select()
+            $customRepository->select(),
         );
 
         $repositoryWriteable = \Mockery::mock(RepositoryWriteableInterface::class);
@@ -206,14 +183,9 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserRepositoryWriteable.php');
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryReadOnly.php');
         @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserAddressRepositoryWriteable.php');
-
-        if (PHP_VERSION_ID >= 80000) {
-            @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryReadOnly.php');
-            @\unlink(__DIR__ . '/' . 'TestEntities/' . 'UserWithAttributesRepositoryWriteable.php');
-        }
     }
 
-    public function testGenerationForInvalidBlobRepositories()
+    public function testGenerationForInvalidBlobRepositories(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
@@ -235,14 +207,14 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesInvalidBlob'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator
         $repositoriesGenerator();
     }
 
-    public function testGenerationForNoTypeRepositories()
+    public function testGenerationForNoTypeRepositories(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
@@ -264,14 +236,14 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesNoType'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator
         $repositoriesGenerator();
     }
 
-    public function testGenerationForInvalidNoEntityNameRepositories()
+    public function testGenerationForInvalidNoEntityNameRepositories(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
@@ -293,14 +265,14 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesInvalidNoEntityName'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator
         $repositoriesGenerator();
     }
 
-    public function testGenerationForInvalidNoFieldNameRepositories()
+    public function testGenerationForInvalidNoFieldNameRepositories(): void
     {
         $this->expectException(\InvalidArgumentException::class);
 
@@ -322,20 +294,15 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesInvalidNoFieldName'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator
         $repositoriesGenerator();
     }
 
-    public function testGenerationForInvalidFieldUnionTypeRepositories()
+    public function testGenerationForInvalidFieldUnionTypeRepositories(): void
     {
-        if (PHP_VERSION_ID < 80000) {
-            $this->assertTrue(true);
-            return;
-        }
-
         $this->expectException(\InvalidArgumentException::class);
 
         $validFiles = [
@@ -356,7 +323,7 @@ class RepositoriesGenerateCommandTest extends \PHPUnit\Framework\TestCase
 
         $repositoriesGenerator = new RepositoriesGenerateCommand(
             [__DIR__ . '/' . 'TestEntitiesInvalidFieldUnionType'],
-            new PHPFilesInDirectoryGetContents()
+            new PHPFilesInDirectoryGetContents(),
         );
 
         // Execute the generator

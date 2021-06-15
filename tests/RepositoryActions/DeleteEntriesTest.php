@@ -2,20 +2,22 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\DeleteEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    /** @var RepositoryWriteableInterface&MockInterface  */
+    private RepositoryWriteableInterface $repository;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryWriteableInterface::class);
     }
 
-    public function testNoDataWrite()
+    public function testNoDataWrite(): void
     {
         $deleteBuilder = new DeleteEntries($this->repository);
 
@@ -32,7 +34,7 @@ class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $deleteBuilder = new DeleteEntries($this->repository);
 
@@ -56,7 +58,7 @@ class DeleteEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(55, $results);
     }
 
-    public function testNoWhereNoConfirmation()
+    public function testNoWhereNoConfirmation(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 

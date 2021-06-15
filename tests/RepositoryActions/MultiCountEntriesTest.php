@@ -2,16 +2,20 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\MultiCountEntries;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class MultiCountEntriesTest extends \PHPUnit\Framework\TestCase
 {
-    private $multiRepository;
+    /** @var MultiRepositoryReadOnlyInterface&MockInterface  */
+    private MultiRepositoryReadOnlyInterface $multiRepository;
 
-    private $repository1;
-    private $repository2;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository1;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository2;
 
     protected function setUp(): void
     {
@@ -21,7 +25,7 @@ class MultiCountEntriesTest extends \PHPUnit\Framework\TestCase
         $this->repository2 = \Mockery::mock(RepositoryReadOnlyInterface::class);
     }
 
-    public function testNoDataGetEntries()
+    public function testNoDataGetEntries(): void
     {
         $builder = new MultiCountEntries($this->multiRepository);
 
@@ -41,7 +45,7 @@ class MultiCountEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(8, $results);
     }
 
-    public function testGetEntries()
+    public function testGetEntries(): void
     {
         $builder = new MultiCountEntries($this->multiRepository);
 

@@ -2,19 +2,21 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\CountEntries;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class CountEntriesTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryReadOnlyInterface::class);
     }
 
-    public function testNoDataGetEntries()
+    public function testNoDataGetEntries(): void
     {
         $selectBuilder = new CountEntries($this->repository);
 
@@ -32,7 +34,7 @@ class CountEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(5, $results);
     }
 
-    public function testGetEntries()
+    public function testGetEntries(): void
     {
         $selectBuilder = new CountEntries($this->repository);
 

@@ -3,9 +3,9 @@
 namespace Squirrel\Entities\Generate;
 
 /**
- * Use PHP tokens to find out which classes are decorated with our entity annotation
+ * Use PHP tokens to find out which classes are decorated by our entity attribute
  */
-class FindClassesWithAnnotation
+class FindClassesWithAttribute
 {
     public function __invoke(string $fileContents): array
     {
@@ -24,7 +24,7 @@ class FindClassesWithAnnotation
         $namespaceStarted = false;
         $classNameStarted = false;
         $useImportStarted = false;
-        $annotationUseFound = false;
+        $attributeUseFound = false;
 
         // Go through all PHP tokens
         foreach ($tokens as $key => $token) {
@@ -41,13 +41,13 @@ class FindClassesWithAnnotation
                 } else { // Every other token indicates that we have reached the end of the name
                     $namespaceStarted = false;
 
-                    // We have found the annotation namespace - so there can be entities in this file
+                    // We have found the attribute namespace - so there can be entities in this file
                     if (
-                        $importClassName === 'Squirrel\\Entities\\Annotation'
-                        || $importClassName === 'Squirrel\\Entities\\Annotation\\Entity'
-                        || $importClassName === 'Squirrel\\Entities\\Annotation\\Field'
+                        $importClassName === 'Squirrel\\Entities\\Attribute'
+                        || $importClassName === 'Squirrel\\Entities\\Attribute\\Entity'
+                        || $importClassName === 'Squirrel\\Entities\\Attribute\\Field'
                     ) {
-                        $annotationUseFound = true;
+                        $attributeUseFound = true;
                     }
                 }
                 // @codeCoverageIgnoreEnd
@@ -75,7 +75,7 @@ class FindClassesWithAnnotation
             if ($classNameStarted === true) {
                 // Only a string is expected for the class name
                 if ($token[0] === T_STRING) {
-                    if (\strlen($token[1]) > 0 && $annotationUseFound === true) {
+                    if (\strlen($token[1]) > 0 && $attributeUseFound === true) {
                         $classes[] = [$namespace, $token[1]];
                     }
                 } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
@@ -84,8 +84,7 @@ class FindClassesWithAnnotation
                 }
             }
 
-            // "use" token - everything coming after this has to be checked for the
-            // SQLMapper annotation class
+            // "use" token - everything coming after this has to be checked for the attribute classes
             if ($token[0] === T_USE) {
                 $useImportStarted = true;
                 $importClassName = '';

@@ -2,19 +2,21 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\InsertEntry;
 use Squirrel\Entities\RepositoryWriteableInterface;
 
 class InsertEntryTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    /** @var RepositoryWriteableInterface&MockInterface  */
+    private RepositoryWriteableInterface $repository;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryWriteableInterface::class);
     }
 
-    public function testNoDataWrite()
+    public function testNoDataWrite(): void
     {
         $insertBuilder = new InsertEntry($this->repository);
 
@@ -28,7 +30,7 @@ class InsertEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $insertBuilder = new InsertEntry($this->repository);
 
@@ -51,7 +53,7 @@ class InsertEntryTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWriteWithNewId()
+    public function testWriteWithNewId(): void
     {
         $insertBuilder = new InsertEntry($this->repository);
 

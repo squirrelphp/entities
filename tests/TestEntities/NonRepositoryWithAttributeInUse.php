@@ -2,21 +2,17 @@
 
 namespace Squirrel\Entities\Tests\TestEntities;
 
-use Squirrel\Entities\Annotation as SQL;
+use Squirrel\Entities\Attribute as SQL;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
-class NonRepositoryWithAnnotationInUse
+class NonRepositoryWithAttributeInUse
 {
     use PopulatePropertiesWithIterableTrait;
 
-    /**
-     * @var int
-     */
-    private $userId = 0;
+    private int $userId = 0;
 
-    /**
-     * @return int
-     */
     public function getUserId(): int
     {
         return $this->userId;

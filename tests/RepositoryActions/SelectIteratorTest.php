@@ -2,21 +2,16 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\SelectIterator;
 use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Entities\RepositorySelectQueryInterface;
 
 class SelectIteratorTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @var RepositoryReadOnlyInterface
-     */
-    private $repository;
-
-    /**
-     * @var array
-     */
-    private $query;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository;
+    private array $query = [];
 
     protected function setUp(): void
     {
@@ -45,7 +40,7 @@ class SelectIteratorTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function testLoop()
+    public function testLoop(): void
     {
         $selectQuery = \Mockery::mock(RepositorySelectQueryInterface::class);
 

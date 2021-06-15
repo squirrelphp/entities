@@ -34,7 +34,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      */
     protected array $reflectionProperties = [];
 
-    public function __construct(DBInterface $db, RepositoryConfig $config)
+    public function __construct(DBInterface $db, RepositoryConfigInterface $config)
     {
         $this->db = $db;
         $this->config = $config;

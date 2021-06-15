@@ -2,6 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\MultiSelectEntriesFreeform;
 use Squirrel\Entities\Builder\MultiSelectIterator;
 use Squirrel\Entities\MultiRepositoryReadOnlyInterface;
@@ -10,10 +11,13 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
 {
-    private $multiRepository;
+    /** @var MultiRepositoryReadOnlyInterface&MockInterface  */
+    private MultiRepositoryReadOnlyInterface $multiRepository;
 
-    private $repository1;
-    private $repository2;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository1;
+    /** @var RepositoryReadOnlyInterface&MockInterface */
+    private RepositoryReadOnlyInterface $repository2;
 
     protected function setUp(): void
     {
@@ -23,7 +27,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->repository2 = \Mockery::mock(RepositoryReadOnlyInterface::class);
     }
 
-    public function testNoDataGetEntries()
+    public function testNoDataGetEntries(): void
     {
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
@@ -45,7 +49,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([], $results);
     }
 
-    public function testGetEntries()
+    public function testGetEntries(): void
     {
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
@@ -86,7 +90,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([], $results);
     }
 
-    public function testGetOneEntry()
+    public function testGetOneEntry(): void
     {
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
@@ -125,7 +129,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([], $results);
     }
 
-    public function testNoDataGetFlattenedFields()
+    public function testNoDataGetFlattenedFields(): void
     {
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
@@ -147,7 +151,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals([], $results);
     }
 
-    public function testIterator()
+    public function testIterator(): void
     {
         $selectBuilder = new MultiSelectEntriesFreeform($this->multiRepository);
 
@@ -181,7 +185,7 @@ class MultiSelectEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals($expectedResult, $results);
     }
 
-    public function testNoBadPracticeConfirmation()
+    public function testNoBadPracticeConfirmation(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 

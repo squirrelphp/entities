@@ -9,7 +9,7 @@ use Squirrel\Entities\MultiRepositoryWriteableInterface;
 
 class MultiRepositoryBuilderWriteableTest extends \PHPUnit\Framework\TestCase
 {
-    public function testUpdate()
+    public function testUpdate(): void
     {
         $multiRepository = \Mockery::mock(MultiRepositoryWriteableInterface::class);
 
@@ -18,7 +18,7 @@ class MultiRepositoryBuilderWriteableTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(new MultiUpdateEntriesFreeform($multiRepository), $multiRepositoryBuilder->updateFreeform());
     }
 
-    public function testUpdateNoConstructorArguments()
+    public function testUpdateNoConstructorArguments(): void
     {
         $multiRepositoryBuilder = new MultiRepositoryBuilderWriteable();
 

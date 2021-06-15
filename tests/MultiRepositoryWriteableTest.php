@@ -2,14 +2,16 @@
 
 namespace Squirrel\Entities\Tests;
 
+use Hamcrest\Core\IsEqual;
+use Mockery\MockInterface;
 use Squirrel\Entities\MultiRepositoryWriteable;
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryConfigInterface;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\RepositoryWriteable;
 use Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderReadOnly;
+use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
-use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
 /**
  * We especially test all the arguments for validity in these test cases, in addition
@@ -17,60 +19,18 @@ use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
  */
 class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @var array
-     */
-    protected $query;
-
-    /**
-     * @var array
-     */
-    protected $queryFreeform;
-
-    /**
-     * @var MultiRepositoryWriteable
-     */
-    protected $queryHandler;
-
-    /**
-     * @var DBInterfaceForTests
-     */
-    protected $db;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $ticketRepositoryConfig;
-
-    /**
-     * @var \Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderWriteable
-     */
-    protected $ticketRepository;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $ticketMessageRepositoryConfig;
-
-    /**
-     * @var RepositoryReadOnly
-     */
-    protected $ticketMessageRepository;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $emailRepository;
-
-    /**
-     * @var array
-     */
-    protected $dbResults;
-
-    /**
-     * @var array
-     */
-    protected $dbResultsSanitized;
+    private array $query = [];
+    private array $queryFreeform = [];
+    private MultiRepositoryWriteable $queryHandler;
+    /** @var DBInterface&MockInterface */
+    private DBInterface $db;
+    private RepositoryConfigInterface $ticketRepositoryConfig;
+    private \Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderWriteable $ticketRepository;
+    private RepositoryConfigInterface $ticketMessageRepositoryConfig;
+    private RepositoryWriteable $ticketMessageRepository;
+    private RepositoryWriteable $emailRepository;
+    private array $dbResults = [];
+    private array $dbResultsSanitized = [];
 
     /**
      * Initialize for every test in this class
@@ -78,7 +38,21 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         // Mock Database class
-        $this->db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        $this->db = \Mockery::mock(DBInterface::class)->makePartial();
+        $this->db->shouldReceive('quoteIdentifier')->andReturnUsing(function (string $identifier): string {
+            if (\str_contains($identifier, ".")) {
+                $parts = \array_map(
+                    function ($p) {
+                        return '"' . \str_replace('"', '""', $p) . '"';
+                    },
+                    \explode(".", $identifier),
+                );
+
+                return \implode(".", $parts);
+            }
+
+            return '"' . \str_replace('"', '""', $identifier) . '"';
+        });
 
         // Initialize query handler so it can be used
         $this->queryHandler = new MultiRepositoryWriteable();
@@ -125,8 +99,8 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->ticketRepository = new TestClasses\TicketRepositoryBuilderWriteable(
             new RepositoryWriteable(
                 $this->db,
-                $this->ticketRepositoryConfig
-            )
+                $this->ticketRepositoryConfig,
+            ),
         );
 
         $this->ticketMessageRepositoryConfig = new RepositoryConfig('', 'tickets_messages', [
@@ -188,7 +162,7 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
                 'from' => false,
                 'automatic' => false,
                 'createDate' => false,
-            ]
+            ],
         ));
 
         // Default query which is manipulated by all the tests - freeform variant
@@ -215,7 +189,7 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function testFreeform()
+    public function testFreeform(): void
     {
         // The values we want to receive
         $expectedQuery = 'UPDATE ' .
@@ -240,21 +214,21 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('change')
             ->once()
-            ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
+            ->with(IsEqual::equalTo($expectedQuery), IsEqual::equalTo($values))
             ->andReturn(13);
 
         // Attempt update
         $results = $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
 
         // Make sure we received the correct sanitized results
         $this->assertSame(13, $results);
     }
 
-    public function testUnresolvedFreeform()
+    public function testUnresolvedFreeform(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -265,11 +239,11 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 
-    public function testFreeformNoQuery()
+    public function testFreeformNoQuery(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -280,11 +254,11 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 
-    public function testFreeformNoTables()
+    public function testFreeformNoTables(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -295,17 +269,17 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 
-    public function testNoWriteRepository()
+    public function testNoWriteRepository(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
 
         $ticketRepository = new TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         $this->queryFreeform['repositories'] = [
@@ -318,11 +292,11 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 
-    public function testNoWriteRepository2()
+    public function testNoWriteRepository2(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -339,11 +313,11 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 
-    public function testFreeformExceptionFromDbClass()
+    public function testFreeformExceptionFromDbClass(): void
     {
         // Expect an invalid option exception
         $this->expectException(DBInvalidOptionException::class);
@@ -372,14 +346,14 @@ class MultiRepositoryWriteableTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('change')
             ->once()
-            ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
+            ->with(IsEqual::equalTo($expectedQuery), IsEqual::equalTo($values))
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Attempt update
         $this->queryHandler->update(
             $this->queryFreeform['repositories'],
             $this->queryFreeform['query'],
-            $this->queryFreeform['parameters']
+            $this->queryFreeform['parameters'],
         );
     }
 }

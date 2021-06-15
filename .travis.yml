@@ -5,7 +5,6 @@ env:
         - XDEBUG_MODE=coverage
 language: php
 php:
-    - '7.4'
     - '8.0'
 
 before_script:
@@ -18,8 +17,8 @@ before_script:
 
 script:
     - composer phpunit_clover
-    - if [ "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then composer phpstan; fi
-    - if [ "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then composer psalm; fi
+    - composer phpstan
+    - composer psalm
     - composer phpcs
     - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then ./cc-test-reporter after-build  -t clover --exit-code $TRAVIS_TEST_RESULT; fi
 

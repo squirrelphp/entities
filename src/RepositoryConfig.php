@@ -30,7 +30,7 @@ class RepositoryConfig implements RepositoryConfigInterface
         string $objectClass,
         array $objectTypes,
         array $objectTypesNullable,
-        string $autoincrementField = ''
+        string $autoincrementField = '',
     ) {
         $this->connectionName = $connectionName;
         $this->tableName = $tableName;

@@ -2,14 +2,16 @@
 
 namespace Squirrel\Entities\Tests;
 
+use Hamcrest\Core\IsEqual;
+use Mockery\MockInterface;
 use Squirrel\Entities\MultiRepositoryReadOnly;
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryConfigInterface;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\Tests\TestClasses\TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection;
+use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
-use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
 
 /**
  * We especially test all the arguments for validity in these test cases, in addition
@@ -17,54 +19,17 @@ use Squirrel\Queries\TestHelpers\DBInterfaceForTests;
  */
 class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 {
-    /**
-     * @var MultiRepositoryReadOnly
-     */
-    protected $queryHandler;
-
-    /**
-     * @var DBInterfaceForTests
-     */
-    protected $db;
-
-    /**
-     * @var RepositoryConfig
-     */
-    protected $ticketRepositoryConfig;
-
-    /**
-     * @var \Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderReadOnly
-     */
-    protected $ticketRepository;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $ticketMessageRepositoryConfig;
-
-    /**
-     * @var RepositoryReadOnly
-     */
-    protected $ticketMessageRepository;
-
-    /**
-     * @var RepositoryConfigInterface
-     */
-    protected $emailRepository;
-
-    /**
-     * Complicated query template
-     *
-     * @var array
-     */
-    protected $complicatedQuery = [];
-
-    /**
-     * Freeform query parts
-     *
-     * @var array
-     */
-    protected $queryFreeform = [];
+    /** @var MultiRepositoryReadOnly */
+    private $queryHandler;
+    /** @var DBInterface&MockInterface */
+    private DBInterface $db;
+    private RepositoryConfig $ticketRepositoryConfig;
+    private \Squirrel\Entities\Tests\TestClasses\TicketRepositoryBuilderReadOnly $ticketRepository;
+    private RepositoryConfigInterface $ticketMessageRepositoryConfig;
+    private RepositoryReadOnly $ticketMessageRepository;
+    private RepositoryReadOnly $emailRepository;
+    private array $complicatedQuery = [];
+    private array $queryFreeform = [];
 
     /**
      * Initialize for every test in this class
@@ -72,7 +37,21 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
     protected function setUp(): void
     {
         // Mock Database class
-        $this->db = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        $this->db = \Mockery::mock(DBInterface::class)->makePartial();
+        $this->db->shouldReceive('quoteIdentifier')->andReturnUsing(function (string $identifier): string {
+            if (\str_contains($identifier, ".")) {
+                $parts = \array_map(
+                    function ($p) {
+                        return '"' . \str_replace('"', '""', $p) . '"';
+                    },
+                    \explode(".", $identifier),
+                );
+
+                return \implode(".", $parts);
+            }
+
+            return '"' . \str_replace('"', '""', $identifier) . '"';
+        });
 
         // Initialize query handler so it can be used
         $this->queryHandler = new MultiRepositoryReadOnly();
@@ -116,7 +95,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
 
         $this->ticketRepository = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         $this->ticketMessageRepositoryConfig = new RepositoryConfig('', 'tickets_messages', [
@@ -178,7 +157,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'from' => false,
                 'automatic' => false,
                 'createDate' => false,
-            ]
+            ],
         ));
 
         // Complicated query as a template to test
@@ -253,7 +232,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function testMinimal()
+    public function testMinimal(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -328,7 +307,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testFetchOne()
+    public function testFetchOne(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -412,7 +391,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testFetchOneNoResult()
+    public function testFetchOneNoResult(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -484,7 +463,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testCount()
+    public function testCount(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -554,7 +533,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testFlattenedField()
+    public function testFlattenedField(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -623,84 +602,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testFlattenedFields()
-    {
-        // The query we want to receive
-        $expectedQuery = [
-            'fields' => [
-                'ticket.ticketId' => 'ticket.ticket_id',
-                'ticket.open' => 'ticket.ticket_open',
-            ],
-            'tables' => [
-                'databasename.tickets ticket',
-                'tickets_messages message',
-                'db74.emails email',
-            ],
-            'where' => [
-                'ticket.ticket_id' => 77,
-                'ticket.ticket_open' => 0,
-            ],
-            'limit' => 3,
-            'lock' => true,
-        ];
-
-        // What the database returns
-        $resultsFromDb = [
-            [
-                'ticket.ticketId' => '54',
-                'ticket.open' => '1',
-            ],
-            [
-                'ticket.ticketId' => '33',
-                'ticket.open' => '0',
-            ],
-            [
-                'ticket.ticketId' => '89',
-                'ticket.open' => '1',
-            ],
-        ];
-
-        // After the data was processed according to types
-        $resultsProcessed = [
-            54,
-            true,
-            33,
-            false,
-            89,
-            true,
-        ];
-
-        // Fetching results - return the stored results
-        $this->db
-            ->shouldReceive('fetchAll')
-            ->once()
-            ->with($expectedQuery, [])
-            ->andReturn($resultsFromDb);
-
-        // Attempt select
-        $results = $this->queryHandler->fetchAllAndFlatten([
-            'repositories' => [
-                'ticket' => $this->ticketRepository,
-                'message' => $this->ticketMessageRepository,
-                'email' => $this->emailRepository,
-            ],
-            'fields' => [
-                'ticket.ticketId',
-                'ticket.open',
-            ],
-            'where' => [
-                'ticket.ticketId' => '77',
-                'ticket.open' => false,
-            ],
-            'limit' => 3,
-            'lock' => true,
-        ]);
-
-        // Make sure we received the correct sanitized results
-        $this->assertSame($resultsProcessed, $results);
-    }
-
-    public function testFlattenedFieldsLegacy()
+    public function testFlattenedFields(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -777,7 +679,84 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testCountQuery()
+    public function testFlattenedFieldsLegacy(): void
+    {
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.open' => 'ticket.ticket_open',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => 77,
+                'ticket.ticket_open' => 0,
+            ],
+            'limit' => 3,
+            'lock' => true,
+        ];
+
+        // What the database returns
+        $resultsFromDb = [
+            [
+                'ticket.ticketId' => '54',
+                'ticket.open' => '1',
+            ],
+            [
+                'ticket.ticketId' => '33',
+                'ticket.open' => '0',
+            ],
+            [
+                'ticket.ticketId' => '89',
+                'ticket.open' => '1',
+            ],
+        ];
+
+        // After the data was processed according to types
+        $resultsProcessed = [
+            54,
+            true,
+            33,
+            false,
+            89,
+            true,
+        ];
+
+        // Fetching results - return the stored results
+        $this->db
+            ->shouldReceive('fetchAll')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($resultsFromDb);
+
+        // Attempt select
+        $results = $this->queryHandler->fetchAllAndFlatten([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.open',
+            ],
+            'where' => [
+                'ticket.ticketId' => '77',
+                'ticket.open' => false,
+            ],
+            'limit' => 3,
+            'lock' => true,
+        ]);
+
+        // Make sure we received the correct sanitized results
+        $this->assertSame($resultsProcessed, $results);
+    }
+
+    public function testCountQuery(): void
     {
         // The query we want to receive
         $expectedQuery = [
@@ -832,7 +811,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testComplicatedQuery()
+    public function testComplicatedQuery(): void
     {
         // Default database results
         $dbResults = [
@@ -982,7 +961,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($dbResultsSanitized, $results);
     }
 
-    public function testFreeform()
+    public function testFreeform(): void
     {
         // Default database results
         $dbResults = [
@@ -1126,7 +1105,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
+            ->with(IsEqual::equalTo($expectedQuery), IsEqual::equalTo($values))
             ->andReturn($dbResults);
 
         // Attempt select
@@ -1136,7 +1115,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($dbResultsSanitized, $results);
     }
 
-    public function testFreeformOneField()
+    public function testFreeformOneField(): void
     {
         // Default database results
         $dbResults = [
@@ -1182,7 +1161,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
+            ->with(IsEqual::equalTo($expectedQuery), IsEqual::equalTo($values))
             ->andReturn($dbResults);
 
         // Attempt select
@@ -1192,7 +1171,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($dbResultsSanitized, $results);
     }
 
-    public function testUnrecognizedOption()
+    public function testUnrecognizedOption(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1205,7 +1184,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFieldsValue()
+    public function testInvalidFieldsValue(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1216,7 +1195,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidWhere1Value()
+    public function testInvalidWhere1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1229,7 +1208,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidWhere2Value()
+    public function testInvalidWhere2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1242,7 +1221,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidWhere3Value()
+    public function testInvalidWhere3Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1255,7 +1234,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidWhere4Value()
+    public function testInvalidWhere4Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1266,7 +1245,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidRepositories1Value()
+    public function testInvalidRepositories1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1277,7 +1256,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidRepositories2Value()
+    public function testInvalidRepositories2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1290,7 +1269,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidRepositories3Value()
+    public function testInvalidRepositories3Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1301,7 +1280,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields1Value()
+    public function testInvalidFields1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1312,7 +1291,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields2Value()
+    public function testInvalidFields2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1325,7 +1304,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields3Value()
+    public function testInvalidFields3Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1338,7 +1317,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields4Value()
+    public function testInvalidFields4Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1351,7 +1330,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields5Value()
+    public function testInvalidFields5Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1364,7 +1343,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidFields6Value()
+    public function testInvalidFields6Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1377,7 +1356,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidTables1Value()
+    public function testInvalidTables1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1390,7 +1369,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidTables2Value()
+    public function testInvalidTables2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1403,7 +1382,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidTables3Value()
+    public function testInvalidTables3Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1416,7 +1395,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidGroup1Value()
+    public function testInvalidGroup1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1429,7 +1408,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidGroup2Value()
+    public function testInvalidGroup2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1442,7 +1421,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidGroup3Value()
+    public function testInvalidGroup3Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1455,7 +1434,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidOrder1Value()
+    public function testInvalidOrder1Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1468,7 +1447,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testInvalidOrder2Value()
+    public function testInvalidOrder2Value(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1481,7 +1460,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testFetchOneInvalidLimit()
+    public function testFetchOneInvalidLimit(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1492,7 +1471,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->fetchOne($this->complicatedQuery);
     }
 
-    public function testInvalidRepositoryFieldType()
+    public function testInvalidRepositoryFieldType(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1536,7 +1515,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
 
         $ticketRepository = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $ticketRepositoryConfig),
         );
 
         $this->complicatedQuery['repositories'] = [
@@ -1595,12 +1574,12 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->fetchAll($this->complicatedQuery);
     }
 
-    public function testBadRepositoryForReflection()
+    public function testBadRepositoryForReflection(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
         $ticketRepository = new TestClasses\TicketRepositoryReadOnlyDifferentRepositoryBuilderVariableWithin(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         $this->complicatedQuery['repositories'] = [
@@ -1613,7 +1592,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testBadRepositoryForReflection2()
+    public function testBadRepositoryForReflection2(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1629,7 +1608,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->complicatedQuery);
     }
 
-    public function testUnresolvedFreeform()
+    public function testUnresolvedFreeform(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1639,7 +1618,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->queryFreeform);
     }
 
-    public function testFreeformNoFields()
+    public function testFreeformNoFields(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1652,7 +1631,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testFreeformNoQuery()
+    public function testFreeformNoQuery(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1662,7 +1641,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->queryFreeform);
     }
 
-    public function testFreeformNoTables()
+    public function testFreeformNoTables(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1672,7 +1651,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->queryFreeform);
     }
 
-    public function testFreeformBadParameter()
+    public function testFreeformBadParameter(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1682,7 +1661,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->select($this->queryFreeform);
     }
 
-    public function testSelectExceptionFromDbClass()
+    public function testSelectExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1730,7 +1709,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testFetchExceptionFromDbClass()
+    public function testFetchExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1786,7 +1765,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->fetch($queryResult);
     }
 
-    public function testClearExceptionFromDbClass()
+    public function testClearExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1842,7 +1821,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->queryHandler->clear($queryResult);
     }
 
-    public function testFetchAllExceptionFromDbClass()
+    public function testFetchAllExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1890,7 +1869,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testFreeformOneFieldExceptionFromDbClass()
+    public function testFreeformOneFieldExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
@@ -1918,21 +1897,21 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->db
             ->shouldReceive('fetchAll')
             ->once()
-            ->with(\Mockery::mustBe($expectedQuery), \Mockery::mustBe($values))
+            ->with(IsEqual::equalTo($expectedQuery), IsEqual::equalTo($values))
             ->andThrow(new DBInvalidOptionException('dada', 'file', 99, 'message'));
 
         // Attempt select
         $this->queryHandler->fetchAll($this->queryFreeform);
     }
 
-    public function testRepositoriesWithTheSameConnection()
+    public function testRepositoriesWithTheSameConnection(): void
     {
         $ticketRepository = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         $ticketRepository2 = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         // The query we want to receive
@@ -2010,18 +1989,18 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($resultsProcessed, $results);
     }
 
-    public function testBuilderRepositoriesWithDifferentConnections()
+    public function testBuilderRepositoriesWithDifferentConnections(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        $db2 = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        $db2 = \Mockery::mock(DBInterface::class)->makePartial();
 
         $ticketRepository = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig),
         );
 
         $ticketRepository2 = new TestClasses\TicketRepositoryBuilderReadOnly(
-            new RepositoryReadOnly($db2, $this->ticketRepositoryConfig)
+            new RepositoryReadOnly($db2, $this->ticketRepositoryConfig),
         );
 
         // The query we want to receive
@@ -2081,11 +2060,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testBaseRepositoriesWithDifferentConnections()
+    public function testBaseRepositoriesWithDifferentConnections(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
-        $db2 = \Mockery::mock(DBInterfaceForTests::class)->makePartial();
+        $db2 = \Mockery::mock(DBInterface::class)->makePartial();
 
         $ticketRepository = new RepositoryReadOnly($this->db, $this->ticketRepositoryConfig);
 
@@ -2148,12 +2127,12 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testRepositoryWithInvalidConnection()
+    public function testRepositoryWithInvalidConnection(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 
         $ticketRepository = new TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection(
-            $this->ticketRepositoryConfig
+            $this->ticketRepositoryConfig,
         );
 
         // The query we want to receive

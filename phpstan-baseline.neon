@@ -1,24 +1,19 @@
 parameters:
 	ignoreErrors:
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Annotation\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) has parameter \\$class with generic class ReflectionClass but does not specify its types\\: T$#"
+			message: "#^Method Squirrel\\\\Entities\\\\Attribute\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) has parameter \\$class with generic class ReflectionClass but does not specify its types\\: T$#"
 			count: 1
-			path: src/Annotation/EntityProcessor.php
+			path: src/Attribute/EntityProcessor.php
 
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Annotation\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Annotation\\\\Entity\\|null but returns object\\.$#"
+			message: "#^Method Squirrel\\\\Entities\\\\Attribute\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Attribute\\\\Entity\\|null but returns object\\.$#"
 			count: 1
-			path: src/Annotation/EntityProcessor.php
+			path: src/Attribute/EntityProcessor.php
 
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Annotation\\\\EntityProcessor\\:\\:getEntityFromAnnotation\\(\\) has parameter \\$class with generic class ReflectionClass but does not specify its types\\: T$#"
+			message: "#^Method Squirrel\\\\Entities\\\\Attribute\\\\EntityProcessor\\:\\:getFieldFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Attribute\\\\Field\\|null but returns object\\.$#"
 			count: 1
-			path: src/Annotation/EntityProcessor.php
-
-		-
-			message: "#^Method Squirrel\\\\Entities\\\\Annotation\\\\EntityProcessor\\:\\:getFieldFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Annotation\\\\Field\\|null but returns object\\.$#"
-			count: 1
-			path: src/Annotation/EntityProcessor.php
+			path: src/Attribute/EntityProcessor.php
 
 		-
 			message: "#^Result of && is always false\\.$#"

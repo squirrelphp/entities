@@ -33,6 +33,7 @@ class TicketRepositoryReadOnlyCorrectNameButInvalidDatabaseConnection implements
 
     public function clear(RepositorySelectQueryInterface $selectQuery): void
     {
+        // Do nothing
     }
 
     public function fetchOne(array $query): ?object

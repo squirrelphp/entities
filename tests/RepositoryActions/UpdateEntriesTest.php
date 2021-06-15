@@ -2,20 +2,22 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\UpdateEntries;
 use Squirrel\Entities\RepositoryWriteableInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
 {
-    private $repository;
+    /** @var RepositoryWriteableInterface&MockInterface  */
+    private RepositoryWriteableInterface $repository;
 
     protected function setUp(): void
     {
         $this->repository = \Mockery::mock(RepositoryWriteableInterface::class);
     }
 
-    public function testNoDataWrite()
+    public function testNoDataWrite(): void
     {
         $updateBuilder = new UpdateEntries($this->repository);
 
@@ -31,7 +33,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testNoDataWriteAndReturnAffectedNumber()
+    public function testNoDataWriteAndReturnAffectedNumber(): void
     {
         $updateBuilder = new UpdateEntries($this->repository);
 
@@ -48,7 +50,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(89, $result);
     }
 
-    public function testWrite()
+    public function testWrite(): void
     {
         $updateBuilder = new UpdateEntries($this->repository);
 
@@ -78,7 +80,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testWriteAndReturnAffectedNumber()
+    public function testWriteAndReturnAffectedNumber(): void
     {
         $updateBuilder = new UpdateEntries($this->repository);
 
@@ -109,7 +111,7 @@ class UpdateEntriesTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(75, $result);
     }
 
-    public function testNoWhereNoConfirmation()
+    public function testNoWhereNoConfirmation(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 

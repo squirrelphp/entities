@@ -2,22 +2,19 @@
 
 namespace Squirrel\Entities\Tests\TestEntitiesInvalidNoFieldName;
 
-use Squirrel\Entities\Annotation\Entity;
-use Squirrel\Entities\Annotation\Field;
+use Squirrel\Entities\Attribute\Entity;
+use Squirrel\Entities\Attribute\Field;
 use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
-/**
- * @Entity("users_address")
- */
+#[Entity("users_address")]
 class UserAddressInvalid
 {
     use PopulatePropertiesWithIterableTrait;
 
     /**
      * An empty name is not allowed
-     *
-     * @Field("")
      */
+    #[Field("")]
     private int $userId = 0;
 
     public function getUserId(): int

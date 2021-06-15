@@ -2,6 +2,7 @@
 
 namespace Squirrel\Entities\Tests\RepositoryActions;
 
+use Mockery\MockInterface;
 use Squirrel\Entities\Builder\MultiUpdateEntriesFreeform;
 use Squirrel\Entities\MultiRepositoryWriteableInterface;
 use Squirrel\Entities\RepositoryWriteableInterface;
@@ -9,10 +10,12 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 
 class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
 {
+    /** @var MultiRepositoryWriteableInterface&MockInterface */
     private $multiRepository;
-
-    private $repository1;
-    private $repository2;
+    /** @var RepositoryWriteableInterface&MockInterface */
+    private RepositoryWriteableInterface $repository1;
+    /** @var RepositoryWriteableInterface&MockInterface */
+    private RepositoryWriteableInterface $repository2;
 
     protected function setUp(): void
     {
@@ -22,7 +25,7 @@ class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->repository2 = \Mockery::mock(RepositoryWriteableInterface::class);
     }
 
-    public function testNoDataGetEntries()
+    public function testNoDataGetEntries(): void
     {
         $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
@@ -39,7 +42,7 @@ class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(8, $results);
     }
 
-    public function testGetEntries()
+    public function testGetEntries(): void
     {
         $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
@@ -72,7 +75,7 @@ class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertEquals(565, $results);
     }
 
-    public function testGetEntriesWriteOnly()
+    public function testGetEntriesWriteOnly(): void
     {
         $builder = new MultiUpdateEntriesFreeform($this->multiRepository);
 
@@ -105,7 +108,7 @@ class MultiUpdateEntriesFreeformTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(true);
     }
 
-    public function testMissingConfirmation()
+    public function testMissingConfirmation(): void
     {
         $this->expectException(DBInvalidOptionException::class);
 

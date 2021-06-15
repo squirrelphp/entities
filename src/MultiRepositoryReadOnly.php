@@ -607,7 +607,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         array $objectToTableFields,
         array $objectTypes,
         array $objectTypesNullable,
-        bool $generateSql = false
+        bool $generateSql = false,
     ): array {
         // Calculated select fields
         $selectProcessed = [];
@@ -751,7 +751,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     private function processSelectResults(
         array $tableObjects,
         array $selectTypes,
-        array $selectTypesNullable
+        array $selectTypesNullable,
     ): array {
         // Go through result set
         foreach ($tableObjects as $entryCount => $entry) {
@@ -764,7 +764,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
     private function processSelectResult(
         array $entry,
         array $selectTypes,
-        array $selectTypesNullable
+        array $selectTypesNullable,
     ): array {
         foreach ($entry as $key => $value) {
             // Special case of nullable types
