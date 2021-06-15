@@ -48,9 +48,11 @@ class EntityProcessor
                         throw new \InvalidArgumentException('Union property types are not supported, encountered with property field ' . $property->getName() . ' in ' . $reflectionClass->getName());
                     }
 
+                    // @codeCoverageIgnoreStart
                     if (!$fieldType instanceof \ReflectionNamedType) {
                         throw new \InvalidArgumentException('Property type is not a named type, encountered with property field ' . $property->getName() . ' in ' . $reflectionClass->getName());
                     }
+                    // @codeCoverageIgnoreEnd
 
                     $fieldTypeName = $fieldType->getName();
 
