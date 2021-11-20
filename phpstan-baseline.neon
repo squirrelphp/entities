@@ -6,14 +6,34 @@ parameters:
 			path: src/Attribute/EntityProcessor.php
 
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Attribute\\\\EntityProcessor\\:\\:getEntityFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Attribute\\\\Entity\\|null but returns object\\.$#"
+			message: "#^Property Squirrel\\\\Entities\\\\Builder\\\\MultiSelectIterator\\:\\:\\$selectReference is never read, only written\\.$#"
 			count: 1
-			path: src/Attribute/EntityProcessor.php
+			path: src/Builder/MultiSelectIterator.php
 
 		-
-			message: "#^Method Squirrel\\\\Entities\\\\Attribute\\\\EntityProcessor\\:\\:getFieldFromAttribute\\(\\) should return Squirrel\\\\Entities\\\\Attribute\\\\Field\\|null but returns object\\.$#"
+			message: "#^Property Squirrel\\\\Entities\\\\Builder\\\\MultiSelectIterator\\:\\:\\$source is never read, only written\\.$#"
 			count: 1
-			path: src/Attribute/EntityProcessor.php
+			path: src/Builder/MultiSelectIterator.php
+
+		-
+			message: "#^Property Squirrel\\\\Entities\\\\Builder\\\\SelectIterator\\:\\:\\$selectReference is never read, only written\\.$#"
+			count: 1
+			path: src/Builder/SelectIterator.php
+
+		-
+			message: "#^Property Squirrel\\\\Entities\\\\Builder\\\\SelectIterator\\:\\:\\$source is never read, only written\\.$#"
+			count: 1
+			path: src/Builder/SelectIterator.php
+
+		-
+			message: "#^Offset 'where' on array\\{repositories\\: array, tables\\?\\: array, where\\: array, lock\\?\\: bool\\} in isset\\(\\) always exists and is not nullable\\.$#"
+			count: 1
+			path: src/MultiRepositoryReadOnly.php
+
+		-
+			message: "#^Offset 'limit' on array\\{fields\\?\\: array\\<string\\>, field\\?\\: string, where\\?\\: array\\<int\\|string, mixed\\>, order\\?\\: array\\<int\\|string, string\\>, offset\\?\\: int, lock\\?\\: bool\\} in isset\\(\\) does not exist\\.$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
 
 		-
 			message: "#^Result of && is always false\\.$#"

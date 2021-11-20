@@ -52,6 +52,55 @@ namespace {namespaceOfEntity} {
 
 namespace {namespaceOfBuilders} {
     /**
+     * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
+     */
+    class SelectIterator implements \Squirrel\Queries\Builder\BuilderInterface, \Iterator
+    {
+        private \Squirrel\Entities\Builder\SelectIterator $iteratorInstance;
+
+        public function __construct(\Squirrel\Entities\Builder\SelectIterator $iterator)
+        {
+            $this->iteratorInstance = $iterator;
+        }
+
+        public function current(): \{namespaceOfEntity}\{classOfEntity}
+        {
+            $entry = $this->iteratorInstance->current();
+
+            if ($entry instanceof \{namespaceOfEntity}\{classOfEntity}) {
+                return $entry;
+            }
+
+            throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
+        }
+
+        public function next(): void
+        {
+            $this->iteratorInstance->next();
+        }
+
+        public function key(): int
+        {
+            return $this->iteratorInstance->key();
+        }
+
+        public function valid(): bool
+        {
+            return $this->iteratorInstance->valid();
+        }
+
+        public function rewind(): void
+        {
+            $this->iteratorInstance->rewind();
+        }
+
+        public function clear(): void
+        {
+            $this->iteratorInstance->clear();
+        }
+    }
+
+    /**
      * This class exists to have proper type hints about the object(s) returned in the
      * getEntries and getOneEntry functions. All calls are delegated to the
      * SelectEntries class - because of the builder pattern we cannot extend SelectEntries
@@ -183,55 +232,6 @@ namespace {namespaceOfBuilders} {
         public function getIterator(): SelectIterator
         {
             return new SelectIterator($this->selectImplementation->getIterator());
-        }
-    }
-
-    /**
-     * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
-     */
-    class SelectIterator implements \Squirrel\Queries\Builder\BuilderInterface, \Iterator
-    {
-        private \Squirrel\Entities\Builder\SelectIterator $iteratorInstance;
-
-        public function __construct(\Squirrel\Entities\Builder\SelectIterator $iterator)
-        {
-            $this->iteratorInstance = $iterator;
-        }
-
-        public function current(): \{namespaceOfEntity}\{classOfEntity}
-        {
-            $entry = $this->iteratorInstance->current();
-
-            if ($entry instanceof \{namespaceOfEntity}\{classOfEntity}) {
-                return $entry;
-            }
-
-            throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
-        }
-
-        public function next(): void
-        {
-            $this->iteratorInstance->next();
-        }
-
-        public function key(): int
-        {
-            return $this->iteratorInstance->key();
-        }
-
-        public function valid(): bool
-        {
-            return $this->iteratorInstance->valid();
-        }
-
-        public function rewind(): void
-        {
-            $this->iteratorInstance->rewind();
-        }
-
-        public function clear(): void
-        {
-            $this->iteratorInstance->clear();
         }
     }
 }
