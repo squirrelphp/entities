@@ -5,7 +5,7 @@ Squirrel Entities Component
 
 Simple & safe implementation of handling SQL entities and repositories as well as multi-table SQL queries while staying lightweight and easy to understand and use. Offers rapid application development by generating repositories (which should not be added to VCS) for entities, and [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) offers automatic integration of these repositories into Symfony.
 
-This library builds upon [squirrelphp/queries](https://github.com/squirrelphp/queries) and works in a similar way: the interfaces, method names and the query builder look and feel almost the same and are just at a higher level with defined entities.
+This library builds upon [squirrelphp/queries](https://github.com/squirrelphp/queries) and works in a similar way: the interfaces, method names and the query builder look and feel almost the same and are just at a higher abstraction level with entities and typed field properties.
 
 Installation
 ------------
@@ -27,9 +27,9 @@ Table of contents
 Creating entities
 -----------------
 
-### Defining an entity with annotations
+### Defining an entity with attributes
 
-If you have used an ORM like Doctrine this will feel similar at first, although the functionality is different. Below is an example how an entity can be defined via attributes:
+If you have used an ORM like Doctrine this will feel similar at first, although the functionality is different. Below is an example how an entity can be defined with attributes:
 
 ```php
 namespace Application\Entity;
@@ -66,13 +66,13 @@ class User
 }
 ```
 
-The class is defined as an entity with the table name, and each class property is defined as a table field with the column name in the database, where the type is taken from the PHP property type (string, int, float, bool). If the property type is nullable, the column type is assumed to be nullable too. You can also define if it is an autoincrement column (called SERIAL in Postgres) and if it is a blob column (binary large object, called "blob" in most databases or "bytea" in Postgres).
+The class is defined as an entity with the table name, and each class property is defined as a table field with the column name in the database, where the type is taken from the PHP property type (string, int, float, bool). If the property type is nullable, the column type is assumed to be nullable too. You can also define whether it is an autoincrement column (called SERIAL in Postgres) and whether it is a blob column (binary large object, called "blob" in most databases or "bytea" in Postgres).
 
-Whether the class properties are private, protected or public does not matter, you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes read-only, by having private properties and only defining getters - see [Read-only entity objects](#read-only-entity-objects) for more details on why you would want to do that.
+Whether the class properties are private, protected or public does not matter (this library does not use the constructor to create entities), you can choose whatever names you want, and you can design the rest of the class however you want. You can even make the classes or properties read-only - see [Read-only entity objects](#read-only-entity-objects) for more details on why you would want to do that.
 
 ### Defining an entity directly
 
-This is not currently recommended, but if you are not using [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) and want to manually configure/create entities, you can create RepositoryConfig objects - with entities-bundle these are created automatically for you. The annotations in the `User` example in the last section would be equivalent to this RepositoryConfig definition:
+This is not currently recommended, but if you are not using [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) and want to manually configure/create entities, you can create RepositoryConfig objects - with entities-bundle these are created automatically for you (using reflection). The attributes in the `User` example in the last section would be equivalent to this RepositoryConfig definition:
 
 ```php
 $repositoryConfig = new \Squirrel\Entities\RepositoryConfig(
@@ -128,16 +128,16 @@ Creating repositories
 
 ### Base repositories
 
-You need to define repositories for each entity in order to use them, and create RepositoryConfig classes from the annotated classes ([squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) does this for you, so you don't need to care too much about these steps).
+You need to define repositories for each entity in order to use them, and create RepositoryConfig classes from the entity classes ([squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) does this for you, so you don't need to care too much about these steps).
 
-The repositories only need a `DBInterface` service (from [squirrelphp/queries](https://github.com/squirrelphp/queries)) and the RepositoryConfig. There are read-only repositories and writeable repositories so you can more easily restrict where and how your data gets changed. These are the base repository classes:
+The repositories only need a `DBInterface` service (from [squirrelphp/queries](https://github.com/squirrelphp/queries)) and the RepositoryConfig object. There are read-only repositories and writeable repositories so you can more easily restrict where and how your data gets changed. These are the base repository classes:
 
 - Squirrel\Entities\RepositoryReadOnly
 - Squirrel\Entities\RepositoryWriteable
 
 They offer almost the same functionality as `DBInterface` in `squirrelphp/queries`, but they do additional steps to avoid mistakes:
 
-- You use the object names in your queries, not the column names in the table, the library then converts them for the query
+- You use the object property names in your queries, not the column names in the table, the library then converts them for the query
 - All provided values are converted to the appropriate type (string, int, bool, float, blob)
 - If any unknown column names are used an exception is thrown
 - Whenever you do a SELECT query to retrieve entries, you get entity objects back instead of arrays, and all values are correctly converted before putting them in the entity objects
@@ -146,7 +146,7 @@ This makes it hard to write invalid queries which are not identified as such bef
 
 ### Builder repositories
 
-Although you can use the base repositories directly, it is usually easier and more readable to use builder repositories to build your queries - these are very similar to the query builder in [squirrelphp/queries](https://github.com/squirrelphp/queries).
+Although you could use the base repositories directly, the builder repositories are easier to use and make your queries more readable - these are very similar to the query builder in [squirrelphp/queries](https://github.com/squirrelphp/queries). This library assumes you use the builder repositories.
 
 #### Generating builder repositories
 
@@ -160,13 +160,13 @@ You can define multiple source-dirs:
 
     vendor/bin/squirrel_repositories_generate --source-dir=src/Entity --source-dir=src/Domain/Entity
 
-Whenever an entity with the library attributes is found, the following files are created in the same directory of the annotated entity:
+Whenever an entity with the library attributes is found, the following files are created in the same directory of the entity class:
 
 - RepositoryReadOnly builder class, by adding `RepositoryReadOnly` to the entity class name
 - RepositoryWriteable builder class, by adding `RepositoryWriteable` to the entity class name
 - A .gitignore file which ignores both the .gitignore file itself and all generated builder classes
 
-This means you do not need to ever edit these generated repositories and should never commit them to git. They are there to help you, not to burden you.
+This means you do not need to ever edit these generated repositories and should never commit them to git. They are within the responsibility of this library, not of your application.
 
 Our entity example `User` would generate the following classes in the same directory as the entity:
 
@@ -177,9 +177,9 @@ Our entity example `User` would generate the following classes in the same direc
 Using repositories
 ------------------
 
-As a stark difference to "normal" ORMs, the entity class is only used when getting results from the database, not to write any changes to the database, which is why it does not matter how you use or design the entity classes except for the needed annotations.
+As a stark difference to "normal" ORMs, the entity class is only used when getting results from the database, not to write any changes to the database, which is why it does not matter how you use or design the entity classes except for the necessary attributes.
 
-All examples use the generated builder repositories, not the base repositories. To see all possibilities and more details you can look at `Squirrel\Entities\RepositoryBuilderReadOnlyInterface` and `Squirrel\Entities\RepositoryBuilderWriteableInterface`
+All examples use the generated builder repositories, not the base repositories. Your IDE will give you appropriate type hints and suggestions on what methods can be used, or you can look at the generated builder repositories.
 
 ### Retrieving database entries as objects
 
@@ -245,6 +245,8 @@ foreach ($userIds as $userId) {
     // Each $userId is an integer with the user ID
 }
 ```
+
+You can enforce a type on the flattened fields by using `getFlattenedIntegerFields`, `getFlattenedFloatFields`, `getFlattenedStringFields` or `getFlattenedBooleanFields`. This is recommended in order to be more type safe and make it easier for static analyzers/IDEs to understand your code. This library will then attempt to convert all values to the requested type and throw a `DBInvalidOptionException` if there is any ambiguity.
 
 If you want to get one entry after another, you can use the select builder as an iterator:
 
@@ -326,7 +328,7 @@ $newUserId = $userRepositoryWriteable // \Application\Entity\UserRepositoryWrite
     ->writeAndReturnNewId();
 ```
 
-`writeAndReturnNewId` only works if you have specified an autoincrement column - use `write` otherwise.
+`writeAndReturnNewId` only works if you have specified an autoincrement column, otherwise it will throw a `DBInvalidOptionException` - use `write` if there is no autoincrement column (or you do not need its value).
 
 ### Updating an existing entry (UPDATE)
 
@@ -392,7 +394,7 @@ $userRepositoryWriteable // \Application\Entity\UserRepositoryWriteable instance
     ->write();
 ```
 
-This would insert the row with all the provided values, but if it already exists only `balance` is changed, not `city` and `active`. Making a custom UPDATE part can make a lot of sense if you want to just increase a number by one:
+This would insert the row with all the provided values, but if it already exists only `balance` is changed, not `city` and `active`. A common use case for a custom UPDATE part is to change an existing number:
 
 ```php
 $userRepositoryWriteable // \Application\Entity\UserRepositoryWriteable instance
@@ -563,7 +565,7 @@ foreach ($entries as $entry) {
 }
 ```
 
-Just like with the select builder of singular repositories you can retrieve results via `getAllEntries`, `getOneEntry`, `getFlattenedFields` or by iterating over the builder:
+Just like with the select builder of singular repositories you can retrieve results via `getAllEntries`, `getOneEntry`, `getFlattenedFields` (or any of its variants `getFlattenedIntegerFields`, `getFlattenedFloatFields`, `getFlattenedStringFields`, `getFlattenedBooleanFields`) or by iterating over the builder:
 
 ```php
 $selectBuilder = $multiBuilder
@@ -673,36 +675,26 @@ $transactionHandler = Transaction::withRepositories([
     $visitRepositoryReadOnly, // \Application\Entity\VisitRepositoryReadOnly instance
 ]);
 
-// Run method takes a callable and lets you define any additional arguments
-// which are then passed along
-$transactionHandler->run(
-    function (
-        int $userId,
-        \Application\Entity\UserRepositoryWriteable $userRepositoryWriteable,
-        \Application\Entity\VisitRepositoryReadOnly $visitRepositoryReadOnly
-    ) {
-        $visitsNumber = $visitRepositoryReadOnly
-            ->count()
-            ->where([
-                'userId' => $userId,
-            ])
-            ->blocking()
-            ->getNumber();
+// Passing additional arguments via `use` is recommended - you could also pass them as function arguments
+$transactionHandler->run(function () use ($userId, $userRepositoryWriteable, $visitRepositoryReadOnly) {
+    $visitsNumber = $visitRepositoryReadOnly
+        ->count()
+        ->where([
+            'userId' => $userId,
+        ])
+        ->blocking()
+        ->getNumber();
 
-        $userRepositoryWriteable
-            ->update()
-            ->set([
-                'visitsNumber' => $visitsNumber,
-            ])
-            ->where([
-                'userId' => $userId,
-            ])
-            ->write();
-    },
-    5, // first argument passed to callable ($userId)
-    $userRepositoryWriteable, // second argument passed to callable
-    $visitRepositoryReadOnly // third argument passed to callable
-);
+    $userRepositoryWriteable
+        ->update()
+        ->set([
+            'visitsNumber' => $visitsNumber,
+        ])
+        ->where([
+            'userId' => $userId,
+        ])
+        ->write();
+});
 ```
 
 The advantage of the static `withRepositories` function is that you cannot do anything wrong without it throwing a `DBInvalidOptionException` - no invalid repositories, no different connections, etc. Internally the `Transaction` class uses class reflection to check the data and expects either `RepositoryBuilderReadOnly` instances or `RepositoryReadOnly` instances (or the `Writeable` instead of `ReadyOnly` versions).
@@ -712,7 +704,7 @@ You can easily create Transaction objects yourself by just passing in an object 
 More complex column types
 -------------------------
 
-Only `string`, `int`, `bool`, `float` and `blob` are supported as column types, yet databases support many specialized column types - like dates, times, geographic positions, IP addresses, enumerated values, JSON, etc.
+Only `string`, `int`, `bool`, `float` and `blob` are supported as column types, yet databases support many specialized column types - like dates, times, geographic positions, IP addresses, enumerated values, JSON, and possibly many more (depending on SQL platform and version).
 
 You should have no problems supporting such special types, but because this library is kept simple, it only supports the basic PHP types and it will be your responsibility to use or convert them to any other types, according to the needs of your application.
 
@@ -733,15 +725,11 @@ class User
     #[Field("active")]
     private bool $active = false;
 
-    /**
-     * @var string JSON data in the database
-     */
+    /** @var string JSON type in the database */
     #[Field("note_data")]
     private string $notes = '';
 
-    /**
-     * @var string datetime in the database
-     */
+    /** @var string datetime type in the database */
     #[Field("created")]
     private string $createDate = '';
 
@@ -776,13 +764,10 @@ namespace Application\Value;
 
 class GeoPoint
 {
-    private float $lat = 0;
-    private float $lng = 0;
-
-    public function __construct(float $lat, float $lng)
-    {
-      $this->lat = $lat;
-      $this->lng = $lng;
+    public function __construct(
+        private float $lat = 0,
+        private float $lng = 0,
+    ) {
     }
 
     public function getLatitude(): float
@@ -810,9 +795,7 @@ class UserLocation
     #[Field("user_id")]
     private int $userId = 0;
 
-    /**
-     * @var string "point" in Postgres
-     */
+    /** @var string "point" type in Postgres */
     #[Field("location")]
     private string $locationPoint = '';
 
@@ -844,14 +827,14 @@ Because this library separates reads and writes and only uses objects for reads,
 
 - Immutable entity objects can be passed to templates or any services without the risk of them being changed or having any side effects on other parts of the application
 - Caching is easy: use whatever technique you like to cache entity objects if this becomes necessary, because they are just data / plain objects
-- Entity classes can be more about the logic of the entity (how to use it), offering additional functionality and leaving out all the database functionality
+- Entity classes can be more about the logic of the entity (how to use it), offering additional functionality and leaving out all the database/infrastructure functionality
 - You can create interfaces for your entity objects to separate infrastructure and entity logic, defining the methods on an entity you want to provide independent of what data is in the database (and you can create aggregates/root entities with multiple read-only entities, the possibilities for more abstractions are plentiful)
 - The library does not need to keep track of your entities, lazy-loading parts of them, and doing complicated things you don't really understand: everything that happens is straightforward and within your control
 - You still have the advantages of using objects to access the data instead of using unstructured data, so you can clearly define the types you are using, or implement methods returning value objects, and the code can be checked by static analyzers
 
 Having the writing queries so clearly separated from the objects also offers advantages:
 
-- It is easy to spot where something is being changed, just look for where `EntityNameRepositoryWriteable` classes are used, and only use the Writeable classes where you actually write to the repository and `EntityNameRepositoryReadOnly` everywhere else
+- It is easy to spot where something is being changed, just look for where `EntityRepositoryWriteable` classes are used, and only use the Writeable classes where you actually write to the repository and `EntityRepositoryReadOnly` everywhere else
 - Queries are not completely abstracted away from you, leaving it up to you to make simple or complicated queries according to your needs, instead of having to hope that the library creates efficient queries for you and forgetting how the data is stored and manipulated
 - You can change many rows at once, or do multi repository queries with a straightforward syntax and without learning a new query language
 - Using a command bus, or doing CQRS (Command Query Responsibility Segregation) in your application becomes an easy pattern to follow, because you always define if you are writing to or reading from a repository
@@ -859,13 +842,8 @@ Having the writing queries so clearly separated from the objects also offers adv
 Recommendations on how to use this library
 ------------------------------------------
 
-The following recommendations are slightly opinionated ways of using this library - you don't have to use the library this way:
-
-- Make your entity objects read-only / immutable, by defining all properties as private and never changing them, and only offer methods to get data, no setters and no keeping track of changes
-- Create a distinct class for every use-case in your application which changes something in your application, for example `OrderCreateHandler` or `UserPasswordChangeHandler`, and have one public method to execute that class
-- Put all these classes in their own directory, like `ChangeHandler`, and make sure you only ever use the `RepositoryWriteable` classes within such a directory, to avoid unintential changes
-- If the change is not super simple, create an action object (usually just a simple value object with public properties) for each handler, like `OrderCreateAction`, and make sure that object can be validated and then passed to the change handler
-- You can put those action objects in a directory like `ChangeAction`, or put them in the same directory as the change handlers
+- If you use Symfony, be sure to install and use [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle), which builds upon this library and autoconfigures almost everything for you
+- Make your entity objects read-only / immutable, by defining all properties as private with only getters, or using `public readonly` with PHP 8.1+
 - Only use the generated builder repositories to access and change your entities, and use `Transaction::withRepositories` for transactions
 - Only use multi repository queries when it is a conscious decision and there are no good alternatives
-- Use [squirrelphp/entities-bundle](https://github.com/squirrelphp/entities-bundle) and Symfony, which autoconfigures almost everything for you
+- Separate read and write operations in your application to make it clear where data is changed and where it is only retrieved

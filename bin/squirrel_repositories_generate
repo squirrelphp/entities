@@ -12,8 +12,7 @@ foreach ([
     __DIR__ . '/../vendor/autoload.php',
 ] as $file) {
     if (file_exists($file)) {
-        /** @var ClassLoader $loader */
-        $loader = require $file;
+        require $file;
 
         break;
     }
