@@ -110,9 +110,7 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
     /**
      * Execute SELECT query and return a list of objects that matched it
      *
-     * Returns object[] (from the entity class), we avoid the return type hint
-     * here so code analyzers don't get confused by generated repositories
-     * and their different type hint
+     * @return object[]
      */
     public function getAllEntries(): array
     {
@@ -128,8 +126,6 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
 
     /**
      * Execute SELECT query and return exactly one entry, if one was found at all
-     *
-     * Returns object (from the entity class) or null if no entry was found
      */
     public function getOneEntry(): ?object
     {

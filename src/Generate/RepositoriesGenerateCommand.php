@@ -175,7 +175,16 @@ namespace {namespaceOfBuilders} {
          */
         public function getAllEntries(): array
         {
-            return $this->selectImplementation->getAllEntries();
+            /** @var \{namespaceOfEntity}\{classOfEntity}[] $entries */
+            $entries = $this->selectImplementation->getAllEntries();
+
+            foreach ($entries as $entry) {
+                if (!($entry instanceof \{namespaceOfEntity}\{classOfEntity})) {
+                    throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
+                }
+            }
+
+            return $entries;
         }
 
         public function getOneEntry(): ?\{namespaceOfEntity}\{classOfEntity}
