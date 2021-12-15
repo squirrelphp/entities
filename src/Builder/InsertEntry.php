@@ -10,16 +10,14 @@ use Squirrel\Queries\Builder\BuilderInterface;
  */
 class InsertEntry implements BuilderInterface
 {
-    private RepositoryWriteableInterface $repository;
-
     /**
      * @var array<string,mixed> VALUES clauses for the query
      */
     private array $values = [];
 
-    public function __construct(RepositoryWriteableInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryWriteableInterface $repository,
+    ) {
     }
 
     /**

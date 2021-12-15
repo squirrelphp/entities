@@ -14,8 +14,6 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiUpdateEntriesFreeform implements BuilderInterface
 {
-    private MultiRepositoryWriteableInterface $queryHandler;
-
     /**
      * @var array<string,RepositoryBuilderWriteableInterface|RepositoryWriteableInterface> Repositories used in the multi query
      */
@@ -36,9 +34,9 @@ class MultiUpdateEntriesFreeform implements BuilderInterface
      */
     private bool $confirmBadPractice = false;
 
-    public function __construct(MultiRepositoryWriteableInterface $queryHandler)
-    {
-        $this->queryHandler = $queryHandler;
+    public function __construct(
+        private MultiRepositoryWriteableInterface $queryHandler,
+    ) {
     }
 
     /**

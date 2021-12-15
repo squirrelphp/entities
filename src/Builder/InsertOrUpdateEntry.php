@@ -10,8 +10,6 @@ use Squirrel\Queries\Builder\BuilderInterface;
  */
 class InsertOrUpdateEntry implements BuilderInterface
 {
-    private RepositoryWriteableInterface $repository;
-
     /**
      * @var array<string,mixed> VALUES clauses for the query
      */
@@ -27,9 +25,9 @@ class InsertOrUpdateEntry implements BuilderInterface
      */
     private ?array $valuesOnUpdate = null;
 
-    public function __construct(RepositoryWriteableInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryWriteableInterface $repository,
+    ) {
     }
 
     /**

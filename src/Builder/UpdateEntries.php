@@ -12,8 +12,6 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class UpdateEntries implements BuilderInterface
 {
-    private RepositoryWriteableInterface $repository;
-
     /**
      * @var array<int|string,mixed> SET clauses for the query
      */
@@ -29,9 +27,9 @@ class UpdateEntries implements BuilderInterface
      */
     private bool $confirmNoWhere = false;
 
-    public function __construct(RepositoryWriteableInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryWriteableInterface $repository,
+    ) {
     }
 
     /**

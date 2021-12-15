@@ -20,32 +20,32 @@ interface RepositoryConfigInterface
     public function getTableName(): string;
 
     /**
-     * @return array
+     * @return array Conversion from table to object fields
      */
     public function getTableToObjectFields(): array;
 
     /**
-     * @return array
+     * @return array Conversion from object to table fields
      */
     public function getObjectToTableFields(): array;
 
     /**
-     * @return string
+     * @return string Object class for conversion of table data to object
      */
     public function getObjectClass(): string;
 
     /**
-     * @return array
+     * @return array Types of the variables in the object for type casting
      */
     public function getObjectTypes(): array;
 
     /**
-     * @return array
+     * @return array Whether NULL is a valid type for a field
      */
     public function getObjectTypesNullable(): array;
 
     /**
-     * @return string
+     * @return string Autoincrement / SERIAL field if any exists for the table (otherwise an empty string)
      */
     public function getAutoincrementField(): string;
 }

@@ -16,13 +16,13 @@ class SelectIterator implements \Iterator, BuilderInterface
 {
     use SelectIteratorTrait;
 
-    private RepositoryReadOnlyInterface $source;
     private ?RepositorySelectQueryInterface $selectReference = null;
     private ?object $lastResult = null;
 
-    public function __construct(RepositoryReadOnlyInterface $repository, array $query)
-    {
-        $this->source = $repository;
+    public function __construct(
+        private RepositoryReadOnlyInterface $source,
+        array $query,
+    ) {
         $this->query = $query;
     }
 

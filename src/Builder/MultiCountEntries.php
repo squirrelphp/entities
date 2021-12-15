@@ -12,8 +12,6 @@ use Squirrel\Queries\Builder\BuilderInterface;
  */
 class MultiCountEntries implements BuilderInterface
 {
-    private MultiRepositoryReadOnlyInterface $queryHandler;
-
     /**
      * @var array<string,RepositoryBuilderReadOnlyInterface|RepositoryReadOnlyInterface> Repositories used in the multi query
      */
@@ -34,9 +32,9 @@ class MultiCountEntries implements BuilderInterface
      */
     private bool $blocking = false;
 
-    public function __construct(MultiRepositoryReadOnlyInterface $queryHandler)
-    {
-        $this->queryHandler = $queryHandler;
+    public function __construct(
+        private MultiRepositoryReadOnlyInterface $queryHandler,
+    ) {
     }
 
     /**

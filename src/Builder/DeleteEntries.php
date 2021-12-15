@@ -12,8 +12,6 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class DeleteEntries implements BuilderInterface
 {
-    private RepositoryWriteableInterface $repository;
-
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
@@ -24,9 +22,9 @@ class DeleteEntries implements BuilderInterface
      */
     private bool $confirmNoWhere = false;
 
-    public function __construct(RepositoryWriteableInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryWriteableInterface $repository,
+    ) {
     }
 
     /**

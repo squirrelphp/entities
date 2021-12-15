@@ -16,6 +16,7 @@ class MultiRepositoryBuilderWriteable extends MultiRepositoryBuilderReadOnly imp
         }
 
         $this->multiRepositoryWriteable = $multiRepositoryWriteable;
+
         parent::__construct($multiRepositoryWriteable);
     }
 

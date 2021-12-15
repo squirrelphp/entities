@@ -12,11 +12,9 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class Transaction implements TransactionInterface
 {
-    private DBInterface $db;
-
-    public function __construct(DBInterface $db)
-    {
-        $this->db = $db;
+    public function __construct(
+        private DBInterface $db,
+    ) {
     }
 
     /**

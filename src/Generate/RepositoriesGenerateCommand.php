@@ -13,7 +13,7 @@ class RepositoriesGenerateCommand
     private array $repositoryPhpFileBlueprint = [
         'ReadOnly' => <<<'EOD'
 <?php
-// phpcs:ignoreFile -- created by SquirrelPHP library, do not alter
+// phpcs:ignoreFile -- created by SquirrelPHP entities library, do not alter
 /*
  * THIS FILE IS AUTOMATICALLY CREATED - DO NOT EDIT, DO NOT COMMIT TO VCS
  *
@@ -25,28 +25,6 @@ class RepositoriesGenerateCommand
  * entity still exists at that time
  */
 // @codeCoverageIgnoreStart
-
-namespace {namespaceOfEntity} {
-    use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
-    use Squirrel\Entities\RepositoryReadOnlyInterface;
-
-    class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
-    {
-        public function __construct(private RepositoryReadOnlyInterface $repository)
-        {
-        }
-
-        public function count(): \Squirrel\Entities\Builder\CountEntries
-        {
-            return new \Squirrel\Entities\Builder\CountEntries($this->repository);
-        }
-
-        public function select(): \{namespaceOfBuilders}\SelectEntries
-        {
-            return new \{namespaceOfBuilders}\SelectEntries($this->repository);
-        }
-    }
-}
 
 namespace {namespaceOfBuilders} {
     /**
@@ -113,6 +91,28 @@ namespace {namespaceOfBuilders} {
                 'offset' => $this->startAt,
                 'lock' => $this->blocking,
             ]);
+        }
+    }
+}
+
+namespace {namespaceOfEntity} {
+    use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
+    use Squirrel\Entities\RepositoryReadOnlyInterface;
+
+    class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
+    {
+        public function __construct(private RepositoryReadOnlyInterface $repository)
+        {
+        }
+
+        public function count(): \Squirrel\Entities\Builder\CountEntries
+        {
+            return new \Squirrel\Entities\Builder\CountEntries($this->repository);
+        }
+
+        public function select(): \{namespaceOfBuilders}\SelectEntries
+        {
+            return new \{namespaceOfBuilders}\SelectEntries($this->repository);
         }
     }
 }

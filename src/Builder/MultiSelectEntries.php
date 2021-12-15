@@ -17,8 +17,6 @@ class MultiSelectEntries implements BuilderInterface, \IteratorAggregate
 {
     use FlattenedFieldsWithTypeTrait;
 
-    private MultiRepositoryReadOnlyInterface $queryHandler;
-
     /**
      * @var array<int|string,string> Only retrieve these fields of the repositories
      */
@@ -64,9 +62,9 @@ class MultiSelectEntries implements BuilderInterface, \IteratorAggregate
      */
     private bool $blocking = false;
 
-    public function __construct(MultiRepositoryReadOnlyInterface $queryHandler)
-    {
-        $this->queryHandler = $queryHandler;
+    public function __construct(
+        private MultiRepositoryReadOnlyInterface $queryHandler,
+    ) {
     }
 
     public function field(string $getThisField): self

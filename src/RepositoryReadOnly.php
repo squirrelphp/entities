@@ -14,8 +14,6 @@ use Squirrel\Queries\LargeObject;
  */
 class RepositoryReadOnly implements RepositoryReadOnlyInterface
 {
-    protected DBInterface $db;
-    protected RepositoryConfigInterface $config;
     protected array $tableToObjectFields = [];
     protected array $objectToTableFields = [];
     protected array $objectTypes = [];
@@ -34,10 +32,10 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
      */
     protected array $reflectionProperties = [];
 
-    public function __construct(DBInterface $db, RepositoryConfigInterface $config)
-    {
-        $this->db = $db;
-        $this->config = $config;
+    public function __construct(
+        protected DBInterface $db,
+        protected RepositoryConfigInterface $config,
+    ) {
         $this->tableToObjectFields = $config->getTableToObjectFields();
         $this->objectToTableFields = $config->getObjectToTableFields();
         $this->objectTypes = $config->getObjectTypes();

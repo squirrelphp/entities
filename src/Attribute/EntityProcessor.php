@@ -13,7 +13,7 @@ class EntityProcessor
     /**
      * Processes a class according to its attributes
      *
-     * @psalm-param object|class-string $class
+     * @param object|class-string $class
      */
     public function process(object|string $class): ?RepositoryConfigInterface
     {

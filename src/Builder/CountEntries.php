@@ -10,8 +10,6 @@ use Squirrel\Queries\Builder\BuilderInterface;
  */
 class CountEntries implements BuilderInterface
 {
-    private RepositoryReadOnlyInterface $repository;
-
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
@@ -22,9 +20,9 @@ class CountEntries implements BuilderInterface
      */
     private bool $blocking = false;
 
-    public function __construct(RepositoryReadOnlyInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryReadOnlyInterface $repository,
+    ) {
     }
 
     /**

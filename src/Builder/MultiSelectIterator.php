@@ -16,13 +16,13 @@ class MultiSelectIterator implements \Iterator, BuilderInterface
 {
     use SelectIteratorTrait;
 
-    private MultiRepositoryReadOnlyInterface $source;
     private ?MultiRepositorySelectQueryInterface $selectReference = null;
     private ?array $lastResult = null;
 
-    public function __construct(MultiRepositoryReadOnlyInterface $repository, array $query)
-    {
-        $this->source = $repository;
+    public function __construct(
+        private MultiRepositoryReadOnlyInterface $source,
+        array $query,
+    ) {
         $this->query = $query;
     }
 
