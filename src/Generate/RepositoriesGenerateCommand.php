@@ -30,7 +30,7 @@ namespace {namespaceOfBuilders} {
     /**
      * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectIterator extends \Squirrel\Entities\Builder\SelectIterator
+    class SelectIterator extends \Squirrel\Entities\Builder\SelectIterator implements \Iterator
     {
         public function current(): \{namespaceOfEntity}\{classOfEntity}
         {
@@ -51,7 +51,7 @@ namespace {namespaceOfBuilders} {
      *
      * @implements \IteratorAggregate<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectEntries extends \Squirrel\Entities\Builder\SelectEntries
+    class SelectEntries extends \Squirrel\Entities\Builder\SelectEntries implements \IteratorAggregate
     {
         /**
          * @return \{namespaceOfEntity}\{classOfEntity}[]
@@ -122,7 +122,7 @@ EOD
         ,
         'Writeable' => <<<'EOD'
 <?php
-// phpcs:ignoreFile -- created by SquirrelPHP library, do not alter
+// phpcs:ignoreFile -- created by SquirrelPHP entities library, do not alter
 /*
  * THIS FILE IS AUTOMATICALLY CREATED - DO NOT EDIT, DO NOT COMMIT TO VCS
  *
