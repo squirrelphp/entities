@@ -9,50 +9,50 @@ use Squirrel\Queries\Builder\FlattenedFieldsWithTypeTrait;
 /**
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
  *
+ * Properties are only protected so we can extend it with generated repositories
+ *
  * @implements \IteratorAggregate<int,object>
  */
 class SelectEntries implements BuilderInterface, \IteratorAggregate
 {
     use FlattenedFieldsWithTypeTrait;
 
-    private RepositoryReadOnlyInterface $repository;
-
     /**
      * @var array<int|string,mixed> WHERE restrictions in query
      */
-    private array $where = [];
+    protected array $where = [];
 
     /**
      * @var array<int|string,string> ORDER BY sorting in query
      */
-    private array $orderBy = [];
+    protected array $orderBy = [];
 
     /**
      * @var int How many results should be returned
      */
-    private int $limitTo = 0;
+    protected int $limitTo = 0;
 
     /**
      * @var int Where in the result set to start (so many entries are skipped)
      */
-    private int $startAt = 0;
+    protected int $startAt = 0;
 
     /**
      * @var bool Whether the SELECT query should block the scanned entries
      */
-    private bool $blocking = false;
+    protected bool $blocking = false;
 
     /**
      * @var string[] Only retrieve some of the fields of the objects, default is to return all
      */
-    private array $fields = [];
+    protected array $fields = [];
 
-    public function __construct(RepositoryReadOnlyInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        protected RepositoryReadOnlyInterface $repository,
+    ) {
     }
 
-    public function field(string $onlyGetThisField): self
+    public function field(string $onlyGetThisField): static
     {
         $this->fields = [$onlyGetThisField];
         return $this;
@@ -61,7 +61,7 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
     /**
      * @param string[] $onlyGetTheseFields
      */
-    public function fields(array $onlyGetTheseFields): self
+    public function fields(array $onlyGetTheseFields): static
     {
         $this->fields = $onlyGetTheseFields;
         return $this;
@@ -70,7 +70,7 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
     /**
      * @param array<int|string,mixed> $whereClauses
      */
-    public function where(array $whereClauses): self
+    public function where(array $whereClauses): static
     {
         $this->where = $whereClauses;
         return $this;
@@ -79,7 +79,7 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
     /**
      * @param array<int|string,string>|string $orderByClauses
      */
-    public function orderBy($orderByClauses): self
+    public function orderBy(array|string $orderByClauses): static
     {
         if (\is_string($orderByClauses)) {
             $orderByClauses = [$orderByClauses];
@@ -89,19 +89,19 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
         return $this;
     }
 
-    public function startAt(int $startAtNumber): self
+    public function startAt(int $startAtNumber): static
     {
         $this->startAt = $startAtNumber;
         return $this;
     }
 
-    public function limitTo(int $numberOfEntries): self
+    public function limitTo(int $numberOfEntries): static
     {
         $this->limitTo = $numberOfEntries;
         return $this;
     }
 
-    public function blocking(bool $active = true): self
+    public function blocking(bool $active = true): static
     {
         $this->blocking = $active;
         return $this;

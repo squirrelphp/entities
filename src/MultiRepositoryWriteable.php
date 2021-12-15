@@ -35,9 +35,9 @@ class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiR
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }

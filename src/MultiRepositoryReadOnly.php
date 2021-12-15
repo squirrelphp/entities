@@ -64,9 +64,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }
@@ -78,9 +78,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
 
@@ -98,9 +98,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }
@@ -110,8 +110,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         if (isset($query['limit']) && $query['limit'] !== 1) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'Row limit cannot be set for fetchOne query: ' . Debug::sanitizeData($query),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -139,9 +139,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
 
@@ -187,8 +187,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!isset($validOptions[$optKey])) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Unknown option key ' . Debug::sanitizeData($optKey),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -206,9 +206,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     if (!\is_array($optVal)) {
                         throw Debug::createException(
                             DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                             'Option key ' . Debug::sanitizeData($optKey) .
                             ' had a non-array value: ' . Debug::sanitizeData($optVal),
+                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         );
                     }
                     break;
@@ -221,8 +221,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         if (!isset($sanitizedOptions['repositories']) || \count($sanitizedOptions['repositories']) === 0) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'No repositories specified',
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -239,8 +239,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         ) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'No "where" definitions',
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -248,8 +248,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         if (isset($validOptions['fields']) && \count($sanitizedOptions['fields']) === 0) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'No "fields" definition',
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -257,8 +257,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         if (isset($validOptions['query']) && \strlen($sanitizedOptions['query']) === 0) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'No "query" definition',
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -273,8 +273,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (!\is_scalar($value)) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Non-scalar "parameters" definition',
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -321,16 +321,16 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($name) || \strpos($name, '.') !== false) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "repositories" key definition: ' . Debug::sanitizeData($name),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             } elseif ($class instanceof RepositoryBuilderReadOnlyInterface) {
                 // Make sure the repository is writeable if we are doing a writing query
                 if ($writing === true && !($class instanceof RepositoryBuilderWriteableInterface)) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Non-writeable "repositories" object definition for writing operation',
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -356,8 +356,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     if (isset($dbInstance) && $dbClass !== $dbInstance) {
                         throw Debug::createException(
                             DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                             'Repositories have different database connections, combined query is not possible',
+                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         );
                     }
 
@@ -365,9 +365,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Repository configuration could not be retrieved through reflection, ' .
                         'repository class not as expected: ' . $e->getMessage(),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
             } elseif ($class instanceof RepositoryReadOnlyInterface) {
@@ -375,8 +375,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if ($writing === true && !($class instanceof RepositoryWriteableInterface)) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Non-writeable "repositories" object definition for writing operation',
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -397,8 +397,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     if (isset($dbInstance) && $dbClass !== $dbInstance) {
                         throw Debug::createException(
                             DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                             'Repositories have different database connections, combined query is not possible',
+                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         );
                     }
 
@@ -406,18 +406,18 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Repository configuration could not be retrieved through reflection, ' .
                         'repository class not as expected: ' . $e->getMessage(),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
             } else {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid repository specified, does not implement ' .
                     'RepositoryReadOnlyInterface or RepositoryBuilderReadOnlyInterface: ' .
                     Debug::sanitizeData($sanitizedOptions['repositories']),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -439,9 +439,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         } else {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'Repositories did not contain a valid database connection' .
                 Debug::sanitizeData($sanitizedOptions['repositories']),
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -590,8 +590,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         if (\strpos($query, ':') !== false) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'Invalid "query" definition, unresolved colons remain',
+                ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -625,8 +625,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($name)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "fields" definition, key is not a string: ' . Debug::sanitizeData($name),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -634,9 +634,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($field)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "fields" definition, value for ' .
                     Debug::sanitizeData($name) . ' is not a string: ' . Debug::sanitizeData($field),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -644,9 +644,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (\strpos($name, ':') !== false) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "fields" definition, name ' .
                     Debug::sanitizeData($name) . ' contains a colon',
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -662,9 +662,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "fields" definition, unknown field name: ' .
                         Debug::sanitizeData($field),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -724,9 +724,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (\strpos($field, ':') !== false) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "fields" definition, unresolved colons: ' .
                         Debug::sanitizeData($field),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -789,8 +789,8 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 default:
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Unknown casting for object variable ' . Debug::sanitizeData($key),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
             }
         }
@@ -818,9 +818,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($expression)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "tables" / table join definition, expression is not a string: ' .
                     Debug::sanitizeData($expression),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -830,9 +830,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (!isset($tableNames[$expression])) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "tables" / table join definition, alias not found: ' .
                         Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -864,10 +864,10 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (\strpos($expression, ':') !== false) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "tables" / table join definition, ' .
                         'unconverted objects/table names found in expression: ' .
                         Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 
@@ -903,9 +903,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($expression)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "where" definition, expression is not a string: ' .
                     Debug::sanitizeData($expression),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -920,9 +920,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
                         throw Debug::createException(
                             DBInvalidOptionException::class,
-                            [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                             'Invalid "where" definition, field name not found: ' .
                             Debug::sanitizeData($expression),
+                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         );
                     }
 
@@ -946,9 +946,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (\strpos($expression, ':') !== false) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "where" definition, unresolved colons remain in expression: ' .
                         Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
             }
@@ -984,9 +984,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($expression)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "group" / group by definition, expression is not a string: ' .
                     Debug::sanitizeData($expression),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -999,17 +999,17 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (!isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "group" / group by definition, field name not found in any repository: ' .
                         Debug::sanitizeData($expression) . ' within ' . Debug::sanitizeData($groupByOptions),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
             } else { // Freestyle expression - not allowed
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "group" / group by definition, no variables are allowed in expression: ' .
                     Debug::sanitizeData($expression),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -1040,9 +1040,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (!\is_string($expression)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "order" / order by definition, expression is not a string: ' .
                     Debug::sanitizeData($expression),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -1072,9 +1072,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 if (\strpos($expression, ':') !== false) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Invalid "order" / order by definition, unconverted object names found in expression: ' .
                         Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
 

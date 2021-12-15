@@ -9,11 +9,9 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 
 class TicketRepositoryBuilderReadOnly implements RepositoryBuilderReadOnlyInterface
 {
-    private RepositoryReadOnlyInterface $repository;
-
-    public function __construct(RepositoryReadOnlyInterface $repository)
-    {
-        $this->repository = $repository;
+    public function __construct(
+        private RepositoryReadOnlyInterface $repository,
+    ) {
     }
 
     public function select(): SelectEntries

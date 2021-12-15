@@ -15,7 +15,6 @@ class FindClassesWithAttribute
 
         // Stores the most recent namespace, import class name and classname in loop
         $namespace = '';
-        $importClassName = '';
 
         // Get all PHP tokens from a file
         $tokens = \token_get_all($fileContents);
@@ -24,70 +23,61 @@ class FindClassesWithAttribute
         $namespaceStarted = false;
         $classNameStarted = false;
         $useImportStarted = false;
+        $attributeStarted = false;
         $attributeUseFound = false;
 
-        // Go through all PHP tokens
+        // Go through all PHP tokens in the file
         foreach ($tokens as $key => $token) {
-            // "use" name started, so collect all parts until we reach the end of the name
-            if ($useImportStarted === true) {
-                // @codeCoverageIgnoreStart
-                // In PHP8 the whole class namespace is its own token
-                if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
-                    $importClassName = $token[1];
-                } elseif (PHP_VERSION_ID < 80000 && \in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
-                    // In PHP 7.4 the namespace is made of string and namespace separators
-                    $importClassName .= $token[1];
-                } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
-                } else { // Every other token indicates that we have reached the end of the name
-                    $namespaceStarted = false;
+            // Skip all whitespace tokens
+            if ($token[0] === T_WHITESPACE) {
+                continue;
+            }
 
-                    // We have found the attribute namespace - so there can be entities in this file
-                    if (
-                        $importClassName === 'Squirrel\\Entities\\Attribute'
-                        || $importClassName === 'Squirrel\\Entities\\Attribute\\Entity'
-                        || $importClassName === 'Squirrel\\Entities\\Attribute\\Field'
-                    ) {
+            // Look for usage of our attributes in use imports
+            if ($useImportStarted === true) {
+                if ($token[0] === T_NAME_QUALIFIED) {
+                    if ($this->isAttributeUsage($token[1])) {
                         $attributeUseFound = true;
                     }
                 }
-                // @codeCoverageIgnoreEnd
+
+                $useImportStarted = false;
             }
 
-            // "namespace" name started, so collect all parts until we reach the end of the name
-            if ($namespaceStarted === true) {
-                // @codeCoverageIgnoreStart
-                // In PHP8 the whole class namespace can be its own token
-                if (PHP_VERSION_ID >= 80000 && $token[0] === T_NAME_QUALIFIED) {
-                    $namespace = $token[1];
-                    $namespaceStarted = false;
-                } elseif (\in_array($token[0], [T_STRING, T_NS_SEPARATOR], true)) {
-                    // In PHP 7.4 the namespace is made of string and namespace separators
-                    // In PHP8 the namespace can be one string
-                    $namespace .= $token[1];
-                } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the namespace
-                } else { // Every other token indicates that we have reached the end of the name
-                    $namespaceStarted = false;
+            // Look for usage of our attributes in attributes (usually those would be fully qualified, unusual but possible)
+            if ($attributeStarted === true) {
+                if ($token[0] === T_NAME_FULLY_QUALIFIED || $token[0] === T_NAME_QUALIFIED) {
+                    if ($this->isAttributeUsage($token[1])) {
+                        $attributeUseFound = true;
+                    }
                 }
-                // @codeCoverageIgnoreEnd
+
+                $attributeStarted = false;
             }
 
-            // "class" name started, so collect all parts until we reach the end of the name
+            // Record a new namespace to correctly assign the namespace for found classes
+            if ($namespaceStarted === true) {
+                if ($token[0] === T_NAME_QUALIFIED || $token[0] === T_STRING) {
+                    $namespace = $token[1];
+                }
+
+                $namespaceStarted = false;
+            }
+
+            // Record any classes if we have found attributes
             if ($classNameStarted === true) {
-                // Only a string is expected for the class name
                 if ($token[0] === T_STRING) {
                     if (\strlen($token[1]) > 0 && $attributeUseFound === true) {
                         $classes[] = [$namespace, $token[1]];
                     }
-                } elseif ($token[0] === T_WHITESPACE) { // Ignore whitespace, can be before or after the class name
-                } else { // Every other token indicates that we have reached the end of the name
-                    $classNameStarted = false;
                 }
+
+                $classNameStarted = false;
             }
 
             // "use" token - everything coming after this has to be checked for the attribute classes
             if ($token[0] === T_USE) {
                 $useImportStarted = true;
-                $importClassName = '';
             }
 
             // "namespace" token - start collecting the namespace name
@@ -96,13 +86,30 @@ class FindClassesWithAttribute
                 $namespace = '';
             }
 
-            // "class" token - start collecting the class name which is being defined
+            // "class" token - collect the class name if attributes were found earlier
             if ($token[0] === T_CLASS) {
                 $classNameStarted = true;
+            }
+
+            // "attribute" token - look for fully qualified attribute
+            if ($token[0] === T_ATTRIBUTE) {
+                $attributeStarted = true;
             }
         }
 
         // Return list of the classes found
         return $classes;
+    }
+
+    private function isAttributeUsage(string $class): bool
+    {
+        // Remove any preceding slashes
+        $class = \ltrim($class, '\\');
+
+        if (\str_starts_with($class, 'Squirrel\\Entities\\Attribute')) {
+            return true;
+        }
+
+        return false;
     }
 }

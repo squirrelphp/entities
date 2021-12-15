@@ -10,8 +10,6 @@ use Squirrel\Entities\Attribute\EntityProcessor;
 class RepositoriesGenerateCommand
 {
     private FindClassesWithAttribute $findClassesWithAttribute;
-    /** @var string[] */
-    private array $sourceCodeDirectories;
     private array $repositoryPhpFileBlueprint = [
         'ReadOnly' => <<<'EOD'
 <?php
@@ -54,18 +52,11 @@ namespace {namespaceOfBuilders} {
     /**
      * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectIterator implements \Squirrel\Queries\Builder\BuilderInterface, \Iterator
+    class SelectIterator extends \Squirrel\Entities\Builder\SelectIterator
     {
-        private \Squirrel\Entities\Builder\SelectIterator $iteratorInstance;
-
-        public function __construct(\Squirrel\Entities\Builder\SelectIterator $iterator)
-        {
-            $this->iteratorInstance = $iterator;
-        }
-
         public function current(): \{namespaceOfEntity}\{classOfEntity}
         {
-            $entry = $this->iteratorInstance->current();
+            $entry = parent::current();
 
             if ($entry instanceof \{namespaceOfEntity}\{classOfEntity}) {
                 return $entry;
@@ -73,110 +64,24 @@ namespace {namespaceOfBuilders} {
 
             throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
         }
-
-        public function next(): void
-        {
-            $this->iteratorInstance->next();
-        }
-
-        public function key(): int
-        {
-            return $this->iteratorInstance->key();
-        }
-
-        public function valid(): bool
-        {
-            return $this->iteratorInstance->valid();
-        }
-
-        public function rewind(): void
-        {
-            $this->iteratorInstance->rewind();
-        }
-
-        public function clear(): void
-        {
-            $this->iteratorInstance->clear();
-        }
     }
 
     /**
      * This class exists to have proper type hints about the object(s) returned in the
-     * getEntries and getOneEntry functions. All calls are delegated to the
-     * SelectEntries class - because of the builder pattern we cannot extend SelectEntries
-     * (because then returning self would return that class instead of this extended class)
-     * so we instead imitate it. This way the implementation in SelectEntries can change
-     * and this generated class has no ties to how it "works" or how the repository is used.
+     * getEntries and getOneEntry functions. The heavy lifting is done by the
+     * SelectEntries class
      *
      * @implements \IteratorAggregate<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectEntries implements \Squirrel\Queries\Builder\BuilderInterface, \IteratorAggregate
+    class SelectEntries extends \Squirrel\Entities\Builder\SelectEntries
     {
-        private \Squirrel\Entities\Builder\SelectEntries $selectImplementation;
-
-        public function __construct(\Squirrel\Entities\RepositoryReadOnlyInterface $repository)
-        {
-            $this->selectImplementation = new \Squirrel\Entities\Builder\SelectEntries($repository);
-        }
-
-        public function field(string $onlyGetThisField): self
-        {
-            $this->selectImplementation->field($onlyGetThisField);
-            return $this;
-        }
-
-        /**
-         * @param string[] $onlyGetTheseFields
-         */
-        public function fields(array $onlyGetTheseFields): self
-        {
-            $this->selectImplementation->fields($onlyGetTheseFields);
-            return $this;
-        }
-
-        /**
-         * @param array<int|string,mixed> $whereClauses
-         */
-        public function where(array $whereClauses): self
-        {
-            $this->selectImplementation->where($whereClauses);
-            return $this;
-        }
-
-        /**
-         * @param array<int|string,string>|string $orderByClauses
-         */
-        public function orderBy(array|string $orderByClauses): self
-        {
-            $this->selectImplementation->orderBy($orderByClauses);
-            return $this;
-        }
-
-        public function startAt(int $startAtNumber): self
-        {
-            $this->selectImplementation->startAt($startAtNumber);
-            return $this;
-        }
-
-        public function limitTo(int $numberOfEntries): self
-        {
-            $this->selectImplementation->limitTo($numberOfEntries);
-            return $this;
-        }
-
-        public function blocking(bool $active = true): self
-        {
-            $this->selectImplementation->blocking($active);
-            return $this;
-        }
-
         /**
          * @return \{namespaceOfEntity}\{classOfEntity}[]
          */
         public function getAllEntries(): array
         {
             /** @var \{namespaceOfEntity}\{classOfEntity}[] $entries */
-            $entries = $this->selectImplementation->getAllEntries();
+            $entries = parent::getAllEntries();
 
             foreach ($entries as $entry) {
                 if (!($entry instanceof \{namespaceOfEntity}\{classOfEntity})) {
@@ -189,7 +94,7 @@ namespace {namespaceOfBuilders} {
 
         public function getOneEntry(): ?\{namespaceOfEntity}\{classOfEntity}
         {
-            $entry = $this->selectImplementation->getOneEntry();
+            $entry = parent::getOneEntry();
 
             if ($entry instanceof \{namespaceOfEntity}\{classOfEntity} || $entry === null) {
                 return $entry;
@@ -198,49 +103,16 @@ namespace {namespaceOfBuilders} {
             throw new \LogicException('Unexpected type encountered - wrong repository might be configured: ' . \get_class($entry));
         }
 
-        /**
-         * @return array<bool|int|float|string|null>
-         */
-        public function getFlattenedFields(): array
-        {
-            return $this->selectImplementation->getFlattenedFields();
-        }
-
-        /**
-         * @return int[]
-         */
-        public function getFlattenedIntegerFields(): array
-        {
-            return $this->selectImplementation->getFlattenedIntegerFields();
-        }
-
-        /**
-         * @return float[]
-         */
-        public function getFlattenedFloatFields(): array
-        {
-            return $this->selectImplementation->getFlattenedFloatFields();
-        }
-
-        /**
-         * @return string[]
-         */
-        public function getFlattenedStringFields(): array
-        {
-            return $this->selectImplementation->getFlattenedStringFields();
-        }
-
-        /**
-         * @return bool[]
-         */
-        public function getFlattenedBooleanFields(): array
-        {
-            return $this->selectImplementation->getFlattenedBooleanFields();
-        }
-
         public function getIterator(): SelectIterator
         {
-            return new SelectIterator($this->selectImplementation->getIterator());
+            return new SelectIterator($this->repository, [
+                'where' => $this->where,
+                'order' => $this->orderBy,
+                'fields' => $this->fields,
+                'limit' => $this->limitTo,
+                'offset' => $this->startAt,
+                'lock' => $this->blocking,
+            ]);
         }
     }
 }
@@ -302,29 +174,30 @@ EOD
         ,
     ];
 
-    private PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents;
-
-    /**
-     * @param string[] $sourceCodeDirectories
-     */
     public function __construct(
-        array $sourceCodeDirectories,
-        PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents,
+        /** @var string[] */
+        private array $sourceCodeDirectories,
+        private bool $forceFileCreation,
+        private PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents,
     ) {
         $this->findClassesWithAttribute = new FindClassesWithAttribute();
-        $this->sourceCodeDirectories = $sourceCodeDirectories;
-        $this->PHPFilesInDirectoryGetContents = $PHPFilesInDirectoryGetContents;
     }
 
     /**
-     * @return string[]
+     * @return array{list<string>, list<string>}
      */
     public function __invoke(): array
     {
-        $log = [];
+        /** @var list<string> $logRepositories */
+        $logRepositories = [];
+        /** @var list<string> $logConflicts */
+        $logConflicts = [];
 
         // Initialize entity processor to find repository config
         $entityProcessor = new EntityProcessor();
+
+        /** @var array<string, string> $filesToCreate */
+        $filesToCreate = [];
 
         // Saves the files per path for which to create a .gitignore file
         $gitignoreFilesForPaths = [];
@@ -337,14 +210,8 @@ EOD
                 $classes = $this->findClassesWithAttribute->__invoke($fileData['contents']);
 
                 // Go through the possible entity classes
-                foreach ($classes as $class) {
-                    // Divvy up the namespace and the class name
-                    $namespace = $class[0];
-                    $className = $class[1];
-
-                    /**
-                     * @psalm-var class-string $fullClassName
-                     */
+                foreach ($classes as [$namespace, $className]) {
+                    /** @var class-string $fullClassName */
                     $fullClassName = $namespace . '\\' . $className;
 
                     // Get repository config as object from attributes
@@ -352,86 +219,90 @@ EOD
 
                     // Repository config found - this is definitely an entity
                     if (isset($repositoryConfig)) {
-                        $log[] = 'Entity found: ' . $fullClassName;
+                        $logRepositories[] = 'Entity found: ' . $fullClassName;
 
-                        $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
-                            $namespace,
-                            $className,
-                            $fileData,
-                            'ReadOnly',
-                        );
+                        foreach (['ReadOnly', 'Writeable'] as $type) {
+                            $phpFilename = $this->generateRepositoryFilename($fileData['filename'], $type);
 
-                        $gitignoreFilesForPaths[$fileData['path']][] = $this->generateRepositoryFile(
-                            $namespace,
-                            $className,
-                            $fileData,
-                            'Writeable',
-                        );
+                            $filesToCreate[$fileData['path'] . '/' . $phpFilename] = $this->repositoryFileContentsFillInBlueprint(
+                                $this->repositoryPhpFileBlueprint[$type],
+                                $namespace,
+                                $className,
+                            );
+
+                            $gitignoreFilesForPaths[$fileData['path']][] = $phpFilename;
+                        }
                     }
                 }
             }
         }
 
-        // Go through all paths where we created repository files
-        $this->createGitignoreFiles($gitignoreFilesForPaths);
+        if (\count($gitignoreFilesForPaths) > 0) {
+            foreach ($gitignoreFilesForPaths as $path => $files) {
+                $filesToCreate[$path . '/.gitignore'] = $this->generateGitignoreContents($files);
+            }
+        }
 
-        return $log;
-    }
+        $conflictDetected = false;
 
-    private function createGitignoreFiles(array $gitignoreFilesForPaths): void
-    {
-        // Go through all paths where we created repository files
-        foreach ($gitignoreFilesForPaths as $path => $files) {
-            // Make sure all files are unique / no duplicates
-            $files = \array_unique($files);
+        foreach ($filesToCreate as $fullFilename => $fileContents) {
+            if (\file_exists($fullFilename)) {
+                $currentContents = \file_get_contents($fullFilename);
 
-            if (\count($files) > 0) {
-                // Ignore the .gitignore file in entity directories, that way both the gitignore
-                // and the repositories will be ignored by VCS
-                $gitignoreLines = [
-                    '.gitignore',
-                ];
+                // @codeCoverageIgnoreStart
+                if ($currentContents === false) {
+                    throw new \RuntimeException('Cannot read file: ' . $fullFilename);
+                }
+                // @codeCoverageIgnoreEnd
 
-                // Add each repository file to .gitignore
-                foreach ($files as $filename) {
-                    $gitignoreLines[] = $filename;
+                // Only assume no conflict if we have an explicit generated by string in the file
+                if (!\str_contains($currentContents, 'Generated by Squirrel\Entities\Generate\RepositoriesGenerateCommand')) {
+                    $conflictDetected = true;
+
+                    $logConflicts[] = 'Possible conflict detected for: ' . $fullFilename;
                 }
 
-                $gitignoreFileContents = \implode("\n", $gitignoreLines);
-
-                // Save .gitignore file in the appropriate path if there was a change
-                if (
-                    !\file_exists($path . '/.gitignore')
-                    || \file_get_contents($path . '/.gitignore') !== $gitignoreFileContents
-                ) {
-                    \file_put_contents(
-                        $path . '/.gitignore',
-                        $gitignoreFileContents,
-                    );
+                // Remove files which exist in the exact same way already
+                if ($currentContents === $fileContents) {
+                    unset($filesToCreate[$fullFilename]);
                 }
             }
         }
-    }
 
-    private function generateRepositoryFile(string $namespace, string $className, array $fileData, string $type): string
-    {
-        $phpFilename = \str_replace('.php', '', $fileData['filename']) . 'Repository' . $type . '.php';
-
-        // Compile file name and file contents for repository
-        $fullPhpFilename = $fileData['path'] . '/' . $phpFilename;
-        $fileContents = $this->repositoryFileContentsFillInBlueprint(
-            $this->repositoryPhpFileBlueprint[$type],
-            $namespace,
-            $className,
-        );
-
-        // Save repository PHP file - only if it changed or doesn't exist yet
-        if (!\file_exists($fullPhpFilename) || \file_get_contents($fullPhpFilename) !== $fileContents) {
-            \file_put_contents($fullPhpFilename, $fileContents);
+        if ($conflictDetected === false || $this->forceFileCreation === true) {
+            foreach ($filesToCreate as $fullFilename => $fileContents) {
+                \file_put_contents($fullFilename, $fileContents);
+            }
         }
 
-        // Add PHP file to list for which we want to create a .gitignore file
-        return $phpFilename;
+        return [$logRepositories, $logConflicts];
+    }
+
+    private function generateGitignoreContents(array $files): string
+    {
+        // Make sure all files are unique / no duplicates
+        $files = \array_unique($files);
+
+        // Ignore the .gitignore file in entity directories, that way both the gitignore
+        // and the repositories will be ignored by VCS
+        $gitignoreLines = [
+            '# Generated by Squirrel\Entities\Generate\RepositoriesGenerateCommand',
+            '# Any changes will be overwritten when running that command again',
+            '# => DO NOT EDIT, DO NOT COMMIT TO VCS',
+            '.gitignore',
+        ];
+
+        // Add each repository file to .gitignore
+        foreach ($files as $filename) {
+            $gitignoreLines[] = $filename;
+        }
+
+        return \implode("\n", $gitignoreLines);
+    }
+
+    private function generateRepositoryFilename(string $filename, string $type): string
+    {
+        return \str_replace('.php', '', $filename) . 'Repository' . $type . '.php';
     }
 
     private function repositoryFileContentsFillInBlueprint(

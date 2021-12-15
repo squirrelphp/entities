@@ -4,7 +4,6 @@ namespace Squirrel\Entities\Tests\TestEntitiesInvalidNoEntityName;
 
 use Squirrel\Entities\Attribute\Entity;
 use Squirrel\Entities\Attribute\Field;
-use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 /**
  * An empty name is not allowed
@@ -12,8 +11,6 @@ use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 #[Entity("")]
 class UserAddressInvalid
 {
-    use PopulatePropertiesWithIterableTrait;
-
     #[Field("user_id")]
     private int $userId = 0;
 

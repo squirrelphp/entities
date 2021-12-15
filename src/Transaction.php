@@ -48,9 +48,9 @@ class Transaction implements TransactionInterface
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [Transaction::class],
                         'Base repository not found in builder repository via reflection. ' .
                         'Make sure you use officially supported classes',
+                        ignoreClasses: [Transaction::class],
                     );
                 }
             }
@@ -65,9 +65,9 @@ class Transaction implements TransactionInterface
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [Transaction::class],
                         'Connection not found in base repository via reflection. ' .
                         'Make sure you use officially supported classes',
+                        ignoreClasses: [Transaction::class],
                     );
                 }
 
@@ -75,8 +75,8 @@ class Transaction implements TransactionInterface
                 if (isset($connection) && $connection !== $foundConnection) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [TransactionInterface::class],
                         'Repositories have different database connections, transaction is not possible',
+                        ignoreClasses: [TransactionInterface::class],
                     );
                 }
 
@@ -84,8 +84,8 @@ class Transaction implements TransactionInterface
             } else { // No base repository - meaning this class is invalid
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [TransactionInterface::class],
                     'Invalid class specified to create transaction (not a repository)',
+                    ignoreClasses: [TransactionInterface::class],
                 );
             }
         }
@@ -94,8 +94,8 @@ class Transaction implements TransactionInterface
         if (!isset($connection)) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [TransactionInterface::class],
                 'No repositories for transaction defined',
+                ignoreClasses: [TransactionInterface::class],
             );
         }
 

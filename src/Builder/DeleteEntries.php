@@ -73,9 +73,9 @@ class DeleteEntries implements BuilderInterface
         if (\count($this->where) === 0 && $this->confirmNoWhere !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [BuilderInterface::class],
                 'No restricting "where" arguments defined for DELETE ' .
                 'and no override confirmation with "confirmNoWhereRestrictions" call',
+                ignoreClasses: [BuilderInterface::class],
             );
         }
     }

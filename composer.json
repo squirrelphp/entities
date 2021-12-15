@@ -23,7 +23,7 @@
         "php": ">=8.0",
         "symfony/console": "^5.0|^6.0",
         "symfony/finder": "^5.0|^6.0",
-        "squirrelphp/queries": "^0.13"
+        "squirrelphp/queries": "^1.2"
     },
     "require-dev": {
         "bamarni/composer-bin-plugin": "^1.3",
@@ -61,9 +61,9 @@
         "phpunit": "vendor/bin/phpunit --colors=always",
         "phpunit_clover": "vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml",
         "coverage": "XDEBUG_MODE=coverage vendor/bin/phpunit --coverage-html tests/_reports",
-        "phpcs": "vendor/bin/phpcs --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php --colors src bin tests",
-        "phpcsd": "vendor/bin/phpcs -s --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php --colors src bin tests",
-        "phpcsfix": "vendor/bin/phpcbf --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php src bin tests",
+        "phpcs": "vendor/bin/phpcs --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php,tests/TestEntities/UserNickname.php --colors src bin tests",
+        "phpcsd": "vendor/bin/phpcs -s --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php,tests/TestEntities/UserNickname.php --colors src bin tests",
+        "phpcsfix": "vendor/bin/phpcbf --standard=ruleset.xml --extensions=php --cache=.phpcs-cache --ignore=tests/TestEntities/NonRepositoryWithAttributeInUse.php,tests/TestEntities/UserNickname.php src bin tests",
         "binupdate": "@composer bin all update --ansi",
         "bininstall": "@composer bin all install --ansi"
     }

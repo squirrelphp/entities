@@ -166,9 +166,9 @@ class MultiSelectEntriesFreeform implements BuilderInterface, \IteratorAggregate
         if ($this->confirmBadPractice !== true) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [BuilderInterface::class],
                 'No confirmation that freeform queries are bad practice - ' .
                 'call "confirmFreeformQueriesAreNotRecommended" with "OK" to confirm the freeform query',
+                ignoreClasses: [BuilderInterface::class],
             );
         }
     }

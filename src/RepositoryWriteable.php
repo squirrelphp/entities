@@ -19,8 +19,8 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         if (\count($changes) === 0) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'No "changes" / SET clause defined',
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -33,9 +33,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }
@@ -65,9 +65,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             if (!\is_string($fieldName)) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Invalid "changes" / SET definition, expression is not a string: ' .
                     Debug::sanitizeData($fieldName),
+                    ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -86,9 +86,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 if (\strpos($fieldName, ':') !== false) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
-                        [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                         'Unresolved colons in "changes" / SET clause: ' .
                         Debug::sanitizeData($fieldName),
+                        ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
             }
@@ -110,9 +110,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         if ($returnInsertId === true && \strlen($this->config->getAutoincrementField()) === 0) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 'Insert ID requested but no autoincrement ID specified: ' .
                 Debug::sanitizeData($fields),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
             );
         }
 
@@ -142,9 +142,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
 
@@ -162,9 +162,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             if (!isset($fields[$fieldName])) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
-                    [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                     'Index field specified do not occur in data array: ' .
                     Debug::sanitizeData($fieldName),
+                    ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 );
             }
 
@@ -198,9 +198,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }
@@ -216,9 +216,9 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
         } catch (DBException $e) {
             throw Debug::createException(
                 \get_class($e),
-                [RepositoryReadOnlyInterface::class, BuilderInterface::class],
                 $e->getMessage(),
-                $e->getPrevious(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                previousException: $e->getPrevious(),
             );
         }
     }
