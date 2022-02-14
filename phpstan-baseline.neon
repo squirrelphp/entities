@@ -16,6 +16,16 @@ parameters:
 			path: src/Builder/MultiSelectIterator.php
 
 		-
+			message: "#^Class Squirrel\\\\Entities\\\\Builder\\\\SelectEntries implements generic interface IteratorAggregate but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Builder/SelectEntries.php
+
+		-
+			message: "#^Class Squirrel\\\\Entities\\\\Builder\\\\SelectIterator implements generic interface Iterator but does not specify its types\\: TKey, TValue$#"
+			count: 1
+			path: src/Builder/SelectIterator.php
+
+		-
 			message: "#^Property Squirrel\\\\Entities\\\\Builder\\\\SelectIterator\\:\\:\\$selectReference is never read, only written\\.$#"
 			count: 1
 			path: src/Builder/SelectIterator.php

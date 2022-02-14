@@ -6,12 +6,10 @@ use Squirrel\Entities\RepositoryReadOnlyInterface;
 use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\Builder\FlattenedFieldsWithTypeTrait;
 
-/**
+/*
  * Select query builder as a fluent object - build query and return object(s) or flattened fields
  *
  * Properties are only protected so we can extend it with generated repositories
- *
- * @implements \IteratorAggregate<int,object>
  */
 class SelectEntries implements BuilderInterface, \IteratorAggregate
 {

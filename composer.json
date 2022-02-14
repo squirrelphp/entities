@@ -36,7 +36,11 @@
         "squirrelphp/entities-bundle": "Automatic integration of squirrel/entities in Symfony"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "bamarni/composer-bin-plugin": true,
+            "captainhook/plugin-composer": true
+        }
     },
     "bin": [
         "bin/squirrel_repositories_generate"
