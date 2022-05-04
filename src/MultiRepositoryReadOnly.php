@@ -318,7 +318,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         // Go through tables to prepare the repositories
         foreach ($sanitizedOptions['repositories'] as $name => $class) {
             // Make sure every entry in the tables array is valid
-            if (!\is_string($name) || \strpos($name, '.') !== false) {
+            if (!\is_string($name) || \str_contains($name, '.')) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
                     'Invalid "repositories" key definition: ' . Debug::sanitizeData($name),
@@ -587,7 +587,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         }
 
         // If we still have unresolved expressions, something went wrong
-        if (\strpos($query, ':') !== false) {
+        if (\str_contains($query, ':')) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
                 'Invalid "query" definition, unresolved colons remain',
@@ -641,7 +641,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // No expressions allowed in name part!
-            if (\strpos($name, ':') !== false) {
+            if (\str_contains($name, ':')) {
                 throw Debug::createException(
                     DBInvalidOptionException::class,
                     'Invalid "fields" definition, name ' .
@@ -654,7 +654,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             if (\strtoupper($field) === 'COUNT(*)') {
                 $selectProcessed[] = $field . ' AS ' . '"' . $name . '"';
                 $selectTypes[$name] = 'int';
-            } elseif (\strpos($field, ':') === false) { // No expression in field part
+            } elseif (!\str_contains($field, ':')) { // No expression in field part
                 // Get separated table and field parts
                 $fieldParts = \explode('.', $field);
 
@@ -696,17 +696,20 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
                         // Replacement occured, so this field name is used
                         if ($count > 0) {
+                            // The u in front of the types stands for "uncertain", meaning we still have to test
+                            // the values later if they conform to the assumed type
+
                             // We narrow the type to bool if only bool values are used
                             if ($objectTypes[$table][$objFieldName] === 'bool' && $type === '') {
-                                $type = 'bool';
+                                $type = 'ubool';
                             } elseif (
                                 $objectTypes[$table][$objFieldName] === 'int' &&
-                                ($type === '' || $type === 'bool')
+                                ($type === '' || $type === 'ubool')
                             ) { // We narrow the type to int if only int and bool values are used
-                                $type = 'int';
+                                $type = 'uint';
                             } elseif ($objectTypes[$table][$objFieldName] === 'float' && $type !== 'string') {
                                 // If any float values are used, we use float type if there are no strings
-                                $type = 'float';
+                                $type = 'ufloat';
                             } elseif ($objectTypes[$table][$objFieldName] === 'string') {
                                 // As soon as a string type is used we always use string type
                                 $type = 'string';
@@ -721,7 +724,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // If we still have unresolved expressions, something went wrong
-                if (\strpos($field, ':') !== false) {
+                if (\str_contains($field, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Invalid "fields" definition, unresolved colons: ' .
@@ -731,7 +734,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // We guess the type is string if we have a CONCAT or REPLACE in the string
-                if (\strpos($field, 'CONCAT') !== false || \strpos($field, 'REPLACE') !== false) {
+                if (\str_contains($field, 'CONCAT') || \str_contains($field, 'REPLACE')) {
+                    $type = 'string';
+                }
+
+                // If no type could be guessed, we assume string
+                if ($type === '') {
                     $type = 'string';
                 }
 
@@ -773,26 +781,31 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 continue;
             }
 
-            switch ($selectTypes[$key]) {
-                case 'int':
-                    $entry[$key] = \intval($value);
-                    break;
-                case 'bool':
-                    $entry[$key] = \boolval($value);
-                    break;
-                case 'float':
-                    $entry[$key] = \floatval($value);
-                    break;
-                case 'string':
-                    $entry[$key] = \strval($value);
-                    break;
-                default:
-                    throw Debug::createException(
-                        DBInvalidOptionException::class,
-                        'Unknown casting for object variable ' . Debug::sanitizeData($key),
-                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
-                    );
+            if ($selectTypes[$key] === 'ubool') {
+                if ($value === '0' || $value === '1') {
+                    $selectTypes[$key] = 'bool';
+                } else {
+                    $selectTypes[$key] = 'string';
+                }
+            } elseif ($selectTypes[$key] === 'uint' || $selectTypes[$key] === 'ufloat') {
+                if (!\is_numeric($value)) {
+                    $selectTypes[$key] = 'string';
+                } else {
+                    $selectTypes[$key] = \substr($selectTypes[$key], 1);
+                }
             }
+
+            $entry[$key] = match ($selectTypes[$key]) {
+                'int' => \intval($value),
+                'bool' => \boolval($value),
+                'float' => \floatval($value),
+                'string' => \strval($value),
+                default => throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    'Unknown casting "' . $selectTypes[$key] . '" for object variable ' . Debug::sanitizeData($key),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                ),
+            };
         }
 
         return $entry;
@@ -825,7 +838,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // No expression, only a table name
-            if (\strpos($expression, ':') === false) {
+            if (!\str_contains($expression, ':')) {
                 // Make sure the table alias exists
                 if (!isset($tableNames[$expression])) {
                     throw Debug::createException(
@@ -861,7 +874,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // If we still have unresolved expressions, something went wrong
-                if (\strpos($expression, ':') !== false) {
+                if (\str_contains($expression, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Invalid "tables" / table join definition, ' .
@@ -910,7 +923,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // No expression, only a table field name
-            if (\strpos($expression, ':') === false) {
+            if (!\str_contains($expression, ':')) {
                 // Values have to be defined for us to make a predefined equals query
                 if (isset($values)) {
                     // Get separated table and field parts
@@ -943,7 +956,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // If we still have unresolved expressions, something went wrong
-                if (\strpos($expression, ':') !== false) {
+                if (\str_contains($expression, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Invalid "where" definition, unresolved colons remain in expression: ' .
@@ -991,7 +1004,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // No expression, only a table field name
-            if (\strpos($expression, ':') === false) {
+            if (!\str_contains($expression, ':')) {
                 // Get separated table and field parts
                 $fieldParts = \explode('.', $expression);
 
@@ -1047,12 +1060,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // No expression, only a table field name
-            if (\strpos($expression, ':') === false) {
+            if (!\str_contains($expression, ':')) {
                 // Get separated table and field parts
                 $fieldParts = \explode('.', $expression);
 
                 // Field was found - convert it
-                if (count($fieldParts) === 2 && isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                if (\count($fieldParts) === 2 && isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
                     $expression = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
                 }
             } else { // Freestyle expression
@@ -1061,7 +1074,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     foreach ($tableFields as $objFieldName => $sqlFieldName) {
                         $expression = \str_replace(
                             ':' . $table . '.' . $objFieldName . ':',
-                            chr(27) . $table . '.' . $sqlFieldName . chr(27),
+                            \chr(27) . $table . '.' . $sqlFieldName . \chr(27),
                             $expression,
                             $count,
                         );
@@ -1069,7 +1082,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // If we still have unresolved expressions, something went wrong
-                if (\strpos($expression, ':') !== false) {
+                if (\str_contains($expression, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Invalid "order" / order by definition, unconverted object names found in expression: ' .
@@ -1079,7 +1092,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
 
                 // Replace the escape markers back to colons
-                $expression = str_replace(chr(27), ':', $expression);
+                $expression = \str_replace(\chr(27), ':', $expression);
             }
 
             // Add order entry to processed list
