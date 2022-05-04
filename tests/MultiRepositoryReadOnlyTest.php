@@ -195,6 +195,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             'group' => [
                 'ticket.ticketId',
                 'email.to',
+                'DATE(:ticket.lastUpdate:)',
             ],
             'order' => [
                 'ticket.ticketId' => 'DESC',
@@ -945,6 +946,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             'group' => [
                 'ticket.ticket_id',
                 'email.to_address',
+                'DATE(' . $this->db->quoteIdentifier('ticket.last_update') . ')',
             ],
             'order' => [
                 'ticket.ticket_id' => 'DESC',
@@ -1436,7 +1438,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 
         // Try to test with some invalid GROUP value
         $this->complicatedQuery['group'] = [
-            ':ticket.ticketId:',
+            'DATE(:ticket.doesnotexist:)',
         ];
 
         // Attempt select

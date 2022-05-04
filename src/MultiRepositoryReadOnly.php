@@ -1029,17 +1029,33 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                         ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
                     );
                 }
-            } else { // Freestyle expression - not allowed
-                throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    'Invalid "group" / group by definition, no variables are allowed in expression: ' .
-                    Debug::sanitizeData($expression),
-                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
-                );
-            }
 
-            // Add to list of finished expressions
-            $groupByProcessed[] = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+                $groupByProcessed[] = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+            } else { // Freestyle expression
+                // Replace all expressions of all involved repositories
+                foreach ($objectToTableFields as $table => $tableFields) {
+                    foreach ($tableFields as $objFieldName => $sqlFieldName) {
+                        $expression = \str_replace(
+                            ':' . $table . '.' . $objFieldName . ':',
+                            $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
+                            $expression,
+                            $count,
+                        );
+                    }
+                }
+
+                // If we still have unresolved expressions, something went wrong
+                if (\str_contains($expression, ':')) {
+                    throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Invalid "where" definition, unresolved colons remain in expression: ' .
+                        Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    );
+                }
+
+                $groupByProcessed[] = $expression;
+            }
         }
 
         return $groupByProcessed;
