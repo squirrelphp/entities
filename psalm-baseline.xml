@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="v4.15.0@a1b5e489e6fcebe40cb804793d964e99fc347820">
+<files psalm-version="4.23.0@f1fe6ff483bf325c803df9f510d09a03fd796f88">
   <file src="src/MultiRepositoryReadOnly.php">
     <MissingConstructor occurrences="2">
       <code>$db</code>
@@ -8,6 +8,10 @@
     <PossiblyInvalidArgument occurrences="1">
       <code>$sanitizedOptions['query']</code>
     </PossiblyInvalidArgument>
+    <RedundantCondition occurrences="2">
+      <code>\strval(\floatval($value)) !== $value</code>
+      <code>\strval(\intval($value)) !== $value</code>
+    </RedundantCondition>
   </file>
   <file src="src/RepositoryReadOnly.php">
     <ArgumentTypeCoercion occurrences="3">

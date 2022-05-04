@@ -177,6 +177,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => ':ticket.lastUpdate:-:ticket.createDate:',
                 'floaty' => ':ticket.floaty:',
                 'booleany' => ':ticket.open:',
+                'integery' => ':ticket.lastUpdate:/2',
                 'updateCreatedConcat' => 'CONCAT(:ticket.lastUpdate:,:ticket.createDate:)',
             ],
             'tables' => [
@@ -825,6 +826,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => '5',
                 'floaty' => '9.5',
                 'booleany' => '1',
+                'integery' => '1',
                 'updateCreatedConcat' => '5',
             ],
             [
@@ -837,6 +839,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => '8',
                 'floaty' => '2022-05-04',
                 'booleany' => '0',
+                'integery' => '5',
                 'updateCreatedConcat' => '5',
             ],
             [
@@ -849,6 +852,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => '53',
                 'floaty' => '3.3',
                 'booleany' => '1',
+                'integery' => '1.5',
                 'updateCreatedConcat' => '5',
             ],
         ];
@@ -865,6 +869,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => 5,
                 'floaty' => 9.5,
                 'booleany' => true,
+                'integery' => 1,
                 'updateCreatedConcat' => '5',
             ],
             [
@@ -877,6 +882,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => 8,
                 'floaty' => '2022-05-04',
                 'booleany' => false,
+                'integery' => 5,
                 'updateCreatedConcat' => '5',
             ],
             [
@@ -889,6 +895,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => 53,
                 'floaty' => 3.3,
                 'booleany' => true,
+                'integery' => '1.5',
                 'updateCreatedConcat' => '5',
             ],
         ];
@@ -910,6 +917,8 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 $this->db->quoteIdentifier('floaty'),
                 '(' . $this->db->quoteIdentifier('ticket.ticket_open') . ') AS ' .
                 $this->db->quoteIdentifier('booleany'),
+                '(' . $this->db->quoteIdentifier('ticket.last_update') . '/2) AS ' .
+                $this->db->quoteIdentifier('integery'),
                 '(CONCAT(' . $this->db->quoteIdentifier('ticket.last_update') . ',' .
                 $this->db->quoteIdentifier('ticket.create_date') . ')) AS ' .
                 $this->db->quoteIdentifier('updateCreatedConcat'),

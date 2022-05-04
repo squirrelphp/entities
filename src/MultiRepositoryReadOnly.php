@@ -781,16 +781,28 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 continue;
             }
 
+            // Test boolean and numeric values to make sure we do not lose information
             if ($selectTypes[$key] === 'ubool') {
+                // Only accept 0 and 1 - all other values are not necessarily boolean
                 if ($value === '0' || $value === '1') {
                     $selectTypes[$key] = 'bool';
                 } else {
                     $selectTypes[$key] = 'string';
                 }
             } elseif ($selectTypes[$key] === 'uint' || $selectTypes[$key] === 'ufloat') {
-                if (!\is_numeric($value)) {
+                // Non-numeric values are kept as string
+                if (
+                    !\is_numeric($value)
+                    || \strval(\floatval($value)) !== $value
+                ) {
                     $selectTypes[$key] = 'string';
-                } else {
+                } elseif (
+                    // Numeric values where we lose some information when converting to integer are kept as a string
+                    $selectTypes[$key] === 'uint'
+                    && \strval(\intval($value)) !== $value
+                ) {
+                    $selectTypes[$key] = 'string';
+                } else { // No information loss detected, use int or float type
                     $selectTypes[$key] = \substr($selectTypes[$key], 1);
                 }
             }
