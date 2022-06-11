@@ -19,8 +19,9 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
  */
 class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
 {
-    /** @var MultiRepositoryReadOnly */
-    private $queryHandler;
+    use ErrorHandlerTrait;
+
+    private MultiRepositoryReadOnly $queryHandler;
     /** @var DBInterface&MockInterface */
     private DBInterface $db;
     private RepositoryConfig $ticketRepositoryConfig;
@@ -2191,5 +2192,95 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.ticketId' => '77',
             ],
         ]);
+    }
+
+    public function testTypeCoercionDeprecation(): void
+    {
+        $this->allowDeprecations();
+
+        // The query we want to receive
+        $expectedQuery = [
+            'fields' => [
+                'ticket.ticketId' => 'ticket.ticket_id',
+                'ticket.floaty' => 'ticket.ticket_floaty',
+                'ticket.open' => 'ticket.ticket_open',
+                'ticket.title' => 'ticket.ticket_title',
+                'ticket.lastUpdate' => 'ticket.last_update',
+            ],
+            'tables' => [
+                'databasename.tickets ticket',
+                'tickets_messages message',
+                'db74.emails email',
+            ],
+            'where' => [
+                'ticket.ticket_id' => [77, 88, 193],
+                'ticket.ticket_open' => 1,
+            ],
+        ];
+
+        // What the database returns
+        $resultsFromDb = [
+            [
+                'ticket.ticketId' => 'hello',
+                'ticket.floaty' => 'ladida',
+                'ticket.open' => '5',
+                'ticket.title' => true,
+                'ticket.lastUpdate' => null,
+            ],
+        ];
+
+        // After the data was processed according to types
+        $resultsProcessed = [
+            [
+                'ticket.ticketId' => 0,
+                'ticket.floaty' => 0.0,
+                'ticket.open' => true,
+                'ticket.title' => '1',
+                'ticket.lastUpdate' => null,
+            ],
+        ];
+
+        // Fetching results - return the stored results
+        $this->db
+            ->shouldReceive('fetchAll')
+            ->once()
+            ->with($expectedQuery, [])
+            ->andReturn($resultsFromDb);
+
+        // Attempt select
+        $results = $this->queryHandler->fetchAll([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+                'ticket.title',
+                'ticket.lastUpdate',
+            ],
+            'where' => [
+                'ticket.ticketId' => [77, 88, 193],
+                'ticket.open' => true,
+            ],
+        ]);
+
+        // Make sure we received the correct sanitized results
+        $this->assertSame($resultsProcessed, $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(4, $deprecationList);
+        $this->assertSame(
+            [
+                'Wrong type for ticket.ticketId: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
+                'Wrong type for ticket.floaty: Only numbers with no fractional part can be coerced from a string to a float, given value: \'ladida\'',
+                'Wrong type for ticket.open: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'5\'',
+                'Wrong type for ticket.title: Only integers and floats are alternative coerceable values for a string, given value: true',
+            ],
+            $deprecationList,
+        );
     }
 }

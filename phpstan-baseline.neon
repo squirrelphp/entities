@@ -36,9 +36,19 @@ parameters:
 			path: src/Builder/SelectIterator.php
 
 		-
+			message: "#^Match expression does not handle remaining value\\: mixed$#"
+			count: 1
+			path: src/MultiRepositoryReadOnly.php
+
+		-
 			message: "#^Offset 'where' on array\\{repositories\\: array, tables\\?\\: array, where\\: array, lock\\?\\: bool\\} in isset\\(\\) always exists and is not nullable\\.$#"
 			count: 1
 			path: src/MultiRepositoryReadOnly.php
+
+		-
+			message: "#^Match expression does not handle remaining value\\: mixed$#"
+			count: 1
+			path: src/RepositoryReadOnly.php
 
 		-
 			message: "#^Offset 'limit' on array\\{fields\\?\\: array\\<string\\>, field\\?\\: string, where\\?\\: array\\<int\\|string, mixed\\>, order\\?\\: array\\<int\\|string, string\\>, offset\\?\\: int, lock\\?\\: bool\\} in isset\\(\\) does not exist\\.$#"

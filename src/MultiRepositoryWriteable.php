@@ -7,8 +7,8 @@ use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\DBException;
 
 /**
- * QueryHandler functionality: If more than one table needs to be selected or updated
- * at once QueryHandler combines the knowledge of multiple Repository classes to create
+ * If more than one table needs to be selected or updated at once this class
+ * combines the knowledge of multiple Repository classes to create
  * a query which is simple and secure
  */
 class MultiRepositoryWriteable extends MultiRepositoryReadOnly implements MultiRepositoryWriteableInterface

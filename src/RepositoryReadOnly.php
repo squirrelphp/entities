@@ -8,6 +8,7 @@ use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
 use Squirrel\Queries\LargeObject;
+use Squirrel\Types\Coerce;
 
 /**
  * Repository functionality: Get data from one table
@@ -327,12 +328,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         return $query;
     }
 
-    /**
-     * @param mixed $shouldBeBoolean
-     * @param string $settingName
-     * @return bool
-     */
-    private function booleanSettingValidation($shouldBeBoolean, string $settingName): bool
+    private function booleanSettingValidation(mixed $shouldBeBoolean, string $settingName): bool
     {
         // Make sure the setting is a boolean or at least an integer which can be clearly interpreted as boolean
         if (
@@ -498,13 +494,11 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * Cast an object variable (array or scalar) to the correct type for a SQL query
      *
-     * @param mixed $value
-     * @param null|string $fieldName
      * @return int|float|string|LargeObject|array<int|string,mixed>|null
      *
      * @throws DBInvalidOptionException
      */
-    protected function castTableVariable($value, ?string $fieldName = null)
+    protected function castTableVariable(mixed $value, ?string $fieldName = null): int|float|string|LargeObject|array|null
     {
         // Array - go through elements and cast them
         if (\is_array($value)) {
@@ -521,14 +515,9 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * Cast an object variable (only single scalar) to the correct type for a SQL query
      *
-     * @param mixed $value
-     * @param string|null $fieldName
-     * @param bool $isChange
-     * @return int|float|string|LargeObject|null
-     *
      * @throws DBInvalidOptionException
      */
-    protected function castOneTableVariable($value, ?string $fieldName = null, bool $isChange = false)
+    protected function castOneTableVariable(mixed $value, ?string $fieldName = null, bool $isChange = false): int|float|string|LargeObject|null
     {
         // Only scalar values and null are allowed
         if (!\is_null($value) && !\is_scalar($value)) {
@@ -547,7 +536,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         // user is on his own
         if (!isset($fieldName)) {
             if (\is_bool($value)) {
-                $value = \intval($value);
+                $value = $value === true ? 1 : 0;
             }
 
             /**
@@ -580,16 +569,31 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             return $value;
         }
 
-        // We know the field type - only basic types allowed
-        switch ($this->objectTypes[$fieldName]) {
-            case 'int':
-                return \intval($value);
-            case 'bool':
-                return \intval(\boolval($value));
-            case 'float':
-                return \floatval($value);
-            case 'string':
-                return \strval($value);
+        try {
+            // We know the field type - only basic types allowed
+            switch ($this->objectTypes[$fieldName]) {
+                case 'int':
+                    return Coerce::toInt($value);
+                case 'bool':
+                    return Coerce::toBool($value) === true ? 1 : 0;
+                case 'float':
+                    return Coerce::toFloat($value);
+                case 'string':
+                    return Coerce::toString($value);
+            }
+        } catch (\TypeError $e) {
+            \trigger_error('Wrong type for ' . $fieldName . ' in query: ' . $e->getMessage(), E_USER_DEPRECATED);
+
+            switch ($this->objectTypes[$fieldName]) {
+                case 'int':
+                    return \intval($value);
+                case 'bool':
+                    return \boolval($value) === true ? 1 : 0;
+                case 'float':
+                    return \floatval($value);
+                case 'string':
+                    return \strval($value);
+            }
         }
 
         // Blob = binary large object
@@ -723,35 +727,36 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
     /**
      * Cast an object variable to the correct type for use in an object
      *
-     * @param mixed $value
-     * @param string $fieldName
-     * @return bool|int|float|string|null
-     *
      * @throws DBInvalidOptionException
      */
-    protected function castObjVariable($value, string $fieldName)
+    protected function castObjVariable(mixed $value, string $fieldName): bool|int|float|string|null
     {
         // Field is null and can be null according to config
         if (\is_null($value) && $this->objectTypesNullable[$fieldName] === true) {
             return $value;
         }
 
-        switch ($this->objectTypes[$fieldName]) {
-            case 'int':
-                return \intval($value);
-            case 'bool':
-                return \boolval($value);
-            case 'float':
-                return \floatval($value);
-            case 'string':
-            case 'blob':
-                return \strval($value);
-        }
+        try {
+            return match ($this->objectTypes[$fieldName]) {
+                'int' => Coerce::toInt($value),
+                'bool' => Coerce::toBool($value),
+                'float' => Coerce::toFloat($value),
+                'string', 'blob' => Coerce::toString($value),
+                default => throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName),
+                    ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                ),
+            };
+        } catch (\TypeError $e) {
+            \trigger_error('Wrong type for ' . $fieldName . ' in result: ' . $e->getMessage(), E_USER_DEPRECATED);
 
-        throw Debug::createException(
-            DBInvalidOptionException::class,
-            'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName),
-            ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
-        );
+            return match ($this->objectTypes[$fieldName]) {
+                'int' => \intval($value),
+                'bool' => \boolval($value),
+                'float' => \floatval($value),
+                'string', 'blob' => \strval($value),
+            };
+        }
     }
 }

@@ -16,6 +16,8 @@ use Squirrel\Queries\LargeObject;
 
 class RepositoryTest extends \PHPUnit\Framework\TestCase
 {
+    use ErrorHandlerTrait;
+
     /**
      * DB data and objects used
      */
@@ -2039,5 +2041,401 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
         $this->repository = new RepositoryWriteable($this->db, $this->repositoryConfig);
 
         $this->testInsert();
+    }
+
+    public function testTypeCoercionForIntInQuery(): void
+    {
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'number' => 5.0,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'number' => 5.0,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+    }
+
+    public function testTypeCoercionForBoolInQuery(): void
+    {
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'is_great_yay' => true,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'isGreat' => 1,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+    }
+
+    public function testWrongTypeForStringInQuery(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'last_name' => true,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'lastName' => true,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for lastName in query: Only integers and floats are alternative coerceable values for a string, given value: true',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForIntInQuery(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'number' => 0,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'number' => 'hello',
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for number in query: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForFloatInQuery(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'float_val' => 0.0,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'floatVal' => 'hello',
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for floatVal in query: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForBoolInQuery(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+
+        $expectedQuery = [
+            'where' => [
+                'is_great_yay' => true,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'isGreat' => 'hello',
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $this->assertEquals($this->basicData['obj1'], $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for isGreat in query: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForStringInResult(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+        $selectResults[0]['last_name'] = true;
+
+        $expectedQuery = [
+            'where' => [
+                'last_name' => 'Baumann',
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'lastName' => 'Baumann',
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $obj = clone $this->basicData['obj1'];
+        $obj->lastName = '1';
+
+        $this->assertEquals($obj, $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for lastName in result: Only integers and floats are alternative coerceable values for a string, given value: true',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForIntInResult(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+        $selectResults[0]['number'] = 'hello';
+
+        $expectedQuery = [
+            'where' => [
+                'number' => 5,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'number' => 5,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $obj = clone $this->basicData['obj1'];
+        $obj->number = 0;
+
+        $this->assertEquals($obj, $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for number in result: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForFloatInResult(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+        $selectResults[0]['float_val'] = 'hello';
+
+        $expectedQuery = [
+            'where' => [
+                'float_val' => 5,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'floatVal' => 5,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $obj = clone $this->basicData['obj1'];
+        $obj->floatVal = 0;
+
+        $this->assertEquals($obj, $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for floatVal in result: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
+            $deprecationList[0],
+        );
+    }
+
+    public function testWrongTypeForBoolInResult(): void
+    {
+        $this->allowDeprecations();
+
+        // What values returned by the findBy method
+        $selectResults = $this->basicData['dbResults1'];
+        $selectResults[0]['is_great_yay'] = 'hello';
+
+        $expectedQuery = [
+            'where' => [
+                'is_great_yay' => true,
+            ],
+            'order' => [
+                'first_name',
+            ],
+            'table' => $this->repositoryConfig->getTableName(),
+            'limit' => 1,
+        ];
+
+        $this->dbSetupSelect($expectedQuery, $selectResults[0]);
+
+        $results = $this->repository->fetchOne([
+            'where' => [
+                'isGreat' => true,
+            ],
+            'order' => [
+                'firstName',
+            ],
+        ]);
+
+        $obj = clone $this->basicData['obj1'];
+        $obj->isGreat = true;
+
+        $this->assertEquals($obj, $results);
+
+        $deprecationList = $this->getDeprecationList();
+
+        $this->assertCount(1, $deprecationList);
+        $this->assertSame(
+            'Wrong type for isGreat in result: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
+            $deprecationList[0],
+        );
     }
 }

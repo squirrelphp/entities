@@ -7,9 +7,11 @@ use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
+use Squirrel\Types\Coerce;
+use Squirrel\Types\Coerceable;
 
 /**
- * If more than one table needs to be selected or updated at once this class
+ * If more than one table needs to be selected at once this class
  * combines the knowledge of multiple Repository classes to create
  * a query which is simple and secure
  */
@@ -790,16 +792,13 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     $selectTypes[$key] = 'string';
                 }
             } elseif ($selectTypes[$key] === 'uint' || $selectTypes[$key] === 'ufloat') {
-                // Non-numeric values are kept as string
-                if (
-                    !\is_numeric($value)
-                    || \strval(\floatval($value)) !== $value
-                ) {
+                // Non-coerceable values are kept as string
+                if (!Coerceable::toFloat($value)) {
                     $selectTypes[$key] = 'string';
                 } elseif (
                     // Numeric values where we lose some information when converting to integer are kept as a string
                     $selectTypes[$key] === 'uint'
-                    && \strval(\intval($value)) !== $value
+                    && !Coerceable::toInt($value)
                 ) {
                     $selectTypes[$key] = 'string';
                 } else { // No information loss detected, use int or float type
@@ -807,17 +806,28 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 }
             }
 
-            $entry[$key] = match ($selectTypes[$key]) {
-                'int' => \intval($value),
-                'bool' => \boolval($value),
-                'float' => \floatval($value),
-                'string' => \strval($value),
-                default => throw Debug::createException(
-                    DBInvalidOptionException::class,
-                    'Unknown casting "' . $selectTypes[$key] . '" for object variable ' . Debug::sanitizeData($key),
-                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
-                ),
-            };
+            try {
+                $entry[$key] = match ($selectTypes[$key]) {
+                    'int' => Coerce::toInt($value),
+                    'bool' => Coerce::toBool($value),
+                    'float' => Coerce::toFloat($value),
+                    'string' => Coerce::toString($value),
+                    default => throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Unknown casting "' . $selectTypes[$key] . '" for object variable ' . Debug::sanitizeData($key),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    ),
+                };
+            } catch (\TypeError $e) {
+                \trigger_error('Wrong type for ' . $key . ': ' . $e->getMessage(), E_USER_DEPRECATED);
+
+                $entry[$key] = match ($selectTypes[$key]) {
+                    'int' => \intval($value),
+                    'bool' => \boolval($value),
+                    'float' => \floatval($value),
+                    'string' => \strval($value),
+                };
+            }
         }
 
         return $entry;
