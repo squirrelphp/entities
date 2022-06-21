@@ -2138,7 +2138,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for lastName in query: Only integers and floats are alternative coerceable values for a string, given value: true',
+            'Wrong type for lastName in query for table example: Only integers and floats are alternative coerceable values for a string, given value: true',
             $deprecationList[0],
         );
     }
@@ -2178,7 +2178,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for number in query: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
+            'Wrong type for number in query for table example: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
             $deprecationList[0],
         );
     }
@@ -2218,7 +2218,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for floatVal in query: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
+            'Wrong type for floatVal in query for table example: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
             $deprecationList[0],
         );
     }
@@ -2258,7 +2258,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for isGreat in query: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
+            'Wrong type for isGreat in query for table example: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
             $deprecationList[0],
         );
     }
@@ -2302,7 +2302,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for lastName in result: Only integers and floats are alternative coerceable values for a string, given value: true',
+            'Wrong type for lastName in result for table example: Only integers and floats are alternative coerceable values for a string, given value: true',
             $deprecationList[0],
         );
     }
@@ -2346,7 +2346,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for number in result: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
+            'Wrong type for number in result for table example: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
             $deprecationList[0],
         );
     }
@@ -2390,7 +2390,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for floatVal in result: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
+            'Wrong type for floatVal in result for table example: Only numbers with no fractional part can be coerced from a string to a float, given value: \'hello\'',
             $deprecationList[0],
         );
     }
@@ -2434,7 +2434,7 @@ class RepositoryTest extends \PHPUnit\Framework\TestCase
 
         $this->assertCount(1, $deprecationList);
         $this->assertSame(
-            'Wrong type for isGreat in result: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
+            'Wrong type for isGreat in result for table example: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'hello\'',
             $deprecationList[0],
         );
     }

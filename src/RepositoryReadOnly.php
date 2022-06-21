@@ -582,7 +582,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                     return Coerce::toString($value);
             }
         } catch (\TypeError $e) {
-            \trigger_error('Wrong type for ' . $fieldName . ' in query: ' . $e->getMessage(), E_USER_DEPRECATED);
+            \trigger_error('Wrong type for ' . $fieldName . ' in query for table ' . $this->config->getTableName() . ': ' . $e->getMessage(), E_USER_DEPRECATED);
 
             switch ($this->objectTypes[$fieldName]) {
                 case 'int':
@@ -749,7 +749,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 ),
             };
         } catch (\TypeError $e) {
-            \trigger_error('Wrong type for ' . $fieldName . ' in result: ' . $e->getMessage(), E_USER_DEPRECATED);
+            \trigger_error('Wrong type for ' . $fieldName . ' in result for table ' . $this->config->getTableName() . ': ' . $e->getMessage(), E_USER_DEPRECATED);
 
             return match ($this->objectTypes[$fieldName]) {
                 'int' => \intval($value),
