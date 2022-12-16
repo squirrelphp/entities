@@ -27,11 +27,7 @@ class Transaction implements TransactionInterface
      */
     public static function withRepositories(array $repositories): self
     {
-        /**
-         * Connection to use for transaction
-         *
-         * @var DBInterface|null $connection
-         */
+        // Connection to use for transaction
         $connection = null;
 
         // Go through all repositories
@@ -89,7 +85,7 @@ class Transaction implements TransactionInterface
         }
 
         // No connection found, meaning no repositories were defined in arguments
-        if (!isset($connection)) {
+        if (!isset($connection) || !($connection instanceof DBInterface)) {
             throw Debug::createException(
                 DBInvalidOptionException::class,
                 'No repositories for transaction defined',
