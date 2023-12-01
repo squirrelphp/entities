@@ -1,35 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.2.0@fb685a16df3050d4c18d8a4100fe83abe6458cba">
+<files psalm-version="5.16.0@2897ba636551a8cb61601cc26f6ccfbba6c36591">
   <file src="src/Builder/SelectEntries.php">
-    <MissingTemplateParam occurrences="1">
+    <MissingTemplateParam>
       <code>\IteratorAggregate</code>
     </MissingTemplateParam>
   </file>
   <file src="src/Builder/SelectIterator.php">
-    <MissingTemplateParam occurrences="1">
+    <MissingTemplateParam>
       <code>\Iterator</code>
     </MissingTemplateParam>
   </file>
   <file src="src/MultiRepositoryReadOnly.php">
-    <MissingConstructor occurrences="2">
+    <MissingConstructor>
       <code>$db</code>
       <code>$db</code>
     </MissingConstructor>
-    <PossiblyInvalidArgument occurrences="1">
-      <code>$sanitizedOptions['query']</code>
+    <PossiblyInvalidArgument>
+      <code><![CDATA[$sanitizedOptions['query']]]></code>
     </PossiblyInvalidArgument>
   </file>
   <file src="src/RepositoryReadOnly.php">
-    <ArgumentTypeCoercion occurrences="3">
+    <ArgumentTypeCoercion>
       <code>$sanitizedQuery</code>
       <code>$sanitizedQuery</code>
       <code>$sanitizedQuery</code>
     </ArgumentTypeCoercion>
-    <InvalidArrayOffset occurrences="1">
-      <code>$query['limit']</code>
+    <InvalidArrayOffset>
+      <code><![CDATA[$query['limit']]]></code>
     </InvalidArrayOffset>
-  </file>
-  <file src="tests/MultiRepositoryReadOnlyTest.php">
-    <ArgumentTypeCoercion occurrences="1"/>
   </file>
 </files>
