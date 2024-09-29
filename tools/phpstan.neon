@@ -1,0 +1,12 @@
+includes:
+    - phpstan-baseline.php
+
+parameters:
+    level: max
+    paths:
+        - ../src
+        - ../bin/squirrel_repositories_generate
+    tmpDir: cache/phpstan
+    ignoreErrors:
+        -
+            identifier: missingType.iterableValue

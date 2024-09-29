@@ -5,7 +5,8 @@ env:
         - XDEBUG_MODE=coverage
 language: php
 php:
-    - '8.0'
+    - '8.2'
+    - '8.3'
 
 before_script:
     - composer self-update
@@ -20,7 +21,7 @@ script:
     - composer phpstan
     - composer psalm
     - composer phpcs
-    - if [ "$TRAVIS_PULL_REQUEST" == "false" -a "${TRAVIS_PHP_VERSION:0:1}" == "8" ]; then ./cc-test-reporter after-build  -t clover --exit-code $TRAVIS_TEST_RESULT; fi
+    - if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then ./cc-test-reporter after-build  -t clover --exit-code $TRAVIS_TEST_RESULT; fi
 
 notifications:
     email: false

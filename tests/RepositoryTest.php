@@ -4,6 +4,7 @@ namespace Squirrel\Entities\Tests;
 
 use Hamcrest\Core\IsEqual;
 use Mockery\MockInterface;
+use Squirrel\Connection\LargeObject;
 use Squirrel\Entities\RepositoryConfig;
 use Squirrel\Entities\RepositoryReadOnly;
 use Squirrel\Entities\RepositorySelectQuery;
@@ -12,7 +13,6 @@ use Squirrel\Entities\Tests\TestClasses\ObjData;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\DBSelectQueryInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
-use Squirrel\Queries\LargeObject;
 
 class RepositoryTest extends \PHPUnit\Framework\TestCase
 {

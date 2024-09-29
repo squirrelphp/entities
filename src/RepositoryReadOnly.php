@@ -2,12 +2,12 @@
 
 namespace Squirrel\Entities;
 
+use Squirrel\Connection\LargeObject;
 use Squirrel\Debug\Debug;
 use Squirrel\Queries\Builder\BuilderInterface;
 use Squirrel\Queries\DBException;
 use Squirrel\Queries\DBInterface;
 use Squirrel\Queries\Exception\DBInvalidOptionException;
-use Squirrel\Queries\LargeObject;
 use Squirrel\Types\Coerce;
 
 /**
