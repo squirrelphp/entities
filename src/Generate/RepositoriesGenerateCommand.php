@@ -30,7 +30,7 @@ namespace {namespaceOfBuilders} {
     /**
      * @implements \Iterator<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectIterator extends \Squirrel\Entities\Builder\SelectIterator implements \Iterator
+    final class SelectIterator extends \Squirrel\Entities\Builder\SelectIterator implements \Iterator
     {
         public function current(): \{namespaceOfEntity}\{classOfEntity}
         {
@@ -51,7 +51,7 @@ namespace {namespaceOfBuilders} {
      *
      * @implements \IteratorAggregate<int,\{namespaceOfEntity}\{classOfEntity}>
      */
-    class SelectEntries extends \Squirrel\Entities\Builder\SelectEntries implements \IteratorAggregate
+    final class SelectEntries extends \Squirrel\Entities\Builder\SelectEntries implements \IteratorAggregate
     {
         /**
          * @return \{namespaceOfEntity}\{classOfEntity}[]
@@ -99,10 +99,11 @@ namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
     use Squirrel\Entities\RepositoryReadOnlyInterface;
 
-    class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
+    readonly class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
     {
-        public function __construct(private RepositoryReadOnlyInterface $repository)
-        {
+        public function __construct(
+            private RepositoryReadOnlyInterface $repository,
+        ) {
         }
 
         public function count(): \Squirrel\Entities\Builder\CountEntries
@@ -139,11 +140,12 @@ namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderWriteableInterface;
     use Squirrel\Entities\RepositoryWriteableInterface;
 
-    class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements
+    final readonly class {classOfEntity}RepositoryWriteable extends {classOfEntity}RepositoryReadOnly implements
         RepositoryBuilderWriteableInterface
     {
-        public function __construct(private RepositoryWriteableInterface $repository)
-        {
+        public function __construct(
+            private RepositoryWriteableInterface $repository,
+        ) {
             parent::__construct($repository);
         }
 
@@ -176,9 +178,9 @@ EOD
 
     public function __construct(
         /** @var string[] */
-        private array $sourceCodeDirectories,
-        private bool $forceFileCreation,
-        private PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents,
+        private readonly array $sourceCodeDirectories,
+        private readonly bool $forceFileCreation,
+        private readonly PHPFilesInDirectoryGetContents $PHPFilesInDirectoryGetContents,
     ) {
         $this->findClassesWithAttribute = new FindClassesWithAttribute();
     }

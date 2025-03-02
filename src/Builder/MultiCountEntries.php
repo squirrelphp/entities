@@ -33,7 +33,7 @@ class MultiCountEntries implements BuilderInterface
     private bool $blocking = false;
 
     public function __construct(
-        private MultiRepositoryReadOnlyInterface $queryHandler,
+        private readonly MultiRepositoryReadOnlyInterface $queryHandler,
     ) {
     }
 

@@ -158,9 +158,9 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
         $list = [];
 
         // Go through table results
-        foreach ($processedResults as $objIndex => $objEntry) {
+        foreach ($processedResults as $objEntry) {
             // Go through all table fields
-            foreach ($objEntry as $fieldName => $fieldValue) {
+            foreach ($objEntry as $fieldValue) {
                 $list[] = $fieldValue;
             }
         }
@@ -194,26 +194,16 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                 );
             }
 
-            // Make sure the variable type for the defined option is valid
-            switch ($optKey) {
-                // These are checked & converted by SQL component
-                case 'limit':
-                case 'offset':
-                case 'lock':
-                    break;
-                // Already type hinted "query" as string
-                case 'query':
-                    break;
-                default:
-                    if (!\is_array($optVal)) {
-                        throw Debug::createException(
-                            DBInvalidOptionException::class,
-                            'Option key ' . Debug::sanitizeData($optKey) .
-                            ' had a non-array value: ' . Debug::sanitizeData($optVal),
-                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
-                        );
-                    }
-                    break;
+            // "limit", "offset" and "lock" are checked + converted by queries component, "query" is typed hinted a string, only check other options
+            if (!\in_array($optKey, ['limit', 'offset', 'lock', 'query'], true)) {
+                if (!\is_array($optVal)) {
+                    throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Option key ' . Debug::sanitizeData($optKey) .
+                        ' had a non-array value: ' . Debug::sanitizeData($optVal),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    );
+                }
             }
 
             $sanitizedOptions[$optKey] = $optVal;
@@ -289,32 +279,16 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
         }
 
-        /**
-         * Name of the tables for this query
-         *
-         * @var array
-         */
+        // Name of the tables for this query
         $tableName = [];
 
-        /**
-         * Conversion from object to table fields
-         *
-         * @var array
-         */
+        // Conversion from object to table fields
         $objectToTableFields = [];
 
-        /**
-         * Types of the variables in the object for type casting
-         *
-         * @var array
-         */
+        // Types of the variables in the object for type casting
         $objectTypes = [];
 
-        /**
-         * Whether variables can be NULL or not
-         *
-         * @var array
-         */
+        // Whether variables can be NULL or not
         $objectTypesNullable = [];
 
         // Go through tables to prepare the repositories
@@ -819,14 +793,12 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     ),
                 };
             } catch (\TypeError $e) {
-                \trigger_error('Wrong type for ' . $key . ': ' . $e->getMessage(), E_USER_DEPRECATED);
-
-                $entry[$key] = match ($selectTypes[$key]) {
-                    'int' => \intval($value),
-                    'bool' => \boolval($value),
-                    'float' => \floatval($value),
-                    'string' => \strval($value),
-                };
+                throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    'Multi select result: cannot convert value ' . Debug::sanitizeData($value) . ' to ' . $selectTypes[$key] . ' for ' .
+                    Debug::sanitizeData($key) . ': ' . $e->getMessage(),
+                    ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                );
             }
         }
 
@@ -881,7 +853,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                             ':' . $table . '.' . $objFieldName . ':',
                             $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
                             $expression,
-                            $count,
                         );
                     }
                 }
@@ -972,7 +943,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                             ':' . $table . '.' . $objFieldName . ':',
                             $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
                             $expression,
-                            $count,
                         );
                     }
                 }
@@ -1049,7 +1019,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                             ':' . $table . '.' . $objFieldName . ':',
                             $this->db->quoteIdentifier($table . '.' . $sqlFieldName),
                             $expression,
-                            $count,
                         );
                     }
                 }
@@ -1114,7 +1083,6 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                             ':' . $table . '.' . $objFieldName . ':',
                             \chr(27) . $table . '.' . $sqlFieldName . \chr(27),
                             $expression,
-                            $count,
                         );
                     }
                 }

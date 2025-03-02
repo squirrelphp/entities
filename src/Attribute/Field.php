@@ -3,7 +3,7 @@
 namespace Squirrel\Entities\Attribute;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class Field
+final readonly class Field
 {
     public function __construct(
         /** @var string Name of the field in the SQL table */

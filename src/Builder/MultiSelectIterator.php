@@ -20,7 +20,7 @@ class MultiSelectIterator implements \Iterator, BuilderInterface
     private ?array $lastResult = null;
 
     public function __construct(
-        private MultiRepositoryReadOnlyInterface $source,
+        private readonly MultiRepositoryReadOnlyInterface $source,
         array $query,
     ) {
         $this->query = $query;

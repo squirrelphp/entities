@@ -6,17 +6,11 @@ use Squirrel\Entities\Builder\MultiCountEntries;
 use Squirrel\Entities\Builder\MultiSelectEntries;
 use Squirrel\Entities\Builder\MultiSelectEntriesFreeform;
 
-class MultiRepositoryBuilderReadOnly implements MultiRepositoryBuilderReadOnlyInterface
+readonly class MultiRepositoryBuilderReadOnly implements MultiRepositoryBuilderReadOnlyInterface
 {
-    private MultiRepositoryReadOnlyInterface $multiRepositoryReadOnly;
-
-    public function __construct(?MultiRepositoryReadOnlyInterface $multiRepositoryReadOnly = null)
-    {
-        if ($multiRepositoryReadOnly === null) {
-            $multiRepositoryReadOnly = new MultiRepositoryReadOnly();
-        }
-
-        $this->multiRepositoryReadOnly = $multiRepositoryReadOnly;
+    public function __construct(
+        private MultiRepositoryReadOnlyInterface $multiRepositoryReadOnly = new MultiRepositoryReadOnly(),
+    ) {
     }
 
     public function select(): MultiSelectEntries

@@ -857,6 +857,19 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'integery' => '1.5',
                 'updateCreatedConcat' => '5',
             ],
+            [
+                'ticket.ticketId' => '193',
+                'ticket.floaty' => '11',
+                'emailTo' => 'test@muster.de',
+                'ticket.open' => '1',
+                'ticketTitle' => 'Third ticket',
+                'ticketTitleLength' => '10',
+                'updateMinusCreated' => '53',
+                'floaty' => '3.3',
+                'booleany' => 'ladida',
+                'integery' => '1.5',
+                'updateCreatedConcat' => '5',
+            ],
         ];
 
         // The processed database results
@@ -897,6 +910,19 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'updateMinusCreated' => 53,
                 'floaty' => 3.3,
                 'booleany' => true,
+                'integery' => '1.5',
+                'updateCreatedConcat' => '5',
+            ],
+            [
+                'ticket.ticketId' => 193,
+                'ticket.floaty' => 11.0,
+                'emailTo' => 'test@muster.de',
+                'ticket.open' => true,
+                'ticketTitle' => 'Third ticket',
+                'ticketTitleLength' => '10',
+                'updateMinusCreated' => 53,
+                'floaty' => 3.3,
+                'booleany' => 'ladida',
                 'integery' => '1.5',
                 'updateCreatedConcat' => '5',
             ],
@@ -2194,9 +2220,9 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
-    public function testTypeCoercionDeprecation(): void
+    public function testTypeCoercionException(): void
     {
-        $this->allowDeprecations();
+        $this->expectException(DBInvalidOptionException::class);
 
         // The query we want to receive
         $expectedQuery = [
@@ -2248,7 +2274,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ->andReturn($resultsFromDb);
 
         // Attempt select
-        $results = $this->queryHandler->fetchAll([
+        $this->queryHandler->fetchAll([
             'repositories' => [
                 'ticket' => $this->ticketRepository,
                 'message' => $this->ticketMessageRepository,
@@ -2266,21 +2292,5 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'ticket.open' => true,
             ],
         ]);
-
-        // Make sure we received the correct sanitized results
-        $this->assertSame($resultsProcessed, $results);
-
-        $deprecationList = $this->getDeprecationList();
-
-        $this->assertCount(4, $deprecationList);
-        $this->assertSame(
-            [
-                'Wrong type for ticket.ticketId: Only numbers with no fractional part can be coerced from a string to an integer, given value: \'hello\'',
-                'Wrong type for ticket.floaty: Only numbers with no fractional part can be coerced from a string to a float, given value: \'ladida\'',
-                'Wrong type for ticket.open: Only 0 and 1 are alternative coerceable values for a boolean, given value: \'5\'',
-                'Wrong type for ticket.title: Only integers and floats are alternative coerceable values for a string, given value: true',
-            ],
-            $deprecationList,
-        );
     }
 }

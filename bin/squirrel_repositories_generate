@@ -1,7 +1,6 @@
 #!/usr/bin/env php
 <?php
 
-use Composer\Autoload\ClassLoader;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputDefinition;
 use Symfony\Component\Console\Input\InputOption;

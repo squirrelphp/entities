@@ -72,7 +72,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
             }
 
             // No variables are contained in SQL
-            if (\strpos($fieldName, ':') === false) {
+            if (!\str_contains($fieldName, ':')) {
                 $fieldValue = $this->castOneTableVariable($fieldValue, $fieldName, true);
                 $fieldName = $this->convertNameToTable($fieldName);
             } else { // Variables are contained in SQL
@@ -83,7 +83,7 @@ class RepositoryWriteable extends RepositoryReadOnly implements RepositoryWritea
                 $fieldName = $this->convertNamesToTableInString($fieldName);
 
                 // Variables still exist which were not resolved
-                if (\strpos($fieldName, ':') !== false) {
+                if (\str_contains($fieldName, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Unresolved colons in "changes" / SET clause: ' .

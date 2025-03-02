@@ -8,6 +8,8 @@
     errorBaseline="tools/psalm-baseline.xml"
     findUnusedBaselineEntry="true"
     findUnusedCode="false"
+    strictBinaryOperands="false"
+    ensureOverrideAttribute="false"
     autoloader="vendor/autoload.php"
     resolveFromConfigFile="false"
     cacheDirectory="tools/cache/psalm"
@@ -40,6 +42,13 @@
                 <file name="tests/RepositoriesGenerateCommandTest.php"/>
             </errorLevel>
         </MissingFile>
+        <!-- We do not want all classes to be automatically final -->
+        <ClassMustBeFinal>
+            <errorLevel type="suppress">
+                <directory name="src"/>
+                <directory name="tests"/>
+            </errorLevel>
+        </ClassMustBeFinal>
     </issueHandlers>
 
     <plugins>

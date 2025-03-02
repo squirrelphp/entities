@@ -4,7 +4,7 @@ namespace Squirrel\Entities;
 
 use Squirrel\Queries\DBSelectQueryInterface;
 
-class RepositorySelectQuery implements RepositorySelectQueryInterface
+final readonly class RepositorySelectQuery implements RepositorySelectQueryInterface
 {
     public function __construct(
         private DBSelectQueryInterface $selectQuery,

@@ -3,13 +3,10 @@
 namespace Squirrel\Entities\Tests\TestEntities;
 
 use Squirrel\Entities\Attribute as SQL;
-use Squirrel\Entities\PopulatePropertiesWithIterableTrait;
 
 #[SQL\Entity("users", connection: "dada")]
 class User
 {
-    use PopulatePropertiesWithIterableTrait;
-
     #[SQL\Field("user_id", autoincrement: true)]
     private int $userId = 0;
 

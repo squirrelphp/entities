@@ -23,7 +23,7 @@ class DeleteEntries implements BuilderInterface
     private bool $confirmNoWhere = false;
 
     public function __construct(
-        private RepositoryWriteableInterface $repository,
+        private readonly RepositoryWriteableInterface $repository,
     ) {
     }
 

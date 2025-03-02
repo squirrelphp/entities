@@ -18,7 +18,7 @@ class SelectIterator implements \Iterator, BuilderInterface
     private ?object $lastResult = null;
 
     public function __construct(
-        private RepositoryReadOnlyInterface $source,
+        private readonly RepositoryReadOnlyInterface $source,
         array $query,
     ) {
         $this->query = $query;

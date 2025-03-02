@@ -16,7 +16,7 @@ class InsertEntry implements BuilderInterface
     private array $values = [];
 
     public function __construct(
-        private RepositoryWriteableInterface $repository,
+        private readonly RepositoryWriteableInterface $repository,
     ) {
     }
 

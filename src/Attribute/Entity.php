@@ -3,7 +3,7 @@
 namespace Squirrel\Entities\Attribute;
 
 #[\Attribute(\Attribute::TARGET_CLASS)]
-class Entity
+final readonly class Entity
 {
     public function __construct(
         /** @var string Name of the SQL table */

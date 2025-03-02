@@ -35,7 +35,7 @@ class MultiUpdateEntriesFreeform implements BuilderInterface
     private bool $confirmBadPractice = false;
 
     public function __construct(
-        private MultiRepositoryWriteableInterface $queryHandler,
+        private readonly MultiRepositoryWriteableInterface $queryHandler,
     ) {
     }
 

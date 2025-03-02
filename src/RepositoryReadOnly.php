@@ -239,23 +239,16 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 );
             }
 
-            // Make sure the variable type for the defined option is valid
-            switch ($optKey) {
-                // These are checked & converted by SQL component
-                case 'limit':
-                case 'offset':
-                case 'lock':
-                    break;
-                default:
-                    if (!\is_array($optVal)) {
-                        throw Debug::createException(
-                            DBInvalidOptionException::class,
-                            'Option key ' . Debug::sanitizeData($optKey) .
-                            ' had a non-array value: ' . Debug::sanitizeData($optVal),
-                            ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
-                        );
-                    }
-                    break;
+            // "limit", "offset" and "lock" are checked + converted by queries component, only check other options
+            if (!\in_array($optKey, ['limit', 'offset', 'lock'], true)) {
+                if (!\is_array($optVal)) {
+                    throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Option key ' . Debug::sanitizeData($optKey) .
+                        ' had a non-array value: ' . Debug::sanitizeData($optVal),
+                        ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    );
+                }
             }
 
             $sanitizedOptions[$optKey] = $optVal;
@@ -413,7 +406,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         $list = [];
 
         // Go through table results
-        foreach ($tableResults as $objIndex => $tableObject) {
+        foreach ($tableResults as $tableObject) {
             // Go through all table fields
             foreach ($tableObject as $fieldName => $fieldValue) {
                 $list[] = $this->castObjVariable($fieldValue, $this->tableToObjectFields[$fieldName]);
@@ -455,7 +448,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             }
 
             // Key contains a colon, meaning this is a string query part
-            if (\strpos($whereName, ':') !== false) {
+            if (\str_contains($whereName, ':')) {
                 // Cast variable values
                 $whereValue = $this->castTableVariable($whereValue);
 
@@ -463,7 +456,7 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 $whereName = $this->convertNamesToTableInString($whereName);
 
                 // Variables still exist which were not resolved
-                if (\strpos($whereName, ':') !== false) {
+                if (\str_contains($whereName, ':')) {
                     throw Debug::createException(
                         DBInvalidOptionException::class,
                         'Unresolved colons in "where" clause: ' .
@@ -570,50 +563,31 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
         }
 
         try {
-            // We know the field type - only basic types allowed
-            switch ($this->objectTypes[$fieldName]) {
-                case 'int':
-                    return Coerce::toInt($value);
-                case 'bool':
-                    return Coerce::toBool($value) === true ? 1 : 0;
-                case 'float':
-                    return Coerce::toFloat($value);
-                case 'string':
-                    return Coerce::toString($value);
-            }
+            return match ($this->objectTypes[$fieldName]) {
+                'int' => Coerce::toInt($value),
+                'bool' => Coerce::toBool($value) === true ? 1 : 0,
+                'float' => Coerce::toFloat($value),
+                'string' => Coerce::toString($value),
+                'blob' => $isChange === true ? new LargeObject(\strval($value)) : throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    'Blob object types cannot be queried, only accessed and written - attempted with field name ' .
+                    Debug::sanitizeData($fieldName) . ' in table ' . $this->config->getTableName(),
+                    ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                ),
+                default => throw Debug::createException(
+                    DBInvalidOptionException::class,
+                    'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName),
+                    ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+                ),
+            };
         } catch (\TypeError $e) {
-            \trigger_error('Wrong type for ' . $fieldName . ' in query for table ' . $this->config->getTableName() . ': ' . $e->getMessage(), E_USER_DEPRECATED);
-
-            switch ($this->objectTypes[$fieldName]) {
-                case 'int':
-                    return \intval($value);
-                case 'bool':
-                    return \boolval($value) === true ? 1 : 0;
-                case 'float':
-                    return \floatval($value);
-                case 'string':
-                    return \strval($value);
-            }
+            throw Debug::createException(
+                DBInvalidOptionException::class,
+                'Query: cannot convert value ' . Debug::sanitizeData($value) . ' to ' . $this->objectTypes[$fieldName] . ' for field name ' .
+                Debug::sanitizeData($fieldName) . ' in table ' . $this->config->getTableName() . ': ' . $e->getMessage(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+            );
         }
-
-        // Blob = binary large object
-        if ($this->objectTypes[$fieldName] === 'blob') {
-            // Large object are used for update and insert
-            if ($isChange === true) {
-                return new LargeObject(\strval($value));
-            }
-
-            // We let this escalate to an exception because blobs should not be used in WHERE clauses
-            // or similar expressions - they are considered something to access and write, but not query,
-            // except for NULL if a blob is nullable
-        }
-
-        // Always throw an exception we if hit unchartered territory
-        throw Debug::createException(
-            DBInvalidOptionException::class,
-            'Unknown casting for object variable: ' . Debug::sanitizeData($fieldName),
-            ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
-        );
     }
 
     /**
@@ -686,21 +660,21 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             }
 
             // Wether variable was found or not
-            $variableFound = (\strpos($expression, ':') !== false);
+            $variableFound = \str_contains($expression, ':');
 
             // Expression contains not just the field name
             if (
                 $variableFound === true
-                || \strpos($expression, ' ') !== false
-                || \strpos($expression, '(') !== false
-                || \strpos($expression, ')') !== false
+                || \str_contains($expression, ' ')
+                || \str_contains($expression, '(')
+                || \str_contains($expression, ')')
             ) {
                 if ($variableFound === true) {
                     // Convert all :variable: values from object to table notation
                     $expression = $this->convertNamesToTableInString($expression);
 
                     // Variables still exist which were not resolved
-                    if (\strpos($expression, ':') !== false) {
+                    if (\str_contains($expression, ':')) {
                         throw Debug::createException(
                             DBInvalidOptionException::class,
                             'Unresolved colons in "order" / order by clause: ' .
@@ -749,14 +723,12 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
                 ),
             };
         } catch (\TypeError $e) {
-            \trigger_error('Wrong type for ' . $fieldName . ' in result for table ' . $this->config->getTableName() . ': ' . $e->getMessage(), E_USER_DEPRECATED);
-
-            return match ($this->objectTypes[$fieldName]) {
-                'int' => \intval($value),
-                'bool' => \boolval($value),
-                'float' => \floatval($value),
-                'string', 'blob' => \strval($value),
-            };
+            throw Debug::createException(
+                DBInvalidOptionException::class,
+                'Result: cannot convert value ' . Debug::sanitizeData($value) . ' to ' . $this->objectTypes[$fieldName] . ' for field name ' .
+                Debug::sanitizeData($fieldName) . ' in table ' . $this->config->getTableName() . ': ' . $e->getMessage(),
+                ignoreClasses: [RepositoryReadOnlyInterface::class, BuilderInterface::class],
+            );
         }
     }
 }

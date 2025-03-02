@@ -45,7 +45,7 @@ class MultiSelectEntriesFreeform implements BuilderInterface, \IteratorAggregate
     private bool $confirmBadPractice = false;
 
     public function __construct(
-        private MultiRepositoryReadOnlyInterface $queryHandler,
+        private readonly MultiRepositoryReadOnlyInterface $queryHandler,
     ) {
     }
 

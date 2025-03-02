@@ -5,7 +5,7 @@ namespace Squirrel\Entities;
 /**
  * VALUE OBJECT: Configuration for a repository to map between table and objects
  */
-class RepositoryConfig implements RepositoryConfigInterface
+final readonly class RepositoryConfig implements RepositoryConfigInterface
 {
     public function __construct(
         private string $connectionName,

@@ -46,7 +46,7 @@ class SelectEntries implements BuilderInterface, \IteratorAggregate
     protected array $fields = [];
 
     public function __construct(
-        protected RepositoryReadOnlyInterface $repository,
+        protected readonly RepositoryReadOnlyInterface $repository,
     ) {
     }
 

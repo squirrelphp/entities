@@ -10,7 +10,7 @@ use Squirrel\Queries\Exception\DBInvalidOptionException;
 /**
  * Run queries within a transaction
  */
-class Transaction implements TransactionInterface
+final readonly class Transaction implements TransactionInterface
 {
     public function __construct(
         private DBInterface $db,

@@ -21,7 +21,7 @@ class CountEntries implements BuilderInterface
     private bool $blocking = false;
 
     public function __construct(
-        private RepositoryReadOnlyInterface $repository,
+        private readonly RepositoryReadOnlyInterface $repository,
     ) {
     }
 
