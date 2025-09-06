@@ -902,7 +902,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             // Switch around expression and values if there are no values
             if (\is_int($expression)) {
                 $expression = $values;
-                $values = null;
+                $values = [];
             }
 
             // Expression always has to be a string
@@ -917,24 +917,31 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
             // No expression, only a table field name
             if (!\str_contains($expression, ':')) {
-                // Values have to be defined for us to make a predefined equals query
-                if (isset($values)) {
-                    // Get separated table and field parts
-                    $fieldParts = \explode('.', $expression);
+                // Get separated table and field parts
+                $fieldParts = \explode('.', $expression);
 
-                    // Field was not found
-                    if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
-                        throw Debug::createException(
-                            DBInvalidOptionException::class,
-                            'Invalid "where" definition, field name not found: ' .
-                            Debug::sanitizeData($expression),
-                            ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
-                        );
-                    }
-
-                    // Convert field name
-                    $expression = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
+                // Field was not found
+                if (!isset($fieldParts[1]) || !isset($objectToTableFields[$fieldParts[0]][$fieldParts[1]])) {
+                    throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Invalid "where" definition, field name not found: ' .
+                        Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    );
                 }
+
+                // Values have to be defined for us to make a predefined equals query
+                if (\is_array($values) && \count($values) === 0) {
+                    throw Debug::createException(
+                        DBInvalidOptionException::class,
+                        'Invalid "where" definition, simple expression has no values: ' .
+                        Debug::sanitizeData($expression),
+                        ignoreClasses: [MultiRepositoryReadOnlyInterface::class, BuilderInterface::class],
+                    );
+                }
+
+                // Convert field name
+                $expression = $fieldParts[0] . '.' . $objectToTableFields[$fieldParts[0]][$fieldParts[1]];
             } else { // Freestyle expression
                 // Replace all expressions of all involved repositories
                 foreach ($objectToTableFields as $table => $tableFields) {
@@ -959,11 +966,7 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
             }
 
             // Add the where definition to the processed list
-            if (isset($values)) {
-                $whereProcessed[$expression] = $values;
-            } else {
-                $whereProcessed[] = $expression;
-            }
+            $whereProcessed[$expression] = $values;
         }
 
         return $whereProcessed;

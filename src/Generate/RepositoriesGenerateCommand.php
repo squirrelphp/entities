@@ -99,6 +99,9 @@ namespace {namespaceOfEntity} {
     use Squirrel\Entities\RepositoryBuilderReadOnlyInterface;
     use Squirrel\Entities\RepositoryReadOnlyInterface;
 
+    /**
+     * @psalm-inheritors {classOfEntity}RepositoryWriteable
+     */
     readonly class {classOfEntity}RepositoryReadOnly implements RepositoryBuilderReadOnlyInterface
     {
         public function __construct(

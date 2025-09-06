@@ -121,7 +121,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             'messageId' => false,
             'ticketId' => false,
             'emailId' => false,
-            'senderType' => false,
+            'senderType' => true,
             'createDate' => false,
         ]);
 
@@ -192,6 +192,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
                 'email.to' => 'info@dada.com',
                 ':ticket.open: = ?' => true,
                 ':ticket.floaty: BETWEEN ? AND ?' => [5.5, 9.5],
+                'message.senderType' => null,
             ],
             'group' => [
                 'ticket.ticketId',
@@ -965,10 +966,11 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'where' => [
                 $this->db->quoteIdentifier('ticket.ticket_id') . ' = ' .
-                $this->db->quoteIdentifier('message.ticket_id'),
+                $this->db->quoteIdentifier('message.ticket_id') => [],
                 'email.to_address' => 'info@dada.com',
                 $this->db->quoteIdentifier('ticket.ticket_open') . ' = ?' => 1,
                 $this->db->quoteIdentifier('ticket.ticket_floaty') . ' BETWEEN ? AND ?' => [5.5, 9.5],
+                'message.sender_type' => null,
             ],
             'group' => [
                 'ticket.ticket_id',
@@ -1907,6 +1909,28 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
         ]);
     }
 
+    public function testFetchAllExceptionNoFieldValues(): void
+    {
+        $this->expectException(DBInvalidOptionException::class);
+
+        $this->queryHandler->fetchAll([
+            'repositories' => [
+                'ticket' => $this->ticketRepository,
+                'message' => $this->ticketMessageRepository,
+                'email' => $this->emailRepository,
+            ],
+            'fields' => [
+                'ticket.ticketId',
+                'ticket.floaty',
+                'ticket.open',
+            ],
+            'where' => [
+                'ticket.ticketId' => [],
+                'ticket.open' => true,
+            ],
+        ]);
+    }
+
     public function testFreeformOneFieldExceptionFromDbClass(): void
     {
         $this->expectException(DBInvalidOptionException::class);
@@ -1964,7 +1988,7 @@ class MultiRepositoryReadOnlyTest extends \PHPUnit\Framework\TestCase
             ],
             'where' => [
                 $this->db->quoteIdentifier('ticket.ticket_id') . ' = ' .
-                $this->db->quoteIdentifier('ticket2.ticket_id'),
+                $this->db->quoteIdentifier('ticket2.ticket_id') => [],
                 'ticket.ticket_id' => 77,
             ],
         ];
