@@ -164,6 +164,12 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
 ];
 $ignoreErrors[] = [
+	'message' => '#^Possibly invalid array key type mixed\\.$#',
+	'identifier' => 'offsetAccess.invalidOffset',
+	'count' => 1,
+	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
+];
+$ignoreErrors[] = [
 	'message' => '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\\.$#',
 	'identifier' => 'foreach.nonIterable',
 	'count' => 7,
@@ -404,7 +410,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/../src/MultiRepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#2 \\$array of function implode expects array\\|null, mixed given\\.$#',
+	'message' => '#^Parameter \\#2 \\$array of function implode expects array, mixed given\\.$#',
 	'identifier' => 'argument.type',
 	'count' => 1,
 	'path' => __DIR__ . '/../src/MultiRepositoryReadOnly.php',
@@ -629,6 +635,12 @@ $ignoreErrors[] = [
 	'message' => '#^Parameter \\#2 \\$fieldName of method Squirrel\\\\Entities\\\\RepositoryReadOnly\\:\\:castObjVariable\\(\\) expects string, mixed given\\.$#',
 	'identifier' => 'argument.type',
 	'count' => 2,
+	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Possibly invalid array key type mixed\\.$#',
+	'identifier' => 'offsetAccess.invalidOffset',
+	'count' => 5,
 	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [

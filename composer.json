@@ -20,9 +20,9 @@
         }
     ],
     "require": {
-        "php": ">=8.2",
-        "symfony/console": "^5.0|^6.0|^7.0",
-        "symfony/finder": "^5.0|^6.0|^7.0",
+        "php": ">=8.4",
+        "symfony/console": "^7.0|^8.0",
+        "symfony/finder": "^7.0|^8.0",
         "squirrelphp/debug": "^2.0",
         "squirrelphp/queries": "^2.0",
         "squirrelphp/types": "^1.0"
@@ -30,9 +30,9 @@
     "require-dev": {
         "captainhook/captainhook-phar": "^5.0",
         "captainhook/hook-installer": "^1.0",
-        "phpunit/phpunit": "^11.2",
+        "phpunit/phpunit": "^12.0",
         "mockery/mockery": "^1.0",
-        "symfony/process": "^7.0"
+        "symfony/process": "^7.0|^8.0"
     },
     "suggest": {
         "squirrelphp/queries-bundle": "Symfony integration of squirrel/queries - automatic assembling of decorated connections",
