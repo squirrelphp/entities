@@ -1,6 +1,6 @@
 services:
     captainhook:
-        image: thecodingmachine/php:8.4-v5-cli
+        image: thecodingmachine/php:8.5-v5-cli
         container_name: squirrel_captainhook
         tty: true
         working_dir: /usr/src/app

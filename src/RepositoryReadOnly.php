@@ -381,7 +381,6 @@ class RepositoryReadOnly implements RepositoryReadOnlyInterface
             // Get reflection property, make is accessible to reflection and cache it
             if (!isset($this->reflectionProperties[$objKey])) {
                 $this->reflectionProperties[$objKey] = $this->reflectionClass->getProperty($objKey);
-                $this->reflectionProperties[$objKey]->setAccessible(true);
             }
 
             // Set the property via reflection

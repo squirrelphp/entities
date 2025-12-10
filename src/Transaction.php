@@ -37,7 +37,6 @@ final readonly class Transaction implements TransactionInterface
                 try {
                     $builderRepositoryReflection = new \ReflectionClass($repository);
                     $builderRepositoryPropertyReflection = $builderRepositoryReflection->getProperty('repository');
-                    $builderRepositoryPropertyReflection->setAccessible(true);
                     $repository = $builderRepositoryPropertyReflection->getValue($repository);
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(
@@ -54,7 +53,6 @@ final readonly class Transaction implements TransactionInterface
                 try {
                     $baseRepositoryReflection = new \ReflectionClass($repository);
                     $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('db');
-                    $baseRepositoryPropertyReflection->setAccessible(true);
                     $foundConnection = $baseRepositoryPropertyReflection->getValue($repository);
                 } catch (\ReflectionException $e) {
                     throw Debug::createException(

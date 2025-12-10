@@ -640,7 +640,7 @@ $ignoreErrors[] = [
 $ignoreErrors[] = [
 	'message' => '#^Possibly invalid array key type mixed\\.$#',
 	'identifier' => 'offsetAccess.invalidOffset',
-	'count' => 5,
+	'count' => 4,
 	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [

@@ -314,18 +314,15 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
                     // Dive into the repository builder class and get the raw repository behind it
                     $builderRepositoryReflection = new \ReflectionClass($class);
                     $builderRepositoryPropertyReflection = $builderRepositoryReflection->getProperty('repository');
-                    $builderRepositoryPropertyReflection->setAccessible(true);
                     $baseRepository = $builderRepositoryPropertyReflection->getValue($class);
 
                     // Get configuration from within the base repository
                     $baseRepositoryReflection = new \ReflectionClass($baseRepository);
                     $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('config');
-                    $baseRepositoryPropertyReflection->setAccessible(true);
                     $class = $baseRepositoryPropertyReflection->getValue($baseRepository);
 
                     // Get DBInterface from base repository
                     $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('db');
-                    $baseRepositoryPropertyReflection->setAccessible(true);
                     $dbClass = $baseRepositoryPropertyReflection->getValue($baseRepository);
 
                     // Make sure all DBInterface instances are the same = the same connection is used
@@ -361,12 +358,10 @@ class MultiRepositoryReadOnly implements MultiRepositoryReadOnlyInterface
 
                     // Get DBInterface from base repository
                     $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('db');
-                    $baseRepositoryPropertyReflection->setAccessible(true);
                     $dbClass = $baseRepositoryPropertyReflection->getValue($class);
 
                     // Get configuration from within the base repository
                     $baseRepositoryPropertyReflection = $baseRepositoryReflection->getProperty('config');
-                    $baseRepositoryPropertyReflection->setAccessible(true);
                     $class = $baseRepositoryPropertyReflection->getValue($class);
 
                     // Make sure all DBInterface instances are the same = the same connection is used
