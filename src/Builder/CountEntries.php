@@ -40,6 +40,9 @@ class CountEntries implements BuilderInterface
         return $this;
     }
 
+    /**
+     * @return positive-int|0
+     */
     public function getNumber(): int
     {
         return $this->repository->count([

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="5.26.1@d747f6500b38ac4f7dfc5edbcae6e4b637d7add0">
+<files psalm-version="6.16.1@f1f5de594dc76faf8784e02d3dc4716c91c6f6ac">
   <file src="src/Builder/SelectEntries.php">
     <MissingTemplateParam>
       <code><![CDATA[\IteratorAggregate]]></code>
@@ -28,5 +28,11 @@
     <InvalidArrayOffset>
       <code><![CDATA[$query['limit']]]></code>
     </InvalidArrayOffset>
+    <LessSpecificReturnStatement>
+      <code><![CDATA[\intval($count['num'] ?? 0)]]></code>
+    </LessSpecificReturnStatement>
+    <MoreSpecificReturnType>
+      <code><![CDATA[int]]></code>
+    </MoreSpecificReturnType>
   </file>
 </files>

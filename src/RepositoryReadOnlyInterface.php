@@ -17,7 +17,7 @@ interface RepositoryReadOnlyInterface
      *
      * @param array<string,mixed> $query Query parts as an array
      * @psalm-param array{where?:array,lock?:bool} $query
-     * @return int Number of entries
+     * @return positive-int|0 Number of entries
      */
     public function count(array $query): int;
 

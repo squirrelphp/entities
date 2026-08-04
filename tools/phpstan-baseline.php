@@ -134,6 +134,18 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
 ];
 $ignoreErrors[] = [
+	'message' => '#^Cannot use array destructuring on mixed\\.$#',
+	'identifier' => 'offsetAccess.nonArray',
+	'count' => 1,
+	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#1 \\$array of function array_unique expects an array of values castable to string, array given\\.$#',
+	'identifier' => 'argument.type',
+	'count' => 1,
+	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
+];
+$ignoreErrors[] = [
 	'message' => '#^Parameter \\#1 \\$fileContents of method Squirrel\\\\Entities\\\\Generate\\\\FindClassesWithAttribute\\:\\:__invoke\\(\\) expects string, mixed given\\.$#',
 	'identifier' => 'argument.type',
 	'count' => 1,
@@ -147,6 +159,12 @@ $ignoreErrors[] = [
 ];
 $ignoreErrors[] = [
 	'message' => '#^Parameter \\#1 \\$repositoryPhpFile of method Squirrel\\\\Entities\\\\Generate\\\\RepositoriesGenerateCommand\\:\\:repositoryFileContentsFillInBlueprint\\(\\) expects string, mixed given\\.$#',
+	'identifier' => 'argument.type',
+	'count' => 1,
+	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
+];
+$ignoreErrors[] = [
+	'message' => '#^Parameter \\#2 \\$array of function implode expects array\\<string\\>, list given\\.$#',
 	'identifier' => 'argument.type',
 	'count' => 1,
 	'path' => __DIR__ . '/../src/Generate/RepositoriesGenerateCommand.php',
@@ -196,7 +214,7 @@ $ignoreErrors[] = [
 $ignoreErrors[] = [
 	'message' => '#^Cannot access offset \'fields\' on mixed\\.$#',
 	'identifier' => 'offsetAccess.nonOffsetAccessible',
-	'count' => 4,
+	'count' => 3,
 	'path' => __DIR__ . '/../src/MultiRepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [
@@ -572,6 +590,12 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [
+	'message' => '#^Method Squirrel\\\\Entities\\\\RepositoryReadOnly\\:\\:count\\(\\) should return int\\<0, max\\> but returns int\\.$#',
+	'identifier' => 'return.type',
+	'count' => 1,
+	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
+];
+$ignoreErrors[] = [
 	'message' => '#^Offset \'limit\' on array\\{fields\\?\\: array\\<string\\>, field\\?\\: string, where\\?\\: array\\<int\\|string, mixed\\>, order\\?\\: array\\<int\\|string, string\\>, offset\\?\\: int, lock\\?\\: bool\\} in isset\\(\\) does not exist\\.$#',
 	'identifier' => 'isset.offset',
 	'count' => 1,
@@ -620,7 +644,7 @@ $ignoreErrors[] = [
 	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
 ];
 $ignoreErrors[] = [
-	'message' => '#^Parameter \\#1 \\$value of function intval expects array\\|bool\\|float\\|int\\|resource\\|string\\|null, mixed given\\.$#',
+	'message' => '#^Parameter \\#1 \\$value of function intval expects array\\|bool\\|float\\|GMP\\|int\\|resource\\|SimpleXMLElement\\|string\\|null, mixed given\\.$#',
 	'identifier' => 'argument.type',
 	'count' => 1,
 	'path' => __DIR__ . '/../src/RepositoryReadOnly.php',
